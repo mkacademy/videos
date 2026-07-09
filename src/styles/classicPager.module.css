@@ -1,0 +1,78 @@
+.pagination {
+    justify-content: center;
+}
+
+.pagination .carders.page-item.underlined {
+    border-bottom-style: solid;
+    border-bottom-color: green;
+    border-bottom-width: 0.001rem;
+}
+
+.pagination .page-item:global(.disabled) .page-link {
+    background-color: #fff;
+    border-color: #dee2e6;
+    color: #6c757d;
+    cursor: auto;
+    pointer-events: none;
+}
+
+.pagination .carders.page-link {
+    font-size: 0.5rem;
+    padding: 0.1rem 0.2rem;
+}
+
+.pagination .course.page-item.underlined {
+    border-bottom-style: solid;
+    border-bottom-color: green;
+    border-bottom-width: 0.001rem;
+}
+
+.pagination .course.page-item.underlined-incoming {
+    border-bottom-style: solid;
+    border-bottom-color: green;
+    border-bottom-width: 0.001rem;
+}
+
+.pagination .course.page-item.underlined-outgoing {
+    border-bottom-style: solid;
+    border-bottom-color: #ca8a04;
+    border-bottom-width: 0.001rem;
+}
+
+.pagination .course.page-link {
+    font-size: 1rem;
+    padding: 0.15rem 0.3rem;
+}
+
+@media screen and (min-width: 576px) {
+    .pagination .carders.page-link {
+        font-size: 0.7rem;
+    }
+
+    .pagination .course.page-link {
+        font-size: 1.2rem;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .pagination .carders.page-link {
+        font-size: 0.875rem;
+        padding: 0.15rem 0.3rem;
+    }
+
+    .pagination .course.page-link {
+        font-size: 1.5rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .pagination .carders.page-link {
+        font-size: 1.5rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .pagination .cpanel.page-link {
+        font-size: 0.875rem;
+    }
+}

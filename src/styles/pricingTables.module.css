@@ -1,0 +1,125 @@
+.pricingTables {
+    align-items: flex-start;
+    min-height: 100vh;
+    max-width: 1010px;
+}
+
+.pricingTables .col-12 .headerTitle {
+    font-weight: 300;
+    text-align: center;
+    font-size: 2rem;
+    margin: 0.5rem 0;
+}
+
+.pricingTables .pricing {
+    display: flex;
+    margin: 5px 0;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pricingTables .pricing * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.pricingTables .pricing .plan {
+    background-color: #fff;
+    padding: 1.5rem;
+    margin: 12px;
+    border-radius: 5px;
+    text-align: center;
+    transition: 0.3s;
+    cursor: pointer;
+}
+
+.pricingTables .pricing .plan h2 {
+    font-size: 22px;
+    margin-bottom: 12px;
+}
+
+.pricingTables .pricing .plan .price {
+    margin-bottom: 1rem;
+    font-size: 30px;
+}
+
+.pricingTables .pricing .plan ul.features {
+    list-style-type: none;
+    text-align: left;
+}
+
+.pricingTables .pricing .plan ul.features li {
+    margin: 8px;
+}
+
+.pricingTables .pricing .plan ul.features li .fas {
+    margin-right: 4px;
+}
+
+.pricingTables .pricing .plan ul.features li .fa-check-circle {
+    color: #6ab04c;
+}
+
+.pricingTables .pricing .plan ul.features li .fa-times-circle {
+    color: #eb4d4b;
+}
+
+.pricingTables .pricing .plan button {
+    border: none;
+    width: 100%;
+    padding: 12px 35px;
+    margin-top: 1rem;
+    background-color: #6ab04c;
+    color: #fff;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.pricingTables .pricing .plan.popular {
+    border: 2px solid #6ab04c;
+    position: relative;
+    transform: scale(1.08);
+}
+
+.pricingTables .pricing .plan.popular span {
+    position: absolute;
+    top: -20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #6ab04c;
+    color: #fff;
+    padding: 4px 20px;
+    font-size: 18px;
+    border-radius: 5px;
+}
+
+.pricingTables .pricing .plan:hover {
+    box-shadow: 5px 7px 67px -28px rgba(0, 0, 0, 0.37);
+}
+
+@media screen and (min-width: 576px) {
+    .pricingTables .col-12 .headerTitle {
+        font-size: 1rem;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .pricingTables .col-12 .headerTitle {
+        font-size: 1rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .pricingTables .col-12 .headerTitle {
+        font-size: 4rem;
+        margin: 1rem 0;
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    .pricingTables .col-12 .headerTitle {
+        margin: 1.5rem 0;
+    }
+}

@@ -1,0 +1,47 @@
+.screenFlex {
+    display: flex;
+    height: fit-content;
+    align-items: center;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.screenFlex .jumbotron {
+    padding: 0;
+    width: 100%;
+    margin: 0 0.1rem;
+    margin-bottom: 0.1rem;
+    background-color: #c4cec4;
+}
+
+.screenFlex .jumbotron a {
+    color: black;
+    margin: 0 0.3rem;
+    font-size: 0.8rem;
+    line-height: 0.8rem;
+    word-break: break-all;
+    text-decoration: none;
+}
+
+@media screen and (min-width: 768px) {
+    .screenFlex .jumbotron {
+        margin: 0 0.2rem;
+        margin-bottom: 0.1rem;
+    }
+
+    .screenFlex .jumbotron a {
+        font-size: 1rem;
+        line-height: 1rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .screenFlex .jumbotron {
+        width: calc(100% - 0.3rem);
+    }
+
+    .screenFlex .jumbotron a {
+        font-size: 1.5rem;
+        line-height: 1.5rem;
+    }
+}

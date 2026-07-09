@@ -1,0 +1,88 @@
+.shortcuts {
+    bottom: 0;
+    z-index: 99;
+    right: 0.3rem;
+    position: fixed;
+    flex-direction: column;
+    justify-content: end;
+    align-items: center;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    display: flex;
+    height: 100%;
+}
+
+.shortcuts ::-webkit-scrollbar {
+    width: 0.1rem;
+}
+
+.shortcuts ::-webkit-scrollbar-track {
+    background: #ddd;
+}
+
+.shortcuts ::-webkit-scrollbar-thumb {
+    background: #666;
+}
+
+.shortcuts .shortcut-Container.cpanel {
+    width: 1.2rem;
+    height: 1.2rem;
+}
+
+.shortcuts .shortcut-Container.carders {
+    width: 1rem;
+    height: 1rem;
+}
+
+.shortcuts .shortcut-Container {
+    height: 2rem;
+    width: 2rem;
+    cursor: pointer;
+}
+
+.shortcuts .shortcut-Container .shortcut {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    vertical-align: top;
+    background-color: white;
+}
+
+.shortcuts .shortcut-Container .shortcut.quiz,
+.shortcuts .shortcut-Container .shortcut.tutors,
+.shortcuts .shortcut-Container .shortcut.cpanel,
+.shortcuts .shortcut-Container .shortcut.incoming,
+.shortcuts .shortcut-Container .shortcut.outgoing,
+.shortcuts .shortcut-Container .shortcut.tutorial,
+.shortcuts .shortcut-Container .shortcut.course {
+    background-color: transparent;
+}
+
+@media screen and (min-width: 992px) {
+    .shortcuts {
+        height: 2rem;
+        overflow-y: hidden;
+        flex-direction: row;
+        justify-content: center;
+    }
+
+    .shortcuts .shortcut-Container.carders {
+        width: 2rem;
+        height: 2rem;
+    }
+}
+
+.cShortContainer {
+    right: 0.1rem;
+}
+
+@media screen and (min-width: 992px) {
+    .cShortContainer {
+        height: 1rem;
+    }
+
+    .cShortContainer .shortcut-Container.cpanel {
+        width: 1rem;
+        height: 1rem;
+    }
+}

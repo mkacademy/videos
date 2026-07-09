@@ -1,0 +1,230 @@
+.modal {
+    border-right: #c4c4c4 solid 0.001rem;
+    border-left: #c4c4c4 solid 0.001rem;
+    margin: -0.002rem;
+}
+
+.modal .col-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 0.13rem;
+}
+
+/* .modal .preview-warning {
+    padding: 0;
+}
+
+.modal .preview-warning .alert {
+    padding: 0;
+    margin-bottom: 0.1rem;
+}
+
+.modal .preview-warning .alert .h4 {
+    cursor: pointer;
+    margin-bottom: 0;
+    font-size: 1.4rem;
+}
+
+.modal .preview-warning .alert-dismissible .close {
+    padding: 0;
+}
+
+@media screen and (min-width: 576px) {
+    .modal .preview-warning .alert .h4 {
+        text-align: center;
+    }
+} */
+
+.modal .card {
+    margin: 0;
+    border: 0;
+    cursor: pointer;
+    padding-left: 0.5rem;
+}
+
+.modal .card p {
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+    width: calc(100% - 1.2rem);
+}
+
+.modal .card .info-tab {
+    float: left;
+    top: 0.2rem;
+    width: 1rem;
+    height: 1rem;
+    display: block;
+    position: relative;
+    margin-left: -0.575rem;
+}
+
+.modal .card .info-tab i::before {
+    width: 0.6rem;
+    height: 0.6rem;
+    box-shadow: inset 0.3rem 0 0.325rem rgba(0, 0, 0, 0.5);
+}
+
+.modal .card .info-tab i::after {
+    width: 0;
+    height: 0;
+    border: 0.3rem solid transparent;
+    border-bottom-color: #fff;
+    border-left-color: #fff;
+    bottom: 0.45rem;
+}
+
+.modal .card .info-tab i::before,
+.modal .card .info-tab i::after {
+    content: "";
+    display: inline-block;
+    position: absolute;
+    left: 0;
+    bottom: -0.425rem;
+    transform: rotateX(60deg);
+}
+
+.modal .card .new-message-box-danger {
+    background: #ffccbc;
+    padding: 0.075rem;
+    margin: 0.25rem 0;
+}
+
+.modal .card .tip-icon-danger {
+    background: #f44336;
+}
+
+.modal .card .tip-icon-danger::before {
+    font-size: 0.625rem;
+    content: "\f00d";
+    top: 0.2rem;
+    left: 0.275rem;
+    font-family: FontAwesome;
+    position: absolute;
+    color: white;
+}
+
+.modal .card .tip-icon-danger i::before {
+    background: #f44336;
+}
+
+.modal .card .tip-box-danger {
+    display: flex;
+    padding: 0.1rem;
+    color: #b71c1c;
+    background: #ffccbc;
+}
+
+.modal .card .new-message-box-warning {
+    background: #fff9c4;
+    padding: 0.075rem;
+    margin: 0.25rem 0;
+}
+
+.modal .card .tip-icon-warning {
+    background: #fbc02d;
+}
+
+.modal .card .tip-icon-warning::before {
+    font-size: 0.625rem;
+    content: "\f00d";
+    top: 0.2rem;
+    left: 0.275rem;
+    font-family: FontAwesome;
+    position: absolute;
+    color: white;
+}
+
+.modal .card .tip-icon-warning i::before {
+    background: #fbc02d;
+}
+
+.modal .card .tip-box-warning {
+    display: flex;
+    padding: 0.1rem;
+    color: #856404;
+    background: #fff9c4;
+}
+
+.modal .card .notification-icon {
+    color: white;
+    top: -0.33rem;
+    left: 0.05rem;
+    position: relative;
+    font-size: 0.9rem;
+}
+
+.modal .card .widget.contraints {
+    width: fit-content;
+    height: 3.5rem;
+    margin: 0;
+}
+
+.modal .card .widget.contraints .dimensions {
+    width: 1rem;
+    height: 1rem;
+    display: block;
+    margin: 0.1rem 0;
+}
+
+.modal .card .dismissBtn {
+    top: 0;
+    right: 0;
+    z-index: 2;
+    padding: 0;
+    color: #000;
+    float: right;
+    color: inherit;
+    line-height: 1;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1.5rem;
+    position: absolute;
+}
+
+@media screen and (min-width: 992px) {
+    .modal .card {
+        padding-left: 1.111rem;
+    }
+
+    .modal .card .widget.contraints .dimensions {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    .modal .card p {
+        font-size: 1.15rem;
+        margin-bottom: 1.3rem;
+    }
+
+    .modal .card .info-tab {
+        top: 0.444rem;
+        width: 2.222rem;
+        height: 2.222rem;
+        margin-left: -1.278rem;
+    }
+
+    .modal .card .info-tab i::before {
+        width: 1.333rem;
+        height: 1.333rem;
+        box-shadow: inset 0.667rem 0 0.722rem rgba(0, 0, 0, 0.5);
+    }
+
+    .modal .card .info-tab i::after {
+        width: 0;
+        height: 0;
+        bottom: -1rem;
+        border-width: 0.667rem;
+    }
+
+    .modal .card .info-tab i::before,
+    .modal .card .info-tab i::after {
+        left: 0;
+        bottom: -0.944rem;
+    }
+
+    .modal .card .notification-icon {
+        top: 0.1rem;
+        left: 0.1rem;
+        font-size: 2rem;
+    }
+}

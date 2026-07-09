@@ -1,0 +1,184 @@
+.carouselCSS {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.carouselCSS .carousel-indicators {
+    position: absolute;
+    bottom: -1.5rem;
+}
+
+.carouselCSS .col-parent {
+    margin: 0.2rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.carouselCSS .carousel-item a:nth-of-type(n + 2),
+.carouselCSS .carousel-item .gutter {
+    display: none;
+}
+
+.carouselCSS .col-parent a {
+    flex-grow: 1;
+    text-decoration: none;
+}
+
+.carouselCSS .col-parent a:link,
+.carouselCSS .col-parent a:hover,
+.carouselCSS .col-parent a:active,
+.carouselCSS .col-parent a:visited {
+    text-decoration: none;
+}
+
+.carouselCSS .col-parent a .title {
+    color: black;
+    font-size: 2rem;
+    text-align: center;
+    line-height: 2.05rem;
+}
+
+@media screen and (min-width: 576px) {
+    .carouselCSS .carousel-indicators {
+        padding-left: 0;
+    }
+
+    .carouselCSS .carousel-item a:nth-of-type(2) {
+        display: inline-block;
+    }
+
+    .carouselCSS .carousel-item .gutter {
+        width: 0.25rem;
+        display: block;
+    }
+
+    .carouselCSS .col-parent a .title {
+        font-size: 1rem;
+        line-height: 1rem;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .carouselCSS .carousel-item a:nth-of-type(3) {
+        display: inline-block;
+    }
+
+    .carouselCSS .carousel-item .gutter {
+        width: 0.3rem;
+    }
+
+    .carouselCSS .col-parent a .title {
+        font-size: 1.4rem;
+        line-height: 1.4rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .carouselCSS .carousel-item a:nth-of-type(4) {
+        display: inline-block;
+    }
+
+    .carouselCSS .carousel-item .gutter {
+        width: 0.556rem;
+    }
+
+    .carouselCSS .carousel-indicators {
+        bottom: -1.8rem;
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    .carouselCSS .col-parent {
+        margin: 0.2rem 0.2rem;
+    }
+
+    .carouselCSS .carousel-item .col-parent a:nth-of-type(n + 5) {
+        display: inline-block;
+    }
+}
+
+.IMGcontainer {
+    width: 10.933rem;
+}
+
+.IMGcontainer .verticalFlex {
+    height: fit-content;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.IMGcontainer .verticalFlex img {
+    width: 100%;
+    height: 10.933rem;
+}
+
+@media screen and (min-width: 576px) {
+    .IMGcontainer {
+        width: 6.305rem;
+    }
+
+    .IMGcontainer .verticalFlex img {
+        height: 6.305rem;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .IMGcontainer {
+        width: 6.406rem;
+    }
+
+    .IMGcontainer .verticalFlex img {
+        height: 6.406rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .IMGcontainer {
+        width: 13.378rem;
+    }
+
+    .IMGcontainer .verticalFlex {
+        margin-bottom: 0.4rem;
+    }
+
+    .IMGcontainer .verticalFlex img {
+        height: 13.378rem;
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    .IMGcontainer {
+        width: 12.778rem;
+    }
+
+    .IMGcontainer .verticalFlex {
+        margin-bottom: 0;
+    }
+
+    .IMGcontainer .verticalFlex img {
+        height: 12.778rem;
+    }
+}
+
+@media screen and (min-width: 1536px) {
+    .IMGcontainer {
+        width: 13.611rem;
+    }
+
+    .IMGcontainer .verticalFlex img {
+        height: 13.611rem;
+    }
+}
+
+@media screen and (min-width: 1920px) {
+    .IMGcontainer {
+        width: 14.771rem;
+    }
+
+    .IMGcontainer .verticalFlex img {
+        height: 14.771rem;
+    }
+}

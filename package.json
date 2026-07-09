@@ -1,0 +1,50 @@
+{
+  "name": "mkacademy-videos",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "parcel index.html --port 3000",
+    "build": "npx tsc --noEmit && parcel build index.html && mkdir -p dist/public/ffmpeg && cp -R public/ffmpeg/. dist/public/ffmpeg/",
+    "build:verbose": "npx tsc --noEmit --listFiles && parcel build index.html",
+    "lint": "eslint .",
+    "preview": "npm run build && npx serve dist -p 3003 -s",
+    "serve": "npm run build && npx http-server dist -p 3004 -o --fallback /index.html",
+    "clear-cache": "rm -rf .parcel-cache dist",
+    "fresh-build": "npm run clear-cache && npm run build",
+    "sync-ffmpeg-assets": "mkdir -p public/ffmpeg && cp node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js node_modules/@ffmpeg/ffmpeg/dist/esm/const.js node_modules/@ffmpeg/ffmpeg/dist/esm/errors.js public/ffmpeg/ && curl -L -o public/ffmpeg/ffmpeg-core.js https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js && curl -L -o public/ffmpeg/ffmpeg-core.wasm https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm"
+  },
+  "dependencies": {
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.2",
+    "@reduxjs/toolkit": "^2.7.0",
+    "bootstrap": "^5.3.5",
+    "browser-image-compression": "^2.0.2",
+    "buffer": "^6.0.3",
+    "jwt-decode": "^4.0.0",
+    "react": "^19.0.0",
+    "react-bootstrap": "^2.10.9",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.56.1",
+    "react-icons": "^5.5.0",
+    "react-redux": "^9.2.0",
+    "react-responsive": "^10.0.1",
+    "react-router": "^7.8.2",
+    "react-router-dom": "^6.30.1",
+    "redux-thunk": "^3.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/node": "^22.14.1",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "eslint": "^9.22.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.0.0",
+    "parcel": "^2.15.4",
+    "postcss-preset-env": "^10.2.4",
+    "serve": "^14.2.5",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.26.1"
+  }
+}

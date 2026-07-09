@@ -1,0 +1,312 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.playerContainer {
+  max-width: none;
+}
+
+.title {
+  font-family: 'Bai Jamjuree', sans-serif;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+}
+
+.subtitle {
+  color: #6c757d;
+  margin-bottom: 1.5rem;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.headerRow .subtitle {
+  margin-bottom: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tabNav {
+  margin-bottom: 1.25rem;
+}
+
+.tabLink {
+  cursor: pointer;
+}
+
+.filterBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.playerCard,
+.playlistCard {
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.playerCard {
+  padding: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.playlistCard {
+  padding: 0.75rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.videoBounds {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.videoStack {
+  position: relative;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #000;
+  overflow: hidden;
+}
+
+.seekWarningBanner {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: rgba(255, 193, 7, 0.95);
+  color: #332701;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: #000;
+  display: block;
+  object-fit: contain;
+}
+
+.videoActive {
+  z-index: 1;
+}
+
+.videoHidden {
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.metaRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.progressText {
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.playlistHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem 0.75rem;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.playlistHeaderRow .playlistHeader {
+  padding: 0;
+  border-bottom: none;
+}
+
+.playlistHeader {
+  font-weight: 600;
+  padding: 0.5rem 0.75rem 0.75rem;
+  border-bottom: 1px solid #edf0f2;
+}
+
+.playlist {
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.75rem;
+}
+
+.chunkItem {
+  flex: 0 0 auto;
+  width: 140px;
+  text-align: left;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: #f8f9fa;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.chunkItem:hover {
+  background: #eef5ff;
+  border-color: #cfe2ff;
+}
+
+.chunkItemActive {
+  background: #e7f1ff;
+  border-color: #9ec5fe;
+}
+
+.chunkItemPlayed {
+  opacity: 0.55;
+}
+
+.chunkThumbnail {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+  background: #000;
+}
+
+.chunkThumbnailPlaceholder {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
+  background: #dee2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 1.25rem;
+}
+
+.chunkMeta {
+  margin-top: 0.5rem;
+}
+
+.chunkTitle {
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.chunkTime {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.15rem;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6c757d;
+}
+
+.libraryList {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.libraryItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.libraryPlayExited {
+  opacity: 0.65;
+}
+
+.libraryItemActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.changeMediaLink {
+  padding: 0;
+  text-decoration: none;
+}
+
+.audioPlayerCard {
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.audioChunkItem {
+  width: 120px;
+}
+
+.audioChunkBar {
+  width: 100%;
+  height: 48px;
+  border-radius: 6px;
+  background: #f1f3f5;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  padding: 0.5rem;
+}
+
+.audioChunkBar span {
+  display: block;
+  width: 6px;
+  border-radius: 999px;
+  background: #212529;
+}

@@ -1,0 +1,200 @@
+/* Google Fonts are now imported in HTML head */
+
+.row.mock-unrender {
+  display: none;
+}
+
+.row.rendered {
+  margin-bottom: 0.1rem;
+}
+
+.padded-bottom {
+  width: 100%;
+  display: inline-block;
+}
+
+div.append_content_top_noBorders,
+div.append_content_bottom_noBorders {
+  border: 0;
+}
+
+.append_content_top {
+  border-top: #c4c4c4 solid 0.001rem;
+}
+
+.append_content_bottom {
+  border-bottom: #c4c4c4 solid 0.001rem;
+}
+
+.hasBorders {
+  border-top: #c4c4c4 solid 0.001rem;
+  border-bottom: #c4c4c4 solid 0.001rem;
+}
+
+.showBorders {
+  border: #c4c4c4 solid 0.001rem;
+}
+
+.app-html {
+  margin: 0;
+  padding: 0;
+  font-size: 28px;
+  border-width: 0;
+  border-radius: 0;
+  scroll-behavior: smooth;
+}
+
+.app-html #root .container {
+  padding: 0;
+  margin: auto;
+  margin-top: 0.5rem;
+}
+
+.container .row {
+  margin-left: 0.1rem;
+  margin-right: 0.1rem;
+}
+
+.row .col {
+  padding: 0;
+}
+
+.modal-dialog.modal-90w {
+  width: 90%;
+  max-width: none;
+}
+
+.modal-dialog.modal-90w .close {
+  padding: 0;
+}
+
+.modal-open {
+  padding-right: 0px !important;
+}
+
+.modal-dialog.modal-90w .modal-title.h4 {
+  width: 12rem;
+  overflow: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* Internet Explorer 10+ */
+}
+
+.modal-dialog.modal-90w .modal-title.h4::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+body .bs-popover-bottom {
+  max-width: fit-content;
+}
+
+.modal-content .modal-body,
+.modal-content .modal-body .container {
+  padding: 0;
+}
+
+@media (max-width: 375px) {
+  .app-html {
+    width: 100%;
+    font-size: 33px;
+  }
+
+  .app-html #root .container {
+    max-width: 375px;
+  }
+}
+
+@media (max-width: 425px) {
+  .app-html {
+    width: 100%;
+    font-size: 37.5px;
+  }
+
+  .app-html #root .container {
+    max-width: 425px;
+  }
+}
+
+@media (max-width: 576px) {
+  .app-html {
+    width: 100%;
+    font-size: 40px;
+  }
+
+  .app-html #root .container {
+    max-width: 540px;
+  }
+
+  .modal-body .container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-html {
+    font-size: 37.5px;
+  }
+
+  .app-html #root .container {
+    max-width: 750px;
+  }
+
+  .container .row {
+    margin-left: 0.2rem;
+    margin-right: 0.2rem;
+  }
+
+  .modal-body .container {
+    max-width: 100%;
+  }
+
+  .modal-dialog.modal-90w .modal-title.h4 {
+    width: 18rem;
+  }
+}
+
+@media (min-width: 992px) {
+  .app-html {
+    font-size: 18px;
+  }
+
+  .app-html #root .container {
+    max-width: 975px;
+    margin-top: 1rem;
+  }
+
+  .modal-body .container {
+    max-width: 100%;
+  }
+
+  .modal-dialog.modal-90w .modal-title.h4 {
+    width: calc(100% - 0.5rem);
+  }
+}
+
+@media (min-width: 1200px) {
+  .modal-body .container {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1440px) {
+  .app-html #root .container {
+    max-width: 1422px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .app-html #root .container {
+    max-width: 1512px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .app-html #root .container {
+    max-width: 1900px;
+  }
+}

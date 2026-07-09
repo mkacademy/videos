@@ -1,0 +1,141 @@
+.instruction .longParagraph {
+    width: 100%;
+    border-radius: 0.3rem;
+    min-height: 5rem;
+    margin-bottom: 0.5rem !important;
+    background-color: #a7ecee;
+}
+
+.instruction .longParagraph .Links {
+    margin: 0;
+    width: 6.7rem;
+    font-size: 0.8rem;
+    display: inline-block;
+}
+
+.instruction .longParagraph .widget.inlinecontraints {
+    width: 4rem;
+    height: 1rem;
+}
+
+.instruction .longParagraph .widget.inlinecontraints .dimensions {
+    width: 32%;
+    height: 1rem;
+}
+
+.instruction .longParagraph .stepContent {
+    color: #2a2f4f;
+}
+
+.instruction .longParagraph .widgets {
+    background-color: #e7e7e7;
+}
+
+.instruction .longParagraph .widgets .dimensions {
+    background-color: #e7e7e7;
+}
+
+.instruction .longParagraph.checked {
+    background-color: #a7ecae;
+}
+
+.instruction .longParagraph .Instructionimg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.instruction .longParagraph .Instructionimg[src*="/src/Images/"] {
+    display: none;
+}
+
+.instruction .longParagraph .stepName {
+    word-wrap: break-word;
+    white-space: unset;
+    width: 95%;
+}
+
+@media screen and (min-width: 576px) {
+    .instruction .longParagraph .Links {
+        width: 7rem;
+    }
+
+    .instruction .longParagraph .widget.inlinecontraints {
+        width: 6rem;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .instruction {
+        height: 20rem;
+        display: block;
+        overflow-y: scroll;
+        scrollbar-width: none;
+        /* Firefox */
+        -ms-overflow-style: none;
+        /* Internet Explorer 10+ */
+    }
+
+    .instruction ::-webkit-scrollbar {
+        /* WebKit */
+        width: 0;
+        height: 0;
+    }
+
+    .instruction .longParagraph {
+        min-height: 8rem;
+    }
+
+    .instruction .longParagraph .widgets {
+        display: inline-flex;
+    }
+
+    .instruction .longParagraph .widget.inlinecontraints {
+        width: 12rem;
+    }
+
+    .instruction .longParagraph .stepName,
+    .instruction .longParagraph .stepNumber {
+        vertical-align: bottom;
+        font-size: 1rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .instruction {
+        height: 40rem;
+    }
+
+    .instruction .longParagraph {
+        min-height: 10rem;
+    }
+
+    .instruction .longParagraph .widgets {
+        width: 11rem;
+        margin-top: 0.1rem;
+        margin-left: 0.5rem;
+    }
+
+    .instruction .longParagraph .stepNumber,
+    .instruction .longParagraph .stepName {
+        font-size: 1rem;
+        width: fit-content;
+        vertical-align: top;
+    }
+
+    .instruction .longParagraph .stepContent {
+        font-size: 1.2rem;
+        line-height: 1.3rem;
+        word-break: break-word;
+    }
+
+    .instruction .longParagraph .stepName {
+        white-space: nowrap;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .instruction {
+        height: 50rem;
+    }
+}

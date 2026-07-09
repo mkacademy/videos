@@ -1,0 +1,47 @@
+.settingscontainer {
+    .row {
+        margin-top: 0.5rem;
+        justify-content: center;
+    }
+
+    .col-sm-12 {
+        padding: 0;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .text-muted {
+        color: #6c757d !important;
+    }
+    .form-text {
+        display: block;
+        margin-top: .25rem;
+    }
+
+    .btn-info {
+        background-color: #17a2b8;
+        border-color: #17a2b8;
+        color: #fff;
+    }
+
+    @media screen and (min-width: 1440px) {
+        .row {
+            justify-content: center;
+        }
+
+        .settings-col1.col-lg-6{
+            flex: 0 0 33.3333%;
+            max-width: 33.333%;
+        }
+    }
+
+    @media screen and (min-width: 1920px) {
+
+        .settings-col1.col-lg-6 {
+            flex: 0 0 25%;
+            max-width: 25%;
+        }
+    }
+}

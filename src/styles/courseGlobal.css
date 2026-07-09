@@ -1,0 +1,40 @@
+/* Montserrat font imported in HTML head */
+
+.course-body {
+  font-family: "Open Sans", Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  color: #666666;
+  scroll-behavior: auto;
+  background-color: #f4f4f4;
+}
+
+@media (min-width: 375px) {
+  .course-html {
+    width: 100%;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 576px) {
+  .course-html {
+    width: 100%;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 425px) {
+  .course-html {
+    width: 100%;
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 768px) {
+  .course-html {
+    width: 100%;
+    font-size: 18px;
+  }
+  .contact-form {
+    padding: 30px 25px;
+  }
+}

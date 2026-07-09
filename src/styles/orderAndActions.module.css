@@ -1,0 +1,99 @@
+.tablesCSS {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.tablesCSS > div {
+    height: 100%;
+}
+
+.tablesCSS div:last-of-type td:first-of-type,
+.tablesCSS div:last-of-type th:first-of-type {
+    display: none;
+}
+
+.tablesCSS table.Orders {
+    border-right: none;
+}
+
+@media screen and (min-width: 768px) {
+    .FlexTablePlusActions {
+        max-width: 20.073rem;
+    }
+
+    .notFlexTablePlusActions {
+        max-width: 41.1%;
+    }
+
+    .notFlexTablePlusActions table td:first-of-type,
+    .notFlexTablePlusActions table th:first-of-type {
+        display: none;
+    }
+
+    .notFlexTablePlusActions > div:first-of-type {
+        width: 43.9%;
+    }
+
+    .notFlexTablePlusActions > div:last-of-type {
+        width: 56.1%;
+    }
+
+    .notFlexTablePlusActions .Cruds .actions,
+    .notFlexTablePlusActions .Options .actions {
+        width: 4.627rem;
+    }
+
+    .notFlexTablePlusActions table .Cruds th,
+    .notFlexTablePlusActions table .Cruds td,
+    .notFlexTablePlusActions table .Options th,
+    .notFlexTablePlusActions table .Options td {
+        padding: 0.36rem 0;
+        padding-left: 0.1rem;
+    }
+
+    .notFlexTablePlusActions .Cruds .actions a:nth-of-type(2),
+    .notFlexTablePlusActions .Options .actions a:nth-of-type(2) {
+        margin: 0 0.05rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .tablesCSS table td:first-of-type,
+    .tablesCSS table th:first-of-type {
+        display: none;
+    }
+
+    .FlexTablePlusActions {
+        max-width: 12.608rem;
+    }
+
+    .notFlexTablePlusActions {
+        max-width: 11rem;
+    }
+
+    .notFlexTablePlusActions .Options .actions,
+    .notFlexTablePlusActions .Cruds .actions {
+        width: 6rem;
+    }
+
+    .notFlexTablePlusActions table .Cruds th,
+    .notFlexTablePlusActions table .Cruds td,
+    .notFlexTablePlusActions table .Options th,
+    .notFlexTablePlusActions table .Options td {
+        padding-left: 0.3rem;
+    }
+
+    .notFlexTablePlusActions table .Cruds .actions a:nth-of-type(2),
+    .notFlexTablePlusActions table .Options .actions a:nth-of-type(2) {
+        margin: 0 0.8rem;
+    }
+
+    .notFlexTablePlusActions > div:first-of-type {
+        width: 4.5rem;
+    }
+
+    .notFlexTablePlusActions > div:last-of-type {
+        width: 6.5rem;
+    }
+}

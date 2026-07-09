@@ -1,0 +1,58 @@
+.searchBox a.flex-item {
+    width: 100%;
+}
+
+.searchBox .btn-outline-light .btnFlex {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+@media screen and (min-width: 576px) {
+    .searchBox .btn-outline-light {
+        padding: 0.375rem 0.4rem;
+    }
+
+    .searchBox .form-control {
+        display: inline-block;
+        vertical-align: middle;
+        /* width: 12.495rem; */
+        width: 100%;
+    }
+
+    .searchBox .mr-sm-2 {
+        margin-right: 0 !important;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .searchBox .mr-sm-2 {
+        margin-right: 0.25rem !important;
+    }
+
+    .searchBox .fillSpace.form-control {
+        width: 14rem;
+    }
+
+    .searchBox .form-control {
+        width: 8.8rem;
+        height: 2.5rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .searchBox .form-control {
+        width: 9rem;
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    .searchBox .form-control {
+        width: 25rem;
+    }
+
+    .searchBox a.flex-item {
+        width: fit-content;
+    }
+}

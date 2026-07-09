@@ -1,0 +1,298 @@
+.HorizantolFlex {
+    display: flex;
+    flex-direction: row;
+    -webkit-box-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    align-items: center;
+}
+
+.HorizantolFlexCounts {
+    display: flex;
+    flex-direction: row;
+    -webkit-box-pack: end;
+    justify-content: flex-end;
+    -webkit-box-align: center;
+    align-items: center;
+}
+
+.descendentCSS {
+    width: 6.333rem;
+}
+
+.descendentCSS td:first-of-type,
+.descendentCSS th:first-of-type {
+    display: none;
+}
+
+@media screen and (min-width: 768px) {
+    .tablesCSSResponsive > div:first-of-type {
+        width: 56.3%;
+    }
+
+    .tablesCSSResponsive > div:last-of-type {
+        width: 43.7%;
+    }
+}
+
+.tablesCSS {
+    margin: 0;
+    padding: 0;
+    max-width: 100%;
+}
+
+.tablesCSS > div {
+    height: 100%;
+}
+
+.tablesCSS > div:first-of-type {
+    width: 55.6%;
+}
+
+.tablesCSS > div:last-of-type {
+    width: 44.4%;
+}
+
+.tablesCSS > div:last-of-type td:first-of-type,
+.tablesCSS > div:last-of-type th:first-of-type {
+    display: none;
+}
+
+.tablesCSS > div:first-of-type table.Descendants {
+    border-right: none;
+}
+
+@media screen and (min-width: 576px) {
+    .tablesCSS .Descendants th:first-of-type,
+    .tablesCSS .Descendants td:first-of-type {
+        width: 2rem;
+    }
+
+    .tablesCSS > div:first-of-type {
+        width: 55.4%;
+    }
+
+    .tablesCSS > div:last-of-type {
+        width: 44.6%;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .tablesCSS {
+        max-width: 58.9%;
+    }
+
+    .tablesCSS .Descendants th:first-of-type,
+    .tablesCSS .Descendants td:first-of-type {
+        width: 1.2rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .tablesCSS table.Descendants {
+        border-right: none;
+    }
+
+    .tablesCSS > div:last-of-type table.Descendants.noOutlier {
+        border-right: 1px Solid #dee2e6;
+    }
+}
+
+.tablesCSS .Descendants,
+.descendentCSS .Descendants {
+    table-layout: fixed;
+    height: 100%;
+    margin: 0;
+}
+
+.tablesCSS .Descendants thead,
+.descendentCSS .Descendants thead {
+    height: 1rem;
+}
+
+.tablesCSS .Descendants tbody,
+.descendentCSS .Descendants tbody {
+    height: calc(100% - 1rem);
+}
+
+.tablesCSS .Descendants td,
+.tablesCSS .Descendants th,
+.descendentCSS .Descendants td,
+.descendentCSS .Descendants th {
+    border-right: none;
+    padding: 0.36rem 0.3rem;
+}
+
+.tablesCSS .Descendants th,
+.descendentCSS .Descendants th {
+    text-align: center;
+    overflow-x: hidden;
+}
+
+.tablesCSS .Descendants th div,
+.descendentCSS .Descendants th div {
+    overflow-x: hidden;
+}
+
+.tablesCSS .Descendants .counts a.urlLink,
+.descendentCSS .Descendants .counts a.urlLink {
+    margin-right: 0.1rem;
+    font-size: 1.2rem;
+    line-height: 1.2rem;
+    text-decoration: underline;
+}
+
+.tablesCSS .Descendants .counts a:hover,
+.descendentCSS .Descendants .counts a:hover {
+    text-decoration: none;
+}
+
+.tablesCSS .Descendants .counts :not(a.urlLink),
+.descendentCSS .Descendants .counts :not(a.urlLink) {
+    width: 1.2rem;
+    height: 1.2rem;
+    display: block;
+    margin-top: 0.05rem;
+    text-align: center;
+}
+
+.tablesCSS .Descendants .counts.padded,
+.descendentCSS .Descendants .counts.padded {
+    padding: 0.03rem 0;
+}
+
+.tablesCSS .Descendants td.datas.padder .counts a,
+.descendentCSS .Descendants td.datas.padder .counts a {
+    color: transparent;
+    cursor: auto;
+}
+
+.tablesCSS .Descendants th.datas.iconThumb,
+.descendentCSS .Descendants th.datas.iconThumb {
+    padding: 0;
+}
+
+.tablesCSS .Descendants th.datas.iconThumb img,
+.descendentCSS .Descendants th.datas.iconThumb img {
+    width: 2.187rem;
+}
+
+@media screen and (min-width: 768px) {
+    .tablesCSS .Descendants th.datas,
+    .tablesCSS .Descendants td.datas,
+    .descendentCSS .Descendants th.datas,
+    .descendentCSS .Descendants td.datas {
+        width: 4rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .tablesCSS .Descendants .counts.padded,
+    .descendentCSS .Descendants .counts.padded {
+        padding: 0.043rem 0;
+    }
+}
+
+.tablesCSS .Descendants th:first-of-type,
+.tablesCSS .Descendants td:first-of-type,
+.descendentCSS .Descendants th:first-of-type,
+.descendentCSS .Descendants td:first-of-type {
+    padding: 0;
+    width: 1.2rem;
+}
+
+@media screen and (min-width: 768px) {
+    .TutorialsInstructions {
+        max-width: 45.3%;
+    }
+
+    .TutorialsInstructions > div:first-of-type,
+    .TutorialsInstructions > div:last-of-type {
+        width: 50%;
+    }
+
+    .TutorialsInstructions > div:last-of-type table.Descendants {
+        border-right: 1px Solid #dee2e6;
+    }
+
+    .notTutorialsInstructions > div:last-of-type table.Descendants {
+        border-right: none;
+    }
+
+    .ProgramsCourses {
+        max-width: 54.7%;
+    }
+
+    .ProgramsCourses > div:first-of-type {
+        width: 55.2%;
+    }
+
+    .ProgramsCourses > div:last-of-type {
+        width: 44.8%;
+    }
+
+    .SnapshotsNotes.repeated {
+        max-width: 45.3%;
+    }
+
+    .SnapshotsNotes.repeated .repeated > div:first-of-type,
+    .SnapshotsNotes.repeated > div:last-of-type {
+        width: 50%;
+    }
+
+    .SnapshotsNotes.repeated .Descendants th:not(first-of-type),
+    .SnapshotsNotes.repeated .Descendants td:not(first-of-type) {
+        padding: 0.47rem 0.1rem;
+    }
+
+    .SnapshotsNotes.repeated > div:last-of-type table.Descendants {
+        border-right: 1px Solid #dee2e6;
+    }
+
+    .Qaurtet .Descendants th:not(first-of-type),
+    .Qaurtet .Descendants td:not(first-of-type) {
+        padding: 0.47rem 0.1rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .tablesCSS {
+        max-width: 13.0178rem;
+    }
+
+    .tablesCSS > div:first-of-type,
+    .tablesCSS > div:last-of-type {
+        width: 7.0089rem;
+    }
+
+    .TutorialsInstructions > div:last-of-type table.Descendants {
+        border-right: none;
+    }
+
+    .Qaurtet .Descendants td:not(first-of-type) {
+        padding: 0.36rem 0.3rem;
+    }
+}
+
+.inCarousel {
+    margin: 0;
+    padding: 0;
+}
+
+.inCarousel :global(.carousel-item.active) {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.inCarousel :global(.carousel-inner),
+.inCarousel :global(.carousel-item) {
+    height: 100%;
+}
+
+.inCarousel :global(.tablesz) {
+    margin: 0;
+    display: flex;
+    flex: 0 0 100%;
+    max-width: 100%;
+    flex-wrap: wrap;
+}

@@ -1,0 +1,48 @@
+/* Source Sans Pro font imported in HTML head */
+
+.pricing-html {
+    margin: 0;
+    padding: 0;
+    font-size: 28px;
+    border-width: 0;
+    border-radius: 0;
+    scroll-behavior: smooth;
+}
+
+
+.pricing-body {
+    background-color: #dff9fb;
+}
+
+@media (max-width: 375px) {
+    .pricing-html {
+        width: 100%;
+        font-size: 33px;
+    }
+}
+
+@media (max-width: 425px) {
+    .pricing-html {
+        width: 100%;
+        font-size: 37.5px;
+    }
+}
+
+@media (max-width: 576px) {
+    .pricing-html {
+        width: 100%;
+        font-size: 40px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pricing-html {
+        font-size: 37.5px;
+    }
+}
+
+@media (min-width: 992px) {
+    .pricing-html {
+        font-size: 18px;
+    }
+} 

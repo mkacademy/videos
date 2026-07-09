@@ -1,0 +1,371 @@
+/* Comments section – ported from templatemo-stand-blog, scoped for reuse */
+
+.root {
+  --border-color: lightgrey;
+  --border-color-parent-editing: #f48840;
+  margin-top: 30px;
+}
+
+.sidebarItem {
+  margin-top: 50px;
+}
+
+.content {
+  display: block;
+}
+
+.formErrorMessage {
+  color: #7a7a7a;
+  font-size: 14px;
+  padding: 0.5rem 0;
+}
+
+.submitComment .formErrorMessage {
+  margin-bottom: 30px;
+}
+
+.submitComment input.inputHasError,
+.submitComment textarea.inputHasError {
+  margin-bottom: 0;
+}
+
+.sidebarHeading {
+  cursor: pointer;
+}
+
+.sidebarHeading h2 {
+  font-size: 18px;
+  text-transform: uppercase;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #20232e;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 15px;
+  margin-bottom: 25px;
+  text-align: center;
+}
+
+.commentsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.commentItem {
+  display: inline-block;
+  margin-bottom: 20px;
+  padding: 0 1rem 20px 1rem;
+  border-left: 1px solid var(--border-color);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Reply: vertical line + indent from --depth (set inline; works for any depth) */
+.commentItem.replied {
+  border-left: 2px solid var(--border-color);
+  padding-left: 1rem;
+  margin-left: calc(var(--depth, 0) * 2rem);
+}
+
+/* Parent of the comment currently being edited */
+.commentItem.parentOfEditing {
+  border-left-color: var(--border-color-parent-editing);
+  border-right-color: var(--border-color-parent-editing);
+  border-bottom-color: var(--border-color-parent-editing);
+}
+
+/* Collapsed "deeper replies" block (cap at depth 7) */
+.collapsedBlock {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.collapsedTrigger {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.collapseButton {
+  background: none;
+  border: none;
+  color: #20232e;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  text-align: left;
+}
+
+.collapseButton:hover {
+  text-decoration: underline;
+}
+
+.commentItem:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Clickable comment row: hover + focus for reply */
+.commentRow {
+  cursor: pointer;
+  outline: none;
+}
+
+.commentRow:hover {
+  background-color: rgba(0, 0, 0, 0.03);
+}
+
+.commentRow:focus-visible {
+  box-shadow: 0 0 0 2px var(--border-color);
+}
+
+.commentItemActive .commentRow {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+/* Inline reply box under the comment */
+.replyBox {
+  margin-top: 1rem;
+  margin-left: 130px;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.replySavingMessage {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary, #666);
+}
+
+.replyTextarea {
+  width: 100%;
+  min-height: 4rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 14px;
+  resize: vertical;
+  margin-bottom: 0.75rem;
+}
+
+.replyTextarea:focus {
+  outline: none;
+  border-color: #20232e;
+}
+
+.replyActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.saveButton {
+  margin-left: auto;
+}
+
+.replyCancelButton {
+  background: none;
+  border: 1px solid var(--border-color);
+  color: #20232e;
+  font-size: 13px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.replyCancelButton:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.authorThumb {
+  display: inline;
+  float: left;
+}
+
+.authorThumb img {
+  max-width: 100px;
+  display: inline;
+}
+
+.rightContent {
+  margin-left: 130px;
+  position: relative;
+  padding-right: 3.5rem;
+}
+
+.rightContent h4 {
+  color: #20232e;
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  margin: 0 0 0.5em 0;
+}
+
+/* Author name in italics when it can collapse/hide deeper replies */
+.authorNameCollapsible {
+  font-style: italic;
+}
+
+.rightContent h4 .date {
+  font-size: 14px;
+  color: #aaa;
+  font-weight: 400;
+  letter-spacing: 0.25px;
+  margin-left: 20px;
+}
+
+.rightContent p {
+  margin: 0;
+}
+
+/* Comment body: wrap long tokens; truncation length is applied in CommentRow.tsx */
+.commentBody {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.messageIconButton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.messageIconImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* Submit comment form */
+
+.submitComment {
+  margin-top: 60px;
+}
+
+.submitComment input,
+.submitComment textarea {
+  width: 100%;
+  height: 46px;
+  border: 1px solid var(--border-color);
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: #7a7a7a;
+  outline: none;
+  padding: 0 15px;
+  margin-bottom: 30px;
+}
+
+.submitComment textarea {
+  height: 180px;
+  max-height: 220px;
+  min-width: 160px;
+  padding: 10px 15px;
+}
+
+.submitComment input::placeholder,
+.submitComment textarea::placeholder {
+  color: #aaa;
+}
+
+.submitComment button {
+  display: inline-block;
+  background-color: #f48840;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 20px;
+  text-transform: uppercase;
+  transition: all 0.3s;
+  border: none;
+  outline: none;
+}
+
+.mainButton {
+  display: inline-block;
+  background-color: #f48840;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 20px;
+  text-transform: uppercase;
+  transition: all 0.3s;
+  border: none;
+  outline: none;
+}
+
+.mainButton:hover {
+  background-color: #fb9857;
+}
+
+.pasteButton {
+  display: inline-block;
+  background-color: #2563eb;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 20px;
+  text-transform: uppercase;
+  transition: all 0.3s;
+  border: none;
+  outline: none;
+  cursor: pointer;
+}
+
+.pasteButton:hover {
+  background-color: #1d4ed8;
+}
+
+/* Beat .submitComment button (higher specificity) so paste stays blue inside submit block */
+.submitComment .pasteButton {
+  background-color: #2563eb;
+  color: #fff;
+}
+
+.submitComment .pasteButton:hover {
+  background-color: #1d4ed8;
+}
+
+.commentFormSubmitRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.copyIconHost {
+  position: relative;
+}
+
+.copyIconButton {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.copyIconImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}

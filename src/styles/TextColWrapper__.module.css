@@ -1,0 +1,39 @@
+@media screen and (min-width: 992px) {
+    .noOutlier {
+        max-width: 20.694rem;
+     }
+ 
+     .hasOutlier {
+        max-width: 14.4rem;
+     }
+ }
+ 
+ @media screen and (min-width: 1440px) {
+     .noOutlier {
+        max-width: 32.549rem;
+     }
+ 
+     .hasOutlier {
+        max-width: 26.216rem;
+     }
+ }
+ 
+ @media screen and (min-width: 1536px) {
+     .noOutlier {
+        max-width: 37.5322rem;
+     }
+ 
+     .hasOutlier {
+        max-width: 18.2rem;
+     }
+ }
+ 
+ @media screen and (min-width: 1920px) {
+     .noOutlier {
+        max-width: 59.013rem;
+     }
+ 
+     .hasOutlier {
+        max-width: 26.7rem;
+     }
+ }

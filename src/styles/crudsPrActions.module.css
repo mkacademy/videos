@@ -1,0 +1,62 @@
+.Cruds {
+    table-layout: fixed;
+    height: 100%;
+    margin: 0;
+}
+
+.Cruds thead {
+    height: 1rem;
+}
+
+.Cruds tbody {
+    height: calc(100% - 1rem);
+}
+
+.Cruds th,
+.Cruds td {
+    padding: 0.36rem 0.3rem;
+}
+
+.Cruds .actions {
+    width: 4.909rem;
+}
+
+.Cruds .actions a,
+.Cruds .actions div {
+    width: 1.5167rem;
+    height: 1.5167rem;
+}
+
+.Cruds .actions a.middle,
+.Cruds .actions div.middle {
+    margin: 0 0.127rem;
+}
+
+.Cruds td.datas.padder {
+    color: transparent;
+}
+
+@media screen and (min-width: 576px) {
+    .Cruds .actions {
+        width: 6rem;
+    }
+
+    .Cruds .actions a.middle,
+    .Cruds .actions div.middle {
+        margin: 0 0.8rem;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    .Cruds th .actions a,
+    .Cruds th .actions div {
+        width: 1.486rem;
+        height: 1.486rem;
+    }
+
+    .Cruds td .actions a,
+    .Cruds td .actions div {
+        width: 1.514rem;
+        height: 1.514rem;
+    }
+}

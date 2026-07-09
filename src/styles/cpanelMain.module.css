@@ -1,0 +1,172 @@
+.mainBar {
+    min-height: 400px;
+    max-height: 400px;
+    overflow-y: scroll;
+    scrollbar-color: var(--clr-primar-light) var(--clr-primary);
+    background-color: var(--clr-primary);
+    border-radius: 12px;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 8px 24px;
+    color: var(--clr-white);
+    padding: 24px;
+    padding: 16px;
+}
+
+.mainBar .grid-c-title-icon img {
+    cursor: pointer;
+    margin-bottom: 0.5rem;
+    margin-left: 0.1rem;
+    width: 1rem;
+}
+
+.mainBar .lg-value {
+    font-size: 24px;
+    font-weight: 600;
+    width: 100%;
+    word-break: break-word;
+}
+
+.mainBar .grid-c-title-text {
+    cursor: pointer;
+    font-weight: 400;
+    font-size: 0.8em;
+    margin-bottom: 0;
+    color: var(--clr-silver);
+}
+
+.mainBar .text-silver-v1 {
+    cursor: pointer;
+    color: var(--clr-silver-v1);
+}
+
+.mainBar .lg-value.total {
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: var(--clr-silver-v1);
+}
+
+.mainBar .field {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+}
+
+.mainBar .text.text-silver-v1 {
+    margin-bottom: 0;
+}
+
+.mainBar .grid-c-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.mainBar .grid-c-top.selected {
+    background-color: var(--clr-jet);
+}
+
+.mainBar .grid-c4-content {
+    margin-top: 0.2rem;
+    border-radius: 16px;
+    padding: 0.2rem;
+}
+
+.mainBar .grid-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.2rem;
+}
+
+.mainBar .grid-item.selected {
+    background-color: var(--clr-peach);
+}
+
+.mainBar .grid-item-l {
+    display: flex;
+    align-items: flex-start;
+    column-gap: 16px;
+}
+
+.mainBar .grid-item-l .icon {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.mainBar .grid-item-l .icon img {
+    width: 20px;
+}
+
+.mainBar .grid-item-l .text {
+    font-weight: 600;
+}
+
+.mainBar .grid-item-l .text span {
+    font-weight: 300;
+    font-size: 15px;
+    display: block;
+    margin-top: 5px;
+    opacity: 0.9;
+}
+
+@media screen and (min-width: 768px) {
+    .mainBar .lg-value.total {
+        font-size: 1rem;
+    }
+
+    .mainBar .grid-c-title-icon img {
+        margin-bottom: 0.2rem;
+        margin-left: 0.1rem;
+        width: 0.6rem;
+    }
+
+    .mainBar .grid-c-title-text {
+        font-size: 0.61rem;
+    }
+}
+
+@media screen and (min-width: 992px) {
+    .mainBar .lg-value.total {
+        font-size: 0.8rem;
+    }
+
+    .mainBar .grid-c-title-icon img {
+        margin-bottom: 0.2rem;
+        margin-left: 0.1rem;
+        width: 0.7rem;
+    }
+
+    .mainBar .grid-c-title-text {
+        font-size: 0.5rem;
+    }
+}
+
+@media screen and (min-width: 1200px) {
+    .mainBar .grid-c-title-icon img {
+        margin-left: 0.1rem;
+        width: 0.8rem;
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    .mainBar .grid-c-title-icon img {
+        margin-left: 0.1rem;
+        width: 0.8rem;
+    }
+
+    .mainBar .grid-c-title-text {
+        font-size: 0.72rem;
+    }
+}
+
+/* Missing classes that are referenced in TypeScript */
+.grid-items {
+  color: initial;
+}
+
+.grid-item-r {
+    color: initial;
+}
+
+.bg-jet {
+    color: initial;
+}

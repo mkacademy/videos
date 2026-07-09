@@ -1,0 +1,200 @@
+.pageTags {
+    margin: 0;
+    width: 100%;
+    color: #0f5132;
+    cursor: pointer;
+    padding: 0.2rem;
+    text-align: left;
+    border-color: #47a992;
+    background-color: #d1e7dd;
+}
+
+.pageTags .pageTagText {
+    font-size: 1rem;
+}
+
+.pageTags .pageCloseBadge {
+    width: 1rem;
+    height: 1rem;
+    margin-left: 0.2rem;
+}
+
+.parentTags {
+    margin: 0;
+    width: 100%;
+    color: #fff;
+    cursor: pointer;
+    padding: 0.2rem;
+    text-align: left;
+    border-color: #007bff;
+    background-color: #007bff;
+}
+
+.parentTags .parentTagText {
+    font-size: 1rem;
+}
+
+.parentTags .parentTickedBadge {
+    width: 1rem;
+    height: 1rem;
+    margin-left: 0.2rem;
+}
+
+.searchTags {
+    margin: 0;
+    width: 100%;
+    color: #055160;
+    padding: 0.2rem;
+    cursor: pointer;
+    text-align: left;
+    border-color: #5c8984;
+    background-color: #cff4fc;
+}
+
+.searchTags .searchTagText {
+    font-size: 1rem;
+}
+
+.searchTags .searchCloseBadge {
+    width: 1rem;
+    height: 1rem;
+    margin-left: 0.2rem;
+}
+
+.timeTags {
+    margin: 0;
+    padding: 0;
+    color: #fff;
+    cursor: pointer;
+    text-align: left;
+}
+
+.timeTags .timeTagText {
+    font-size: 0.9rem;
+}
+
+.timeTags .timeTickedBadge {
+    width: 1rem;
+    height: 1rem;
+    margin-left: 0.2rem;
+}
+
+.historyTags {
+    margin-right: -8px;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+    background-color: #e7e7e7;
+}
+
+.historyTags .selectedHistory .alert {
+    border: 1px black solid;
+    background-color: #f0f0f0;
+}
+
+.historyTags .col-sm-auto {
+    padding: 0.1rem 0.2rem;
+}
+
+.menuTag {
+    margin: 0;
+    width: 100%;
+    color: #fff;
+    padding: 0.2rem;
+    text-align: left;
+    border-color: #c6c7c8;
+    background-color: #d3d4d5;
+}
+
+.menuTag .filterBadge {
+    width: 1rem;
+    height: 1rem;
+    margin-left: 0.2rem;
+}
+
+.menuTag .small_thumbs .filterBadge {
+    margin: 0;
+}
+
+.menuTag .small_thumbs .filterBadge.search {
+    margin-top: 0.1rem;
+}
+
+.menuTag .thumbs .toBadge,
+.menuTag .thumbs .fromBadge {
+    width: 2.187rem;
+}
+
+.menuTags {
+    margin-right: -8px;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+    background-color: #e7e7e7;
+}
+
+.menuTags .selectedMenu .alert {
+    border: 1px black solid;
+    background-color: #f0f0f0;
+}
+
+.menuTags .col-sm-auto {
+    padding: 0.1rem 0.2rem;
+}
+
+.mobile {
+    background-color: #e7e7e7;
+}
+
+.mobile .selectedMenu .alert {
+    border: 1px black solid;
+    background-color: #f0f0f0;
+}
+
+.mobile .alert {
+    padding: 0.2rem 0;
+}
+
+.mobile .alert .thumbs {
+    justify-content: flex-start;
+}
+
+.rootTags {
+    margin-right: -8px;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+    background-color: #e7e7e7;
+}
+
+.rootTags .selectedRoot .alert {
+    border: 1px black solid;
+    background-color: #f0f0f0;
+}
+
+.rootTags .selectedRoot .selectedRoot .alert {
+    border: 1px orange solid;
+    background-color: #f0f0f0;
+}
+
+.rootTags .col-sm-auto {
+    padding: 0.1rem 0.2rem;
+}
+
+.HorizontalFlex {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.HorizontalFlex-centered {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.verticalFlex {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: space-between;
+}

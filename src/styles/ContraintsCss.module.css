@@ -1,0 +1,27 @@
+.filter,
+.boss,
+.dashboard,
+.instruction,
+.minion,
+.sifter,
+.underboss {
+    @media screen and (min-width: 992px) {
+        flex: 0 0 26.0356rem;
+        max-width: 26.0356rem;
+    }
+
+    @media screen and (min-width: 1440px) {
+        flex: 0 0 39.054rem;
+        max-width: 39.054rem;
+    }
+
+    @media screen and (min-width: 1536px) {
+        flex: 0 0 39.054rem;
+        max-width: 39.054rem;
+    }
+
+    @media screen and (min-width: 1920px) {
+        flex: 0 0 39.054rem;
+        max-width: 39.054rem;
+    }
+}

@@ -1,0 +1,95 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  @media screen and (min-width: 1400px) {
+    cpanel-body {
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+  }
+
+  @media (min-width: 375px) {
+    .cpanel-html {
+      width: 100%;
+      font-size: 33px;
+    }
+  }
+  @media (min-width: 425px) {
+    .cpanel-html {
+      font-size: 37.5px;
+    }
+  }
+  @media (min-width: 576px) {
+    .cpanel-html {
+      font-size: 40px;
+    }
+  }
+  @media (min-width: 768px) {
+    .cpanel-html {
+      font-size: 37.5px;
+    }
+  }
+  @media (min-width: 992px) {
+    .cpanel-html #root .container {
+      max-width: 975px;
+    }
+  }
+  @media (min-width: 1200px) {
+    .cpanel-html {
+      font-size: 35px;
+    }
+    .cpanel-html #root .container {
+      max-width: 1200px;
+    }
+  }
+  @media (min-width: 1400px) {
+    .cpanel-html {
+      font-size: 33px;
+    }
+  }
+  @media (min-width: 1440px) {
+    .cpanel-html {
+      font-size: 32.5px;
+    }
+    .cpanel-html #root .container {
+      max-width: 1422px;
+    }
+  }
+  @media (min-width: 1536px) {
+    .cpanel-html #root .container {
+      max-width: 1512px;
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .cpanel-html #root .container {
+      max-width: 1900px;
+    }
+  }
+  :root {
+    --clr-primary: #29221d;
+    --clr-primar-light: #473b33;
+    --clr-secondary: #1e1611;
+    --clr-white: #fff;
+    --clr-black: #000;
+    --clr-pumpkin: #fe6c00;
+    --clr-silver: #a8a5a6;
+    --clr-silver-v1: #bdbabb;
+    --clr-scarlet: #fe1e00;
+    --clr-scarlet-v1: rgb(254, 30, 0, 0.79);
+    --clr-green: #00fe93;
+    --clr-yellow: #fec80a;
+    --clr-jet: #302924;
+    --clr-peach: #ffc397;
+    --font-family-bai: "Bai Jamjuree", sans-serif;
+    --transition-default: all 300ms ease-in-out;
+  }
+
+  cpanel-body {
+    font-family: var(--font-family-bai);
+  }
+
+ 
