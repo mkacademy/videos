@@ -1,14 +1,13 @@
 # mkacademy workspace — videos repo
 
-| Repo | Path | Remote | Port (`npm run dev`) |
-|------|------|--------|----------------------|
-| Editor | `~/Desktop/frontend` | `mkacademy/frontend` | 3000 |
-| Viewer | `~/Desktop/website` | `mkacademy/website` | 3001 |
-| CMS | `~/Desktop/cms` | `mkacademy/cms` | — |
-| **Videos** | `~/Desktop/videos` | `mkacademy/videos` | 3000 |
-| Landing | `~/Desktop/landing` | `mkacademy/landing` | — |
+| Repo | Path | Remote | `npm run dev` |
+|------|------|--------|---------------|
+| Studio | `~/Desktop/studio` | `mkacademy/studio` | http://localhost:3000 |
+| Images | `~/Desktop/images` | `mkacademy/images` | http://localhost:3001 |
+| **Videos** | `~/Desktop/videos` | `mkacademy/videos` | http://localhost:3002 |
+| Landing | `~/Desktop/landing` | `mkacademy/landing` | http://localhost:4000 |
 
-The **videos** repo is a standalone fork of `frontend` with routes trimmed to media player and prepper only. It retains the full dependency closure from frontend (Redux store, stash, FFmpeg tooling) so media features work without the convolution editor UI.
+The **videos** repo is a standalone app with routes trimmed to media player and prepper only. It retains the dependency closure needed for FFmpeg tooling and media workflows without the full studio convolution UI.
 
 ## Clone (SSH)
 

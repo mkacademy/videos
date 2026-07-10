@@ -4,12 +4,12 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "parcel index.html --port 3000",
+    "dev": "parcel index.html --port 3002",
     "build": "npx tsc --noEmit && parcel build index.html && mkdir -p dist/public/ffmpeg && cp -R public/ffmpeg/. dist/public/ffmpeg/",
     "build:verbose": "npx tsc --noEmit --listFiles && parcel build index.html",
     "lint": "eslint .",
-    "preview": "npm run build && npx serve dist -p 3003 -s",
-    "serve": "npm run build && npx http-server dist -p 3004 -o --fallback /index.html",
+    "preview": "npm run build && npx serve dist -p 3007 -s",
+    "serve": "npm run build && npx http-server dist -p 3008 -o --fallback /index.html",
     "clear-cache": "rm -rf .parcel-cache dist",
     "fresh-build": "npm run clear-cache && npm run build",
     "sync-ffmpeg-assets": "mkdir -p public/ffmpeg && cp node_modules/@ffmpeg/ffmpeg/dist/esm/worker.js node_modules/@ffmpeg/ffmpeg/dist/esm/const.js node_modules/@ffmpeg/ffmpeg/dist/esm/errors.js public/ffmpeg/ && curl -L -o public/ffmpeg/ffmpeg-core.js https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js && curl -L -o public/ffmpeg/ffmpeg-core.wasm https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm"

@@ -251,7 +251,7 @@ const copyLinkToClipboard = (
   settings: RootState['settings'],
 ): void => {
   const isDev = window.location.hostname === 'localhost';
-  const baseUrl = isDev ? 'http://localhost:3000' : 'https://mkacademy.ca';
+  const baseUrl = isDev ? 'http://localhost:3001' : 'https://mkacademy.ca';
   const url = new URL(baseUrl);
   for (const { treeIdParam, bannerIdParam, treeId, bannerId } of pairs) {
     url.searchParams.set(treeIdParam, treeId.toString());

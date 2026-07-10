@@ -12,19 +12,19 @@ Standalone media player and prepper app for the mkacademy workspace. FFmpeg powe
 ```bash
 npm install
 npm run sync-ffmpeg-assets   # copies FFmpeg WASM assets into public/ffmpeg
-npm run dev                # http://localhost:3000
+npm run dev                # http://localhost:3002
 ```
 
 ## Build
 
 ```bash
 npm run build
-npm run preview            # serve production build on http://localhost:3003
+npm run preview            # serve production build on http://localhost:3007
 ```
 
 ## Workspace
 
-Part of the mkacademy 4-repo workspace alongside `frontend`, `cms`, `website`, and `landing`. See [WORKSPACE.md](WORKSPACE.md).
+Part of the mkacademy 4-repo workspace alongside `landing`, `studio`, `images`, and `videos`. See [WORKSPACE.md](WORKSPACE.md).
 
 ## Related docs
 
