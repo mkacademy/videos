@@ -18,7 +18,7 @@ import {
   compressTutorials,
   compressCourseTutorials,
 } from '../../library/EncodingManagerUtils';
-import { prependError } from '../slices/errorSlice';
+import { prependError, prependWarning } from '../slices/errorSlice';
 import { Tree as entities, globalVars, getInteractionIDs, users, visitedRoutes } from '../../utils';
 import { zipRecords, unzipRecords } from '../../library/actions';
 import { viewPayload, ViewPayload } from '../slices/viewSlice';
@@ -423,11 +423,11 @@ const EncodingManager: Middleware<{}, RootState> = ({ dispatch, getState }) => (
           handleUnzippedTutorialFormatters(formatters, dispatch, setQueue, tutorialP);
           const tutorials = tutorialP.map(({ banners }: Partial<TutorialState> & ItemWithTutorialTrees) => banners?.length);
           const tutorialsMsg = `unzipped ${tutorials.toString()} Hydrated Tutorials`;
-          dispatch(prependError(tutorialsMsg));
+          dispatch(prependWarning(tutorialsMsg));
           const dehydratedTutorials = tutorialP.map(({ Trees: { _orphans, ...trees } }:
             Partial<TutorialState> & ItemWithTutorialTrees) => Object.values(trees).length + (_orphans?.length ?? 0));
           const dehydratedTutorialsMsg = `unzipped ${dehydratedTutorials.toString()} Dehydrated Tutorials.`;
-          dispatch(prependError(dehydratedTutorialsMsg));
+          dispatch(prependWarning(dehydratedTutorialsMsg));
           visitedRoutes['/convolution/tutorial'] = true;
         } else {
           dispatch(prependError(errorMsg3));
@@ -442,11 +442,11 @@ const EncodingManager: Middleware<{}, RootState> = ({ dispatch, getState }) => (
           handleUnzippedCourseFormatters(formatters, dispatch, setQueue, courseP);
           const courses = courseP.map(({ banners }: Partial<CourseState> & ItemWithCourseTrees) => banners?.length);
           const coursesMsg = `unzipped ${courses.toString()} Hydrated Courses`;
-          dispatch(prependError(coursesMsg));
+          dispatch(prependWarning(coursesMsg));
           const dehydratedCourses = courseP.map(({ Trees: { _orphans, ...trees } }:
             Partial<CourseState> & ItemWithCourseTrees) => Object.values(trees).length + (_orphans?.length ?? 0));
           const dehydratedCoursesMsg = `unzipped ${dehydratedCourses.toString()} Dehydrated Courses.`;
-          dispatch(prependError(dehydratedCoursesMsg));
+          dispatch(prependWarning(dehydratedCoursesMsg));
           visitedRoutes['/convolution/course'] = true;
         } else {
           dispatch(prependError(errorMsg6));
@@ -461,11 +461,11 @@ const EncodingManager: Middleware<{}, RootState> = ({ dispatch, getState }) => (
           handleUnzippedQuizFormatters(formatters, dispatch, setQueue, quizP);
           const quizzes = quizP.map(({ quizzes }: Partial<QuizState> & ItemWithQuizTrees) => quizzes?.length);
           const quizzesMsg = `unzipped ${quizzes.toString()} Hydrated Quizzes`;
-          dispatch(prependError(quizzesMsg));
+          dispatch(prependWarning(quizzesMsg));
           const dehydratedQuizzes = quizP.map(({ Trees: { _orphans, ...trees } }:
             Partial<QuizState> & ItemWithQuizTrees) => Object.values(trees).length + (_orphans?.length ?? 0));
           const dehydratedQuizzesMsg = `unzipped ${dehydratedQuizzes.toString()} Dehydrated Quizzes.`;
-          dispatch(prependError(dehydratedQuizzesMsg));
+          dispatch(prependWarning(dehydratedQuizzesMsg));
           visitedRoutes['/convolution/quiz'] = true;
         } else {
           dispatch(prependError(errorMsg10));
@@ -514,11 +514,11 @@ const EncodingManager: Middleware<{}, RootState> = ({ dispatch, getState }) => (
           const results = tutorialP.map(({ banners }: Partial<TutorialState> & ItemWithTutorialTrees) => banners?.length);
           const tutorialsMsg = `unzipped ${results.toString()} Hydrated Tutorials`;
           visitedRoutes['/convolution/tutorial'] = true;
-          dispatch(prependError(tutorialsMsg));
+          dispatch(prependWarning(tutorialsMsg));
           const dehydratedTutorials = tutorialP.map(({ Trees: { _orphans, ...trees } }:
             Partial<TutorialState> & ItemWithTutorialTrees) => Object.values(trees).length + (_orphans?.length ?? 0));
           const dehydratedTutorialsMsg = `unzipped ${dehydratedTutorials.toString()} Dehydrated Tutorials.`;
-          dispatch(prependError(dehydratedTutorialsMsg));
+          dispatch(prependWarning(dehydratedTutorialsMsg));
         } else {
           dispatch(prependError(errorMsg3));
         }
@@ -533,11 +533,11 @@ const EncodingManager: Middleware<{}, RootState> = ({ dispatch, getState }) => (
           const results = courseP.map(({ banners }: Partial<CourseState> & ItemWithCourseTrees) => banners?.length);
           const coursesMsg = `unzipped ${results.toString()} Hydrated Courses`;
           visitedRoutes['/convolution/course'] = true;
-          dispatch(prependError(coursesMsg));
+          dispatch(prependWarning(coursesMsg));
           const dehydratedCourses = courseP.map(({ Trees: { _orphans, ...trees } }:
             Partial<CourseState> & ItemWithCourseTrees) => Object.values(trees).length + (_orphans?.length ?? 0));
           const dehydratedCoursesMsg = `unzipped ${dehydratedCourses.toString()} Dehydrated Courses.`;
-          dispatch(prependError(dehydratedCoursesMsg));
+          dispatch(prependWarning(dehydratedCoursesMsg));
         } else {
           dispatch(prependError(errorMsg6));
         }
@@ -552,11 +552,11 @@ const EncodingManager: Middleware<{}, RootState> = ({ dispatch, getState }) => (
           const results = quizP.map(({ quizzes }: Partial<QuizState> & ItemWithQuizTrees) => quizzes?.length);
           const quizzesMsg = `unzipped ${results.toString()} Hydrated Quizzes`;
           visitedRoutes['/convolution/quiz'] = true;
-          dispatch(prependError(quizzesMsg));
+          dispatch(prependWarning(quizzesMsg));
           const dehydratedQuizzes = quizP.map(({ Trees: { _orphans, ...trees } }:
             Partial<QuizState> & ItemWithQuizTrees) => Object.values(trees).length + (_orphans?.length ?? 0));
           const dehydratedQuizzesMsg = `unzipped ${dehydratedQuizzes.toString()} Dehydrated Quizzes.`;
-          dispatch(prependError(dehydratedQuizzesMsg));
+          dispatch(prependWarning(dehydratedQuizzesMsg));
         } else {
           dispatch(prependError(errorMsg10));
         }

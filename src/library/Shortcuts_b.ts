@@ -809,7 +809,7 @@ export const registerShouldHydrateShortcut = (dispatch: AppDispatch) => {
  * In full feature mode, dispatches `setCleared(true)` then `clearFetched` for the current
  * convolution path using the `fetchedClearers` map in `actions.ts` (same as FullAccount).
  */
-export const registerClearContentShortcut = (dispatch: AppDispatch) => {
+export const registerClearContentShortcut = (dispatch: AppDispatch, navigate: NavigateFunction) => {
   const handler = (event: KeyboardEvent) => {
     if (!isCtrlShiftChordModifierSidesOk(event)) return;
     if (event.key !== 'q' && event.key !== 'Q') return;
@@ -819,8 +819,8 @@ export const registerClearContentShortcut = (dispatch: AppDispatch) => {
     dispatch(clearOnlyWarnings());
     if (isMinimumFeatureMode(state)) {
       const webapp = state.settings.clearContentType;
-      dispatchSettingsClearContent(dispatch, store.getState);
-      dispatch(prependWarning(`cleared ${webapp} and trees`));
+      dispatchSettingsClearContent(dispatch, store.getState, navigate);
+      dispatch(prependWarning(`cleared ${webapp} trees and URL params`));
     } else {
       const pathname = window.location.pathname;
       const matched = (Object.keys(fetchedClearers) as (keyof typeof fetchedClearers)[]).find(
@@ -828,8 +828,8 @@ export const registerClearContentShortcut = (dispatch: AppDispatch) => {
       );
       if (!matched) return;
       const webapp = matched.split('/').pop() ?? getCurAppName(state.session.curApp).toLowerCase();
-      dispatchConvolutionClearFetched(dispatch, store.getState);
-      dispatch(prependWarning(`cleared ${webapp} and stats`));
+      dispatchConvolutionClearFetched(dispatch, store.getState, navigate);
+      dispatch(prependWarning(`cleared ${webapp} stats and URL params`));
     }
   };
   window.addEventListener('keydown', handler);

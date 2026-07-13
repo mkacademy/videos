@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react'
 import { Provider } from 'react-redux'
-import { Route, Routes, BrowserRouter, Navigate } from 'react-router-dom'
+import { Route, Routes, BrowserRouter } from 'react-router-dom'
 import 'bootstrap/dist/css/bootstrap.min.css'
 import './init'
 import { store } from './store'
@@ -12,6 +12,8 @@ import { useLibraryGlobalShortcuts, WebappNavigateShortcutRegistrar } from './Ho
 import NotFound from './components/views/NotFound'
 import MediaPrepper from './components/mediaPrepper/mediaPrepper'
 import MediaPlayer from './components/mediaPlayer/mediaPlayer'
+import LoadingAnimation from './components/views/Loading'
+import Login from './components/convolutions/Login'
 
 const appGlobalCSS = new URL('./styles/appGlobal.css', import.meta.url).href;
 const courseGlobalCSS = new URL('./styles/courseGlobal.css', import.meta.url).href;
@@ -39,7 +41,8 @@ loadCSS(pricingTablesGlobalCSS);
 loadCSS(cpanelGlobalCSS);
 
 const mediaRoutes = [
-  { path: "/", element: <Navigate to="/media-prepper" replace /> },
+  { path: "/", element: <LoadingAnimation /> },
+  { path: "/login", element: <Login /> },
   { path: "/media-player", element: <MediaPlayer /> },
   { path: "/media-prepper", element: <MediaPrepper /> },
   { path: "/*", element: <NotFound /> },

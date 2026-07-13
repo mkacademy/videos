@@ -185,7 +185,8 @@ export function useToggleDismissedOnCtrlShiftArrows(): void {
 
 /**
  * Must render under `BrowserRouter` so `useNavigate` is available. Registers Ctrl+Alt+0–9
- * jumps aligned with `constants` webapp keys and `FullNavigation` targets (0 → settings, 9 → tabulator).
+ * jumps aligned with `constants` webapp keys and `FullNavigation` targets (0 → settings, 9 → tabulator),
+ * plus Ctrl+Shift+Q clear content (needs navigate to strip URL query params).
  */
 export function WebappNavigateShortcutRegistrar(): null {
   const navigate = useNavigate();
@@ -195,11 +196,13 @@ export function WebappNavigateShortcutRegistrar(): null {
     const unregisterSettingsGoBack = registerGoBackShortcut(navigate);
     const unregisterEditorCookToggle = registerTabulatorToggleShortcut(navigate);
     const unregisterFetchSequenceToggle = registerConnectedAppsAddShortcut(dispatch, navigate);
+    const unregisterClearContent = registerClearContentShortcut(dispatch, navigate);
     return () => {
       unregisterWebappNavigate();
       unregisterSettingsGoBack();
       unregisterEditorCookToggle();
       unregisterFetchSequenceToggle();
+      unregisterClearContent();
     };
   }, [navigate, dispatch]);
   return null;
@@ -232,7 +235,6 @@ export function useLibraryGlobalShortcuts(): void {
     const unregisterHandlesToStashB = registerHandlesToStashShortcut(dispatch);
     const unregisterExportSelectedStashRoutesB = registerExportSelectedStashRoutesShortcut(dispatch);
     const unregisterImportSelectedStashRoutesB = registerImportSelectedStashRoutesShortcut(dispatch);
-    const unregisterClearContent = registerClearContentShortcut(dispatch);
     const unregisterSaveContent = registerSaveContentShortcut(dispatch);
     const unregisterMigrateServerIdsC = registerMigrateServerIdsShortcut(dispatch);
     const unregisterMarkTextsModifiedC = registerMarkTextsModifiedShortcut(dispatch);
@@ -290,7 +292,6 @@ export function useLibraryGlobalShortcuts(): void {
       unregisterHandlesToStashB();
       unregisterExportSelectedStashRoutesB();
       unregisterImportSelectedStashRoutesB();
-      unregisterClearContent();
       unregisterSaveContent();
       unregisterMigrateServerIdsC();
       unregisterMarkTextsModifiedC();

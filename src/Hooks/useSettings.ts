@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Action, UnknownAction } from "@reduxjs/toolkit";
 import { isOwnershipQueueActive } from "../store/middleware/ownershipSaveQueue";
 import {
@@ -205,6 +205,7 @@ export default function useSettings({
     source,
 }: UseSettingsParams): UseSettingsReturn {
     const reduxStore = useStore();
+    const navigate = useNavigate();
     const siteapps: SiteApps = {
         ["memberapp-select"]: {
             offset: 4,
@@ -265,7 +266,7 @@ export default function useSettings({
     };
 
     const handleClearContent = (): void => {
-        dispatchSettingsClearContent(dispatcher, () => reduxStore.getState() as RootState);
+        dispatchSettingsClearContent(dispatcher, () => reduxStore.getState() as RootState, navigate);
     };
 
     const handleButton = (e: React.MouseEvent<HTMLButtonElement>): void => {

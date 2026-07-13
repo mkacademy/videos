@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from "react";
-import { NavigateOptions, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import * as styles from "../../styles/loading.module.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchData } from "../../library/Thunks";
@@ -20,15 +20,12 @@ import {
 } from "../../store/slices/settingsSlice";
 import { setCurPage } from "../../library/Thunks";
 import {
-  deepLinkExtraParams,
   LOADING_DEEP_LINK_PAIRS,
   parseLoadingTreeFlags,
-  primaryLoadingRoute,
   primaryLoadingWebapp,
   resolveEditorDeepLinkSearch,
   type LoadingDeepLinkPair,
 } from "../../loadingRouteUtils";
-import { buildConvolutionNavigateTo, warnConvolutionCsFsqConflict } from "../../library/convolutionNavSearch";
 import { parseUnzipQueryParam } from "../../library/unzipQuery";
 import { parseRandomizedQueryParam } from "../../library/randomizedQuery";
 
@@ -41,7 +38,6 @@ const LoadingAnimation: React.FC = () => {
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, UnknownAction>>();
   const isNotUnzipping = useSelector((state: RootState) => state.settings.isNotUnzipping);
   const shouldHydrate = useSelector((state: RootState) => state.settings.shouldHydrate);
-  const fsq = useSelector((state: RootState) => state.settings.fsq);
   const noTutorials = useSelector((state: RootState) => state.tutorial.noTutorials);
   const noCourses = useSelector((state: RootState) => state.course.noCourses);
   const noQuizzes = useSelector((state: RootState) => state.quiz.noQuizzes);
@@ -51,7 +47,7 @@ const LoadingAnimation: React.FC = () => {
   const loadStartedAt = useRef(Date.now());
   const hydrateEnabledAt = useRef<number | null>(null);
 
-  const { params, foundPairs, hasTutorial, hasCourse, hasQuiz, hasTreeParams, resolvedSearch } = useMemo(() => {
+  const { foundPairs, hasTutorial, hasCourse, hasQuiz, hasTreeParams, resolvedSearch } = useMemo(() => {
     const resolvedSearch = resolveEditorDeepLinkSearch(location.search);
     const searchParams = new URLSearchParams(
       resolvedSearch.startsWith('?') ? resolvedSearch.slice(1) : resolvedSearch,
@@ -138,41 +134,15 @@ const LoadingAnimation: React.FC = () => {
 
     const proceed = () => {
       if (hasNavigated.current) return;
+      hasNavigated.current = true;
 
-      const currentUrl = `${location.pathname}${location.search}`;
-      const stickyFsq = { shouldHydrate, fsq };
-      const exitExtra = {
-        ldr: currentUrl,
-        ...deepLinkExtraParams(location.search),
-      };
-
-      const route = isDeepLinkExit
-        ? primaryLoadingRoute(resolvedSearch, foundPairs)
-        : '/convolution/tutorial';
-
-      const options: NavigateOptions = isDeepLinkExit
-        ? {
-          replace: true,
-          state: {
-            selectedT: params.tutorial !== undefined ? parseInt(params.tutorial, 10) : -1,
-            selectedC: params.course !== undefined ? parseInt(params.course, 10) : -1,
-            selectedQ: params.quiz !== undefined ? parseInt(params.quiz, 10) : -1,
-          },
-        }
-        : { replace: true, state: { selected: -1 } };
-
-      const target = buildConvolutionNavigateTo(
-        route,
-        undefined,
-        stickyFsq,
-        location.search || isDeepLinkExit ? exitExtra : undefined,
-      );
-      if (!target) {
-        warnConvolutionCsFsqConflict(dispatch);
+      if (!isDeepLinkExit) {
+        navigate('/media-prepper', { replace: true });
         return;
       }
-      hasNavigated.current = true;
-      navigate(target, options);
+
+      const webapp = primaryLoadingWebapp(resolvedSearch, foundPairs);
+      navigate(`/media-player?tab=${webapp}`, { replace: true });
     };
 
     if (shouldHydrate && hydrateEnabledAt.current === null) {
@@ -229,9 +199,7 @@ const LoadingAnimation: React.FC = () => {
     hasTutorial,
     hasCourse,
     hasQuiz,
-    params,
     resolvedSearch,
-    fsq,
   ]);
 
   return (

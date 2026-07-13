@@ -43,6 +43,38 @@
   margin-bottom: 1.25rem;
 }
 
+.tabRow {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.tabRow .tabNav {
+  flex: 1 1 auto;
+  margin-bottom: 0;
+}
+
+.accountButton {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 0.35rem;
+}
+
+.accountIcon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  transition: opacity 0.2s ease-in-out;
+}
+
 .tabLink {
   cursor: pointer;
 }

@@ -1,8 +1,10 @@
 import React, { useCallback, useMemo } from 'react';
 import { Alert, Button, Nav } from 'react-bootstrap';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { createSearchParams, Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../store';
+import { signOut } from '../../utils';
+import { clearData as clearReducers } from '../../store/slices/rowSlice';
 import { resetPlayback, setPlaybackWebapp } from '../../store/slices/playbackSlice';
 import { setAllowMimeOnlyImageurlOverrideOnUpdateSteps } from '../../store/slices/sessionSlice';
 import {
@@ -31,10 +33,13 @@ import {
 import { updateSteps } from '../../library/actions';
 import { isDirectoryExportSupported, pickWritableDirectoryHandle } from '../../library/directoryTreeUtils';
 import { prependError, prependWarning } from '../../store/slices/errorSlice';
-import { viewRequest } from '../../store/slices/viewSlice';
+import { clearEscrow, viewRequest } from '../../store/slices/viewSlice';
 import { FaDownload, FaTrash } from 'react-icons/fa';
 import { navigateConvolutionOrWarn, stickyFsqFromState } from '../../library/convolutionNavSearch';
 import * as styles from '../../styles/mediaPlayer.module.css';
+
+const accountIconSrc = new URL('../../Images/user.png', import.meta.url).href;
+const exitIconSrc = new URL('../../Images/3094700.png', import.meta.url).href;
 
 function buildLibraryUrl(
   tab: MediaPlayerTab,
@@ -53,23 +58,64 @@ function buildLibraryUrl(
   return `/media-player?${search.toString()}`;
 }
 
+const MediaPlayerAccountButton: React.FC = () => {
+  const dispatch = useDispatch();
+  const { pathname, search } = useLocation();
+  const authenticated = useSelector((state: RootState) => state.session.authenticated);
+  const pauseFetchers = useSelector((state: RootState) => state.session.pauseFetchers);
+  const loginSearch = createSearchParams({ redirectUrl: pathname + search }).toString();
+
+  const handleAccountClick = (e: React.MouseEvent) => {
+    if (!authenticated) return;
+    e.preventDefault();
+    dispatch(clearReducers());
+    dispatch(clearEscrow());
+    dispatch({ type: signOut(pauseFetchers) });
+  };
+
+  return (
+    <Link
+      to={{ pathname: '/login', search: loginSearch }}
+      onClick={handleAccountClick}
+      aria-label={authenticated ? 'Sign out' : 'Sign in'}
+      className={styles['accountButton']}
+    >
+      <img
+        src={accountIconSrc}
+        alt=""
+        className={styles['accountIcon']}
+        style={{ opacity: authenticated ? 0 : 1 }}
+      />
+      <img
+        src={exitIconSrc}
+        alt=""
+        className={styles['accountIcon']}
+        style={{ opacity: authenticated ? 1 : 0 }}
+      />
+    </Link>
+  );
+};
+
 const MediaPlayerTabs: React.FC<{
   activeTab: MediaPlayerTab;
   onSelect: (tab: MediaPlayerTab) => void;
 }> = ({ activeTab, onSelect }) => (
-  <Nav variant="tabs" className={styles['tabNav']}>
-    {(['tutorial', 'course', 'quiz'] as const).map((tab) => (
-      <Nav.Item key={tab}>
-        <Nav.Link
-          active={activeTab === tab}
-          onClick={() => onSelect(tab)}
-          className={styles['tabLink']}
-        >
-          {tab.charAt(0).toUpperCase() + tab.slice(1)}
-        </Nav.Link>
-      </Nav.Item>
-    ))}
-  </Nav>
+  <div className={styles['tabRow']}>
+    <Nav variant="tabs" className={styles['tabNav']}>
+      {(['tutorial', 'course', 'quiz'] as const).map((tab) => (
+        <Nav.Item key={tab}>
+          <Nav.Link
+            active={activeTab === tab}
+            onClick={() => onSelect(tab)}
+            className={styles['tabLink']}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </Nav.Link>
+        </Nav.Item>
+      ))}
+    </Nav>
+    <MediaPlayerAccountButton />
+  </div>
 );
 
 const MediaPlayer: React.FC = () => {
