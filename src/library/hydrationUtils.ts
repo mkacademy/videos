@@ -40,6 +40,23 @@ export const resolveLdrRedirectUrl = (url: string): string => {
   return ldr;
 };
 
+/**
+ * After login (or continue-incognito), resolve where to send the user.
+ * Prefer an explicit `ldr` back-link, fall back to the loading entry (`/`) so it can
+ * route into media-prepper/media-player, and otherwise honor an in-app redirect path.
+ */
+export const resolveLoginLoadingRedirectUrl = (url: string): string => {
+  if (!url) return '/';
+  const queryStart = url.indexOf('?');
+  if (queryStart !== -1) {
+    const ldr = new URLSearchParams(url.slice(queryStart)).get('ldr');
+    if (ldr && ldr.startsWith('/') && !ldr.startsWith('//')) return ldr;
+  }
+  const pathOnly = url.split('?')[0];
+  if (pathOnly === '/' || pathOnly === '') return url.startsWith('/') ? url : `/${url}`;
+  return resolveLdrRedirectUrl(url);
+};
+
 const filterServerIds = (ids: number[]): number[] => ids.filter((id) => isServerId(id));
 
 /** Remove local ids from seek/IDs; return null when nothing server-side remains to hydrate. */
