@@ -34,7 +34,6 @@ import {
   mergeGloballySortedWithAltGroupSegment,
   ordinalForReorder,
 } from "./TutorialUtils";
-import { getAttempts, getFocuses } from "./quizAttemptManager";
 import type { OwnershipPayload } from "./actions";
 import type { RandomizedType } from "./randomizedQuery";
 
@@ -759,8 +758,6 @@ export const applySetQuizzes = (state: QuizState, payload: SetQuizzesPayload) =>
 
   state.quizzes = newQuizzesState;
   state.noQuizzes = newNoQuizzes;
-  state.focus = getFocuses(newQuizzesState);
-  state.attempt = getAttempts(newQuizzesState);
 };
 
 export const applySetBanners = (state: QuizState, bannersPayload: Banner[]) => {
@@ -850,8 +847,6 @@ export const applyGroupReOrderQuizSelection = (state: QuizState, payload: { ids:
   const newFull = [...fullSorted.slice(0, range.lo), ...newSeg, ...fullSorted.slice(range.hi + 1)];
   assignDenseOrdinalsZeroBased(newFull);
   state.quizzes = contiguousOrdinalQuizzesPred(sorter([...state.quizzes]) as Quiz[]);
-  state.focus = getFocuses(state.quizzes);
-  state.attempt = getAttempts(state.quizzes);
 };
 
 export const applyReOrderQuestionSelection = (

@@ -6,16 +6,12 @@ import type {
 } from '../../library/QuizUtils';
 import {
   applyClearFetched,
-  applyClearSelectedQuizBranches,
   applyCourseReducer,
   applyCreateCoursesQuizState,
-  applyHighlightAttemptBreathSelection,
-  applyHighlightQuestionBreathSelection,
   applySetBanners,
   applySetFollowupOptions,
   applySetQuizzes,
   applyPersistTutorialsQuizState,
-  mergeQuizFetchSkeletonsFulfilledIfQuiz,
   recomputeFollowupCombinations,
   createQuizStartIdInitial,
   applyUpdateOwnership,
@@ -39,7 +35,6 @@ export type {
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   Banner,
-  SlideGroup,
   SlideItem,
   highlightCoversBreathSelection,
   highlightSlideBreathSelection,
@@ -52,7 +47,6 @@ import {
   idsMerger,
   textsMerger,
 } from '../../library/sliceUtils';
-import { getChoices, getAttempts, getFocuses } from '../../library/quizAttemptManager';
 import {
   createSteps,
   createCourses,
@@ -63,7 +57,6 @@ import {
   updateQuizzes,
   updateCourses,
   updateTutorials,
-  erasePayload,
   updateSteps,
   createQuizzes,
   updateQuestionsMetadata,
@@ -72,7 +65,6 @@ import {
   updateCoversMetadata,
   updateStepsMetadata,
   updateAnswersMetadata,
-  FETCH_SKELETONS_FULFILLED,
   updateOwnerships,
 } from '../../library/actions';
 const initialState: QuizState = {
@@ -137,27 +129,9 @@ const quizSlice = createSlice({
     setFollowupOptions: (state, action: PayloadAction<{ content: SlideItem[][] }>) => {
       applySetFollowupOptions(state, action.payload.content);
     },
-    highlightQuizBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
-      const { quizzes, selected } = state;
-      const { ids, isHighlighted } = action.payload;
-      const quizIds = selected === -1
-        ? quizzes.map(({ id }) => id).filter((id) => ids.includes(id))
-        : [quizzes[selected]?.id];
-      state.quizzes = quizzes.map((quiz) =>
-        quizIds.includes(quiz.id)
-          ? { ...quiz, isHighlighted: isHighlighted ?? !quiz.isHighlighted }
-          : quiz
-      );
-    },
-    highlightAttemptBreathSelection: (state, action: PayloadAction<{ ids: (number | string)[]; isHighlighted?: boolean; isShow?: boolean }>) => {
-      applyHighlightAttemptBreathSelection(state, action.payload, getChoices);
-    },
-    highlightQuestionBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
-      applyHighlightQuestionBreathSelection(state, action.payload);
-    },
-    clearSelected: (state, action: PayloadAction<erasePayload>) => {
-      applyClearSelectedQuizBranches(state, action.payload, getChoices);
-    },
+
+
+
     clearFetched: (state, action: PayloadAction<boolean>) => {
       applyClearFetched(state, action.payload);
     },
@@ -194,7 +168,6 @@ const quizSlice = createSlice({
         // Update banners using courseReducer
         const { banners } = applyCourseReducer(state, action);
         state.banners = banners || state.banners;
-        state.attempt = getAttempts(nState);
       })
       .addCase(updateCourses, (state, action) => {
         const { banners } = applyCourseReducer(state, action);
@@ -304,23 +277,7 @@ const quizSlice = createSlice({
       .addCase(updateOwnerships, (state, action) => {
         applyUpdateOwnership(state, action.payload);
       })
-      .addMatcher(
-        (action): action is PayloadAction<{
-          screen: string;
-          response: { quizzes?: Quiz[]; banners?: Banner[]; content?: SlideGroup[] };
-        }> => action.type === FETCH_SKELETONS_FULFILLED,
-        (state, action) => {
-          mergeQuizFetchSkeletonsFulfilledIfQuiz(
-            state,
-            action.payload.screen,
-            action.payload.response,
-            (s) => {
-              s.focus = getFocuses(s.quizzes);
-              s.attempt = getAttempts(s.quizzes);
-            },
-          );
-        }
-      );
+
   },
 });
 
@@ -328,10 +285,6 @@ export const {
   toggleQuizDismissed,
   toggleQuiz,
   setQuizzes,
-  highlightQuizBreathSelection,
-  highlightAttemptBreathSelection,
-  highlightQuestionBreathSelection,
-  clearSelected,
   clearFetched,
   setBanners,
   setFollowupOptions,
