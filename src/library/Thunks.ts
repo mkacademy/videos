@@ -1,6 +1,6 @@
 import { jwtDecode } from "jwt-decode";
 import { getCurAppIndex, getSimplePageIndexFromSearch, signOut, userroles, timeout, getMoldsResolver, getConvSearch } from "../utils";
-import { createAsyncThunk, type GetThunkAPI } from "@reduxjs/toolkit";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 import { EntityTypeMap, ResultPayload } from "../store/slices/rowSlice";
 import { clearEscrow } from "../store/slices/viewSlice";
 import { getGraphqlResolver, redirectUrl, ToolKit, RECORDS, Tree } from "../utils";
@@ -10,25 +10,11 @@ import { DataRow } from "../components/Core/types";
 import {
     insertMetadata,
 } from "./actions";
-import {
-    CourseThunkPayload,
-    IncomingThunkPayload,
-    OutgoingThunkPayload,
-    PennantThunkPayload,
-    QuestionThunkPayload,
-    QuizThunkPayload,
-    TutorsThunkPayload,
-    TutorialThunkPayload
-} from "../store/middleware/ContentExtractorJKL";
-import { fetchedHandles, Handler } from "../store/slices/errorSlice";
+
+import { fetchedHandles } from "../store/slices/errorSlice";
 import { enqueueHydrationStoreUpdate } from "../store/middleware/hydrationPayloadBuffer";
 import { markHydrationAttemptedSeekIds } from "../store/middleware/hydrationQueue";
-import { SlideGroup, SlideItem } from "../store/slices/courseSlice";
-import { Banner } from "../store/slices/courseSlice";
-import { Quiz } from "../store/slices/quizSlice";
 import { InitializedLoadingPayload } from "../store/slices/sessionSlice";
-import { IncomingMessage, OutgoingMessage, Tutor } from "../store/slices/commsSlice";
-import { Banner as TutorialBanner, Content as TutorialContent } from "../store/slices/tutorialSlice";
 import {
     CustomJwtPayload,
     AuthPayload,
@@ -39,57 +25,8 @@ import { QueryParams } from "../store/types";
 import { Executedquery, validateThenDispatch, buildRecordStateProps, extractIDsAtRequest } from "./ThunksUtils";
 import { getAccountRecords, getAnonymousRecords } from "./ThunksUtils";
 import { clearIDsAtRequest, registerIDsAtRequest } from "../store/slices/statsSlice";
-import {
-    quizFormatter as offlineQuizFormatter,
-    courseFormatter as offlineCourseFormatter,
-    questionFormatter as offlineQuestionFormatter,
-    pennantFormatter as offlinePennantFormatter,
-    outgoingFormatter as offlineOutgoingFormatter,
-    incomingFormatter as offlineIncomingFormatter,
-    tutorsFormatter as offlineTutorsFormatter,
-    tutorialFormatter as offlineTutorialFormatter,
-} from "../offlineFormatters/service/FormatService";
+       
 
-type FormatterThunkApi = GetThunkAPI<{ rejectValue: string }>;
-type FormatterReject = ReturnType<FormatterThunkApi['rejectWithValue']>;
-
-function rejectFormatterError(
-    rejectWithValue: FormatterThunkApi['rejectWithValue'],
-    error: unknown,
-): FormatterReject {
-    if (error instanceof Error) return rejectWithValue(error.message);
-    return rejectWithValue('An unknown error occurred');
-}
-
-async function postFormatterJson<T>(
-    formatterLabel: string,
-    url: string,
-    variables: Record<string, unknown>,
-    rejectWithValue: FormatterThunkApi['rejectWithValue'],
-): Promise<T | FormatterReject> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
-    try {
-        const response = await fetch(url, {
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(variables),
-            method: 'POST',
-            signal: controller.signal,
-        });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(errorText);
-        }
-        clearTimeout(timeoutId);
-        return await response.json() as T;
-    } catch (error) {
-        clearTimeout(timeoutId);
-        if (error instanceof Error && error.name === 'AbortError') {
-            return rejectWithValue(`Request timeout: ${formatterLabel} formatter failed after ${timeout}ms`);
-        }
-        return rejectFormatterError(rejectWithValue, error);
-    }
-}
 
 export const authenticate = createAsyncThunk<InitializedLoadingPayload, AuthPayload, { rejectValue: string }>(
     'authenticate',
@@ -283,134 +220,8 @@ export const bytesFetcher = createAsyncThunk<UpdateTextsPayload[], BytesFetcherA
         }
     }
 );
-export const QuizFormatter = createAsyncThunk<{ quizzes: Quiz[] }, QuizThunkPayload, { rejectValue: string }>(
-    'QuizFormatter',
-    async (payload: QuizThunkPayload, { rejectWithValue, getState }): Promise<{ quizzes: Quiz[] } | FormatterReject> => {
-        const { content } = payload;
-        if ((getState() as RootState).session.offlineFormatter) {
-            try {
-                return offlineQuizFormatter({ content }) as { quizzes: Quiz[] };
-            } catch (error) {
-                return rejectFormatterError(rejectWithValue, error);
-            }
-        }
-        return postFormatterJson<{ quizzes: Quiz[] }>('Quiz', ToolKit.quizFormatterUrl, { content }, rejectWithValue);
-    }
-);
 
-export const CourseFormatter = createAsyncThunk<
-    { banners: Banner[]; content: SlideGroup[] },
-    CourseThunkPayload, { rejectValue: string }>(
-        'CourseFormatter',
-        async (payload: CourseThunkPayload, { rejectWithValue, getState }): Promise<{ banners: Banner[]; content: SlideGroup[] } | FormatterReject> => {
-            const { content } = payload;
-            if ((getState() as RootState).session.offlineFormatter) {
-                try {
-                    return offlineCourseFormatter({ content }) as { banners: Banner[]; content: SlideGroup[] };
-                } catch (error) {
-                    return rejectFormatterError(rejectWithValue, error);
-                }
-            }
-            return postFormatterJson<{ banners: Banner[]; content: SlideGroup[] }>('Course', ToolKit.courseFormatterUrl, { content }, rejectWithValue);
-        }
-    );
 
-export const QuestionFormatter = createAsyncThunk<
-    { banners: Banner[], handlers: Record<string, Handler[]> },
-    QuestionThunkPayload, { rejectValue: string }>(
-        'QuestionFormatter',
-        async (payload: QuestionThunkPayload, { rejectWithValue, getState }): Promise<{ banners: Banner[]; handlers: Record<string, Handler[]> } | FormatterReject> => {
-            const { content } = payload;
-            if ((getState() as RootState).session.offlineFormatter) {
-                try {
-                    return offlineQuestionFormatter({ content }) as { banners: Banner[]; handlers: Record<string, Handler[]> };
-                } catch (error) {
-                    return rejectFormatterError(rejectWithValue, error);
-                }
-            }
-            return postFormatterJson<{ banners: Banner[]; handlers: Record<string, Handler[]> }>('Question', ToolKit.questionFormatterUrl, { content }, rejectWithValue);
-        }
-    );
-export const PennantFormatter = createAsyncThunk<
-    { banners: Banner[]; content: SlideItem[][] },
-    PennantThunkPayload, { rejectValue: string }>(
-        'PennantFormatter',
-        async (payload: PennantThunkPayload, { rejectWithValue, getState }): Promise<{ banners: Banner[]; content: SlideItem[][] } | FormatterReject> => {
-            const { content } = payload;
-            if ((getState() as RootState).session.offlineFormatter) {
-                try {
-                    return offlinePennantFormatter({ content }) as { banners: Banner[]; content: SlideItem[][] };
-                } catch (error) {
-                    return rejectFormatterError(rejectWithValue, error);
-                }
-            }
-            return postFormatterJson<{ banners: Banner[]; content: SlideItem[][] }>('Pennant', ToolKit.pennantFormatterUrl, { content }, rejectWithValue);
-        }
-    );
-export const OutgoingFormatter = createAsyncThunk<
-    { content: OutgoingMessage[], handlers: Record<string, Handler[]> },
-    OutgoingThunkPayload, { rejectValue: string }>(
-        'OutgoingFormatter',
-        async (payload: OutgoingThunkPayload, { rejectWithValue, getState }): Promise<{ content: OutgoingMessage[]; handlers: Record<string, Handler[]> } | FormatterReject> => {
-            const { content } = payload;
-            if ((getState() as RootState).session.offlineFormatter) {
-                try {
-                    return offlineOutgoingFormatter({ content }) as { content: OutgoingMessage[]; handlers: Record<string, Handler[]> };
-                } catch (error) {
-                    return rejectFormatterError(rejectWithValue, error);
-                }
-            }
-            return postFormatterJson<{ content: OutgoingMessage[]; handlers: Record<string, Handler[]> }>('Outgoing', ToolKit.outgoingFormatterUrl, { content }, rejectWithValue);
-        }
-    );
-export const IncomingFormatter = createAsyncThunk<
-    { content: IncomingMessage[] },
-    IncomingThunkPayload, { rejectValue: string }>(
-        'IncomingFormatter',
-        async (payload: IncomingThunkPayload, { rejectWithValue, getState }): Promise<{ content: IncomingMessage[] } | FormatterReject> => {
-            const { content, mailer } = payload;
-            if ((getState() as RootState).session.offlineFormatter) {
-                try {
-                    return offlineIncomingFormatter({ content, mailer }) as { content: IncomingMessage[] };
-                } catch (error) {
-                    return rejectFormatterError(rejectWithValue, error);
-                }
-            }
-            return postFormatterJson<{ content: IncomingMessage[] }>('Incoming', ToolKit.incomingFormatterUrl, { content, mailer }, rejectWithValue);
-        }
-    );
-export const TutorsFormatter = createAsyncThunk<
-    { content: Tutor[] },
-    TutorsThunkPayload, { rejectValue: string }>(
-        'TutorsFormatter',
-        async (payload: TutorsThunkPayload, { rejectWithValue, getState }): Promise<{ content: Tutor[] } | FormatterReject> => {
-            const { content } = payload;
-            if ((getState() as RootState).session.offlineFormatter) {
-                try {
-                    return offlineTutorsFormatter({ content }) as { content: Tutor[] };
-                } catch (error) {
-                    return rejectFormatterError(rejectWithValue, error);
-                }
-            }
-            return postFormatterJson<{ content: Tutor[] }>('Tutors', ToolKit.tutorsFormatterUrl, { content }, rejectWithValue);
-        }
-    );
-export const TutorialFormatter = createAsyncThunk<
-    { banners: TutorialBanner[]; content: TutorialContent[][] },
-    TutorialThunkPayload, { rejectValue: string }>(
-        'TutorialFormatter',
-        async (payload: TutorialThunkPayload, { rejectWithValue, getState }): Promise<{ banners: TutorialBanner[]; content: TutorialContent[][] } | FormatterReject> => {
-            const { content } = payload;
-            if ((getState() as RootState).session.offlineFormatter) {
-                try {
-                    return offlineTutorialFormatter({ content }) as { banners: TutorialBanner[]; content: TutorialContent[][] };
-                } catch (error) {
-                    return rejectFormatterError(rejectWithValue, error);
-                }
-            }
-            return postFormatterJson<{ banners: TutorialBanner[]; content: TutorialContent[][] }>('Tutorial', ToolKit.tutorialFormatterUrl, { content }, rejectWithValue);
-        }
-    );
 
 export const fetchData = createAsyncThunk<
     Record<string, Executedquery>,

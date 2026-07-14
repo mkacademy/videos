@@ -27,11 +27,7 @@ import {
 import { flushHydrationStoreBuffer } from './hydrationPayloadBuffer';
 import { getHydrationCpanelMessage } from './hydrationLegUtils';
 import { cpanelMessage } from '../slices/viewSlice';
-import {
-  handleCourseFormatters,
-  handleQuizFormatters,
-  handleTutorialFormatters,
-} from '../../library/cpanelFormatingUtils';
+
 import { isDehydrated } from '../../library/controlPanelUtils';
 import { prependError } from '../slices/errorSlice';
 
@@ -106,37 +102,25 @@ const controlPanel: Middleware<{}, RootState> = ({ dispatch, getState }) => (nex
     }
   }
   if (setTutorials.match(action)) {
-    const state = getState();
     const { Trees, content, banners, TreesId } = action.payload;
     const { content: flushedContent, banners: flushedBanners } = flushTutorialTrees(Trees);
     const newBanners = [...(flushedBanners || []), ...(banners || [])];
     const newContent = [...(flushedContent || []), ...(content || [])];
-    const { formatters } = state.settings;
-    if (formatters === "cpanel" || formatters === "cpanelapp")
-      handleTutorialFormatters(dispatch, setQueue, flushedBanners, flushedContent);
     return next(setTutorials({ banners: newBanners, content: newContent, Trees, TreesId }));
   }
   if (setCourses.match(action)) {
-    const state = getState();
     const { Trees, content, banners, TreesId } = action.payload;
     const { content: flushedContent, banners: flushedBanners } = flushCourseTrees(Trees);
     const newBanners = [...(flushedBanners || []), ...(banners || [])];
     const newContent = [...(flushedContent || []), ...(content || [])];
-    const { formatters } = state.settings;
-    if (formatters === "cpanel" || formatters === "cpanelapp")
-      handleCourseFormatters(dispatch, setQueue, flushedBanners, flushedContent);
     return next(setCourses({ banners: newBanners, content: newContent, Trees, TreesId }));
   }
   if (setQuizzes.match(action)) {
-    const state = getState();
     const { Trees, content, banners, quizzes, TreesId } = action.payload;
     const { quizzes: flushedQuizzes, content: flushedContent, banners: flushedBanners } = flushQuizTrees(Trees);
     const newQuizzes = [...(flushedQuizzes || []), ...(quizzes || [])];
     const newBanners = [...(flushedBanners || []), ...(banners || [])];
     const newContent = [...(flushedContent || []), ...(content || [])];
-    const { formatters } = state.settings;
-    if (formatters === "cpanel" || formatters === "cpanelapp")
-      handleQuizFormatters(dispatch, setQueue, flushedQuizzes, flushedContent, flushedBanners);
     return next(setQuizzes({ quizzes: newQuizzes, content: newContent, banners: newBanners, Trees, TreesId }));
   }
   if (viewPayload.match(action)) {
