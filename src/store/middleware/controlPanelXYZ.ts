@@ -3,7 +3,7 @@ import { RootState } from '../index';
 import {
   initializedLoading,
 } from "../slices/sessionSlice";
-import { hydrateData, hydratedThenFetch, hydrateSkeletons, hydrateSkeletonRows } from '../../library/actions';
+import { hydrateData, hydratedThenFetch } from '../../library/actions';
 import { appendRowz } from "../slices/rowSlice";
 import { EntityTypeMap } from '../slices/rowSlice';
 import { viewPayload, viewRequest } from '../slices/viewSlice';
@@ -154,32 +154,8 @@ const controlPanel: Middleware<{}, RootState> = ({ dispatch, getState }) => (nex
     }
     else next(viewPayload(rest));
   }
-  if (hydrateSkeletons.match(action)) {
-    if (abortIfHydrationDisabled(getState)) {
-      return next(action);
-    }
-    const webapp = getCurAppName(getState().session.curApp);
-    handleHydrationLogic(
-      webapp,
-      getState,
-      dispatch,
-      [isDehydrated],
-    );
-    return next(action);
-  }
-  if (hydrateSkeletonRows.match(action)) {
-    const webapp = getCurAppName(getState().session.curApp);
-    handleHydrationLogic(
-      webapp,
-      getState,
-      dispatch,
-      [isDehydrated],
-      undefined,
-      undefined,
-      { bypassShouldHydrate: true },
-    );
-    return next(action);
-  }
+
+
   if (hydrateData.match(action) || hydratedThenFetch.match(action)) {
     if (!isBypassShouldHydrateSession() && abortIfHydrationDisabled(getState)) {
       return;

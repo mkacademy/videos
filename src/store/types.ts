@@ -41,6 +41,22 @@ export interface RootState {
   playback: PlaybackState;
 }
 
+export interface QueryParams {
+  type?: string;
+  IDs?: number[];
+  entity?: string;
+  webapp?: string;
+  parent?: string;
+  hasCounts?: boolean;
+  convolution?: string;
+  isPrivateView?: boolean
+  seek?: number[] | string;
+  curToken?: string | null;
+  mutateRole?: string | null;
+  mailer?: number | undefined;
+  limit?: { take: number | undefined; skip: number | undefined };
+}
+
 export type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
 
 export interface StatsMiddlewareState {

@@ -572,8 +572,6 @@ export const updateAnswersMetadata = createAction<MetadataUpdate[]>('updateAnswe
 // Communication actions
 export const markIncoming = createAction('markIncoming');
 export const UnzipAndHydrate = createAction('UnzipAndHydrate');
-export const hydrateSkeletons = createAction('hydrateSkeletons');
-export const hydrateSkeletonRows = createAction('hydrateSkeletonRows');
 
 // Content actions (third import)
 export const hydratedThenFetch = createAction<FetchDataPayload>('hydratedThenFetch');

@@ -1,7 +1,7 @@
 import { RootState } from "../types";
 import { Middleware } from "@reduxjs/toolkit";
-import { hydrateData, hydrateSkeletons, UnzipAndHydrate } from "../../library/actions";
-import { addUnzippedTrees, completedSkeletons, completedUnzipping, MappedCourseTrees, MappedQuizTrees, MappedTutorialTrees } from "../slices/settingsSlice";
+import { hydrateData, UnzipAndHydrate } from "../../library/actions";
+import { addUnzippedTrees, completedUnzipping, MappedCourseTrees, MappedQuizTrees, MappedTutorialTrees } from "../slices/settingsSlice";
 import { FS, FF, FD, sifterTypes, filterTypes, dashboardTypes } from "../../library/commsUtils";
 import { setTutorials, TutorialState } from "../slices/tutorialSlice";
 import { ItemWithCourseTrees, ItemWithQuizTrees, ItemWithTutorialTrees } from "./EncodingManagerGHI";
@@ -159,10 +159,6 @@ const HydrationManager: Middleware<{}, RootState> = ({ dispatch, getState }) => 
             }));
             dispatchHydrateDataIfEnabled(dispatch, getState);
         });
-    }
-
-    if (hydrateSkeletons.match(action)) {
-        setTimeout(() => dispatch(completedSkeletons(true)), 2000);
     }
 
     if (mutateCurApp.match(action)) {

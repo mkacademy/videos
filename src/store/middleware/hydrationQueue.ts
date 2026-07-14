@@ -2,7 +2,7 @@ import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 import { hydrationDelay, getPlural } from '../../utils';
 import { anonymousFetch, authenticatedFetch } from '../../library/ThunksUtils';
 import { deHydratedRowsDataFetcher } from '../../library/Thunks';
-import { QueryParams } from './ViewManagerSTU';
+import { QueryParams } from '../types';
 import { RootState, store } from '../index';
 import { hydrateData } from '../../library/actions';
 import { resetHydrationQueries } from '../slices/sessionSlice';

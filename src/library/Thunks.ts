@@ -35,7 +35,7 @@ import {
 } from "./types";
 import { RootState } from "../store";
 import { anonymousFetch, authenticatedFetch, FetchDataPayload } from "./ThunksUtils";
-import { QueryParams } from "../store/middleware/ViewManagerSTU";
+import { QueryParams } from "../store/types";
 import { Executedquery, validateThenDispatch, buildRecordStateProps, extractIDsAtRequest } from "./ThunksUtils";
 import { getAccountRecords, getAnonymousRecords } from "./ThunksUtils";
 import { clearIDsAtRequest, registerIDsAtRequest } from "../store/slices/statsSlice";

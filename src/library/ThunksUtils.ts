@@ -9,7 +9,7 @@ import { appendRowz, ResultPayload } from '../store/slices/rowSlice';
 import { getCounts, getExecutedQueries } from '../store/slices/statsSlice';
 import { Quiz, setQuizzes } from '../store/slices/quizSlice';
 import { CpanelRow } from '../components/Core/types';
-import { QueryParams } from '../store/middleware/ViewManagerSTU';
+import { QueryParams } from '../store/types';
 import { viewRequestFetching } from '../store/slices/viewSlice';
 import { insertStats } from './actions';
 import { withReciepients } from '../Hooks/useCommunications/useCommunications';

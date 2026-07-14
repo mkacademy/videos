@@ -4,7 +4,7 @@ import type { SlideGroup } from '../../library/CourseUtils';
 import type { ChunkBufferingEntry } from '../../library/videoChunkPlayback';
 import { normalizeBase64Payload } from '../../library/directoryTreeUtils';
 import { Metadata } from '../../components/Core/types';
-import { QueryParams } from './ViewManagerSTU';
+import { QueryParams } from '../types';
 import { SessionState } from '../slices/sessionSlice';
 import type { ChunkBuffer } from '../slices/playbackSlice';
 import { setChunkFetchInFlight } from '../slices/playbackSlice';

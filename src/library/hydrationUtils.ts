@@ -1,4 +1,4 @@
-import { QueryParams } from '../store/middleware/ViewManagerSTU';
+import { QueryParams } from '../store/types';
 import { Banner as TutorialBanner, Content as TutorialContent } from '../store/slices/tutorialSlice';
 import { Banner as CourseBanner, SlideGroup, SlideItem, SlideGroupItem } from '../store/slices/courseSlice';
 import { Quiz } from '../store/slices/quizSlice';
