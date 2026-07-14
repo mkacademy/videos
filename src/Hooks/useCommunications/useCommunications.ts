@@ -1,22 +1,8 @@
 
 import { Handler } from "../../store/slices/errorSlice";
-import { useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { outRoutes, appIndeces } from "../../library/commsUtils";
-import { Tutor, IncomingMessage, OutgoingMessage, OutgoingType } from "../../store/slices/commsSlice";
-import { AppDispatch, RootState } from "../../store";
-import { navigateConvolutionOrWarn, stickyFsqFromState } from "../../library/convolutionNavSearch";
-
-
-interface Props {
-  webapp: string;
-  tutors: Tutor[];
-  pathname: string;
-  outgoing: OutgoingMessage[];
-  incoming: IncomingMessage[];
-  encodedData: Record<string, string>;
-  dismissals: Record<string, boolean>;
-}
+import { outRoutes } from "../../library/commsUtils";
+import { OutgoingMessage } from "../../store/slices/commsSlice";
+import { OutgoingType } from "../../library/commsUtils";
 
 export const withReciepients = (payload: { response: OutgoingMessage[]; handlers: Record<string, Handler[]> }) => {
   const { response, handlers } = payload;
@@ -41,85 +27,3 @@ export const withReciepients = (payload: { response: OutgoingMessage[]; handlers
   }));
 };
 
-const useCommunications = ({
-  webapp,
-  tutors,
-  outgoing,
-  incoming,
-  pathname,
-  dismissals,
-  encodedData,
-}: Props) => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
-  const stickyFsq = useSelector((state: RootState) => stickyFsqFromState(state));
-  const tabChnageHandler = (tab: string) => {
-    navigateConvolutionOrWarn(
-      dispatch,
-      navigate,
-      '/convolution/' + tab,
-      encodedData[appIndeces[tab]],
-      stickyFsq,
-    );
-  };
-
-  switch (webapp) {
-    case "tutors": {
-      const dismised = dismissals[pathname] ?? false;
-      const filtered = tutors.filter(
-        ({ isDismissed }) => isDismissed === dismised
-      );
-      return {
-        outgoing,
-        incoming,
-        tutors: filtered,
-        tabChnageHandler,
-        noIncoming: true,
-        noOutgoing: true,
-        noTutors: filtered.length === 0,
-      };
-    }
-    case "outgoing": {
-      const dismised = dismissals[pathname] ?? false;
-      const filtered = outgoing.filter(
-        ({ isDismissed }) => isDismissed === dismised
-      );
-      return {
-        tutors,
-        incoming,
-        noTutors: true,
-        tabChnageHandler,
-        noIncoming: true,
-        outgoing: filtered,
-        noOutgoing: filtered.length === 0,
-      };
-    }
-    case "incoming": {
-      const dismised = dismissals[pathname] ?? false;
-      const filtered = incoming.filter(
-        ({ isDismissed }) => isDismissed === dismised
-      );
-      return {
-        tutors,
-        outgoing,
-        tabChnageHandler,
-        incoming: filtered,
-        noIncoming: filtered.length === 0,
-        noOutgoing: true,
-        noTutors: true,
-      };
-    }
-    default:
-      return {
-        tutors,
-        outgoing,
-        incoming,
-        noTutors: true,
-        noIncoming: true,
-        noOutgoing: true,
-        tabChnageHandler,
-      };
-  }
-};
-
-export default useCommunications; 

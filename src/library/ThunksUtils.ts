@@ -3,7 +3,7 @@ import { createSelector, Dispatch } from '@reduxjs/toolkit';
 import { fetchedHandles, Handler } from '../store/slices/errorSlice';
 import { Content, setTutorials, Banner as TutorialBanner } from '../store/slices/tutorialSlice';
 import { Banner, setCourses, SlideGroup } from '../store/slices/courseSlice';
-import { IncomingMessage, OutgoingMessage, setIncomings, setOutgoings, setTutors, Tutor } from '../store/slices/commsSlice';
+import { IncomingMessage, OutgoingMessage } from '../store/slices/commsSlice';
 import { ToolKit, RECORDS, getCurAppName, getSimplePageIndexFromSearch, orderedWebappRoutes, Tree, timeout, getCurAppIndex } from '../utils';
 import { appendRowz, ResultPayload } from '../store/slices/rowSlice';
 import { Quiz, setQuizzes } from '../store/slices/quizSlice';
@@ -15,8 +15,8 @@ import { withReciepients } from '../Hooks/useCommunications/useCommunications';
 import { RootState } from '../store';
 import { initTotals } from './actions';
 import { StatsMiddlewareState } from '../store/types';
-import { B, M, U } from '../library/commsUtils';
 import { buildRecordStateProps} from './requestIdsUtils';   
+import { setOutgoings, setIncomings } from '../store/slices/commsSlice';
 
 export {
     bannerPred,
@@ -392,7 +392,7 @@ export interface FetchedData {
     banners?: Banner[] | TutorialBanner[];
     counts: Record<string, Record<string, number>>;
     executedQueries?: Record<string, Executedquery>;
-    content?: SlideGroup[] | Content[][] | OutgoingMessage[] | IncomingMessage[] | Tutor[] | Record<string, Record<string, CpanelRow[]>>;
+    content?: SlideGroup[] | Content[][] | OutgoingMessage[] | IncomingMessage[] | Record<string, Record<string, CpanelRow[]>>;
 }
 
 export interface QuizResponse {
@@ -524,13 +524,8 @@ export const validateThenDispatch = ({
     }
     else {
         if (content && Array.isArray(content) && content.length > 0) {
-            if (isArrayOfType(content, isTutor)) {
-                console.log("is_tutors_response");
-                dispatch(setTutors(content));
-                dispatch(fetchedHandles(getHandlesFromTutors(content)));
-                dispatch(insertStats({ screen: 'tutors', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
-            }
-            else if (isArrayOfType(content, isOutgoingMessage)) {
+
+         if (isArrayOfType(content, isOutgoingMessage)) {
                 console.log("is_outgoing_response");
                 dispatch(fetchedHandles(handlers ?? emptyHandlers));
                 dispatch(setOutgoings(withReciepients({ response: content, handlers: handlers ?? emptyHandlers })));
@@ -558,36 +553,13 @@ export const validateThenDispatch = ({
 
 }
 
-const getHandleName = (type: string): string => {
-    switch (type) {
-        case B:
-            return "HandlesBosses";
-        case M:
-            return "HandlesMinions";
-        case U:
-            return "HandlesUnderbosses";
-    }
-    return "";
-};
 
-const getHandlesFromTutors = (tutors: Tutor[]): Record<string, Handler[]> => {
-    return tutors.reduce((acc: Record<string, Handler[]>, cur: Tutor) => {
-        acc[getHandleName(cur.type)] = [...(acc[getHandleName(cur.type)] ?? []), { id: cur.id, keyword: cur.title }];
-        return acc;
-    }, {} as Record<string, Handler[]>);
-};
+
+
 const isArrayOfType = <T>(arr: unknown[], typeGuard: (item: unknown) => item is T): arr is T[] => {
     return Array.isArray(arr) && arr.every((item) => typeGuard(item));
 };
-// Add type guards before the useCommunications function
-const isTutor = (item: unknown): item is Tutor => {
-    if (typeof item !== 'object' || item === null) return false;
-    const o = item as Record<string, unknown>;
-    // Tutor has email and status as number, but no mailer property
-    return typeof o.email === 'string' &&
-        typeof o.status === 'number' &&
-        !('mailer' in o);
-};
+
 
 const isOutgoingMessage = (item: unknown): item is OutgoingMessage => {
     if (typeof item !== 'object' || item === null) return false;

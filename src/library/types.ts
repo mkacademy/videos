@@ -1,5 +1,4 @@
 import { UPDATE_ROWS } from "../utils";
-import { TutorType } from "../store/slices/commsSlice";
 import { CookIngredientsProps } from "../utils";
 export interface CustomJwtPayload {
     sub: string;
@@ -89,75 +88,15 @@ export interface MutateHierachyPayload {
     selector: string,
 }
 
-export interface MutateHierachyResponse {
-    selector: string,
-    candidates: string[],
-}
 
-export interface mutateMotionsPayload {
-    mutateRole: string,
-    modified: {
-        id: number;
-        motion?: {
-            prev: TutorType;
-            cur: TutorType;
-            token: string;
-        };
-    }[],
-    curMailer: number,
-    curToken: string,
-    quota: number,
-}
 
-export interface mutateMotionsResponse {
-    modified: {
-        id: number;
-        motion?: {
-            prev: TutorType;
-            cur: TutorType;
-            token: string;
-        };
-    }[],
-}
 
-export interface sendPackagesPayload {
-    quota: number,
-    curToken: string,
-    mutateRole: string,
-    modified: {
-        id: number;
-        targets?: (string | number)[];
-        status: {
-            communications?: string;
-            primary: { disabled: boolean; label: string };
-            danger: { disabled: boolean; label: string };
-        };
-    }[],
-}
 
-export interface sendPackagesResponse {
-    packages: {
-        quota: number;
-        curToken: string;
-        mutateRole: string;
-        curMailer: number;
-        webapp: string;
-        formatter?: string;
-        resolvers: string[];
-        unlocked: string[];
-        foundations: Record<string, Record<string, Record<string, number[]>>>;
-    }[];
-    sent: Record<string, {
-        id: number;
-        type: string;
-        targets: (string | number)[];
-        status: {
-            communications?: string;
-            primary: { disabled: boolean; label: string };
-            danger: { disabled: boolean; label: string };
-        };
-    }[]>;
-}
+
+
+
+
+
 
 export interface sendPackagePayload {
     quota: number,

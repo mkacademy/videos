@@ -14,7 +14,7 @@ import { ParentData } from './store/slices/viewSlice';
 import { showInfos, tabluarPrefixes, userApps, memberApps, adminsApps } from './constants';
 import { EntityTypeMap } from './store/slices/rowSlice';
 import { UserMockInput, BannerInput, PennantInput, StepInput, RootInput } from './library/RowMockingUtils';
-import { IncomingMessage, OutgoingMessage, Tutor } from './store/slices/commsSlice';
+import { IncomingMessage, OutgoingMessage } from './store/slices/commsSlice';
 
 export type FormKeys = BaseForm | InstructionForm | UserForm;
 // Comprehensive interface for all possible BaseEntity properties
@@ -1342,7 +1342,7 @@ export const validatedCombination = (
 
 export const uniqueAliases = ["text", "quote", "content", "title", "imageurl", 'email'];
 
-export const calcBytes = (r: Partial<DataRow> | OutgoingMessage | IncomingMessage | Tutor, to: string | string[] = getEntityFromUrl()) => {
+export const calcBytes = (r: Partial<DataRow> | OutgoingMessage | IncomingMessage, to: string | string[] = getEntityFromUrl()) => {
   const isString = typeof to === "string";
   const fields = isString ? Tree.getProperty(to, "fields") : to;
   return (fields ?? []).reduce((t: number, k: string) => t + Buffer.byteLength(String(r[k as keyof DataRow] ?? ""), "utf8"), 0);
