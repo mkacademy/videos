@@ -12,7 +12,6 @@ import { CpanelRow } from '../components/Core/types';
 import { QueryParams } from '../store/middleware/ViewManagerSTU';
 import { viewRequestFetching } from '../store/slices/viewSlice';
 import { insertStats } from './actions';
-import { setCounts } from '../store/slices/searchSlice';
 import { withReciepients } from '../Hooks/useCommunications/useCommunications';
 import { RootState } from '../store';
 import { initTotals } from './actions';
@@ -566,7 +565,6 @@ export const validateThenDispatch = ({
     }
     else if (isCountsResponse(response)) {
         console.log("is_counts_response");
-        dispatch(setCounts(counts));
         if (fetchSequence) abortRemainingFetchSequence = true;
     }
     else {

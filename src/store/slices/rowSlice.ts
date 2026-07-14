@@ -1,9 +1,5 @@
 import { Tree } from '../../utils';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { tabledFetcher } from '../../library/Thunks';
-import {
-  type ReOrderRowsPayload,
-} from '../middleware/TabulatorOrderingUtils';
 import { BaseFormattedData, DataRow, BaseEntity } from '../../components/Core/types';
 
 
@@ -12,7 +8,6 @@ export type EntityTypeMap = {
   foundation: BaseEntity;
 }
 
-export type { ReOrderRowsPayload };
 
 // Helper functions
 const getOffsetState = (state: Row[], fetched: Row[], affirm: (r: Row) => (R: Row) => boolean) => {
@@ -181,12 +176,6 @@ export const rowSlice = createSlice({
       console.log("cleared_rows");
       return [];
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(tabledFetcher.rejected, (_, action) => {
-        console.log("tabledFetcher.rejected", action);
-      })
   },
 });
 
