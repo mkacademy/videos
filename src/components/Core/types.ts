@@ -1,5 +1,4 @@
 import { PennantInput, BannerInput, RootInput, StepInput, UserMockInput } from "../../library/RowMockingUtils";
-import { ActionItem, Status } from "../../store/slices/actionSlice";
 import { DescendentItem } from "../../store/slices/decendentSlice";
 import { Row } from "../../store/slices/rowSlice";
 import { ParentData } from "../../store/slices/viewSlice";
@@ -79,7 +78,16 @@ export interface BaseEntityData {
   sizeInBytes: number;
   descendentsSums: Record<string, number>;
 }
-
+export interface Status {
+  initial: number;
+  current: number;
+  owner?: boolean;
+}
+export interface ActionItem {
+  id: string;
+  status: Status;
+  modified?: boolean;
+}
 export interface BaseFormattedData<T = EntityTextProperties> {
   rows: Row[];
   statuses: ActionItem[];

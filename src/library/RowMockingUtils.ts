@@ -1,5 +1,5 @@
 import { getInteractionIDs } from "../utils";
-import { Status } from "../store/slices/actionSlice";
+import { Status } from "../components/Core/types";
 import { DataRow, Metadata } from "../components/Core/types";
 import type { IncomingMessage, OutgoingMessage } from "./commsUtils";
 

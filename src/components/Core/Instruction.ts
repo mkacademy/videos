@@ -17,8 +17,8 @@ import {
 import * as styles from "../../styles/ContraintsCss.module.css";
 import * as descendantsWrapper from "../../styles/descendantsWrapper.module.css";
 import * as orderAndActions from "../../styles/orderAndActions.module.css";
-import { Status } from "../../store/slices/actionSlice";
 import { StepInput } from "../../library/RowMockingUtils";
+import { Status } from "./types";
 
 interface Instruction extends BaseEntity {
   form: InstructionForm;

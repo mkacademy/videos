@@ -1,6 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
-import actionReducer from './slices/actionSlice';
 import sessionReducer from './slices/sessionSlice';
 import commsReducer from './slices/commsSlice';
 import contentReducer from './slices/contentSlice';
@@ -25,7 +24,6 @@ import { preThunkMiddleware, postThunkMiddleware } from './middleware';
 
 export const store = configureStore({
   reducer: {
-    action: actionReducer,
     session: sessionReducer,
     comms: commsReducer,
     content: contentReducer,

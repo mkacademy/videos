@@ -1,4 +1,4 @@
-import { Status } from "../store/slices/actionSlice";
+import { Status } from "../components/Core/types";
 import { Metadata } from "../components/Core/types";
 import type { CourseTrees } from "./controlPanelUtils";
 import {

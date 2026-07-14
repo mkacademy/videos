@@ -12,7 +12,6 @@ import { TraversalState } from './slices/traversalSlice';
 import { RowState } from './slices/rowSlice';
 import { ContentState } from './slices/contentSlice';
 import { InteractionState } from './slices/interactionSlice';
-import { ActionState } from './slices/actionSlice';
 import { DecendentState } from './slices/decendentSlice';
 import { SettingsState } from './slices/settingsSlice';
 import { StashState } from './slices/stashSlice';
@@ -36,7 +35,6 @@ export interface RootState {
   row: RowState;
   content: ContentState;
   interaction: InteractionState;
-  action: ActionState;
   decendent: DecendentState;
   settings: SettingsState;
   stash: StashState;

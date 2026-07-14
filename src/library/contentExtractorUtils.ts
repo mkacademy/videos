@@ -1,5 +1,5 @@
 import { DataRow, CpanelRow, MockedDataReturnTypes, Metadata } from '../components/Core/types';
-import { Status } from '../store/slices/actionSlice';
+import { Status } from '../components/Core/types';
 import { declare } from '../store/slices/contentSlice';
 import { Tree as entities } from '../utils';
 import {
