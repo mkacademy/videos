@@ -1,29 +1,7 @@
-import { isEditsSaveMessage } from '../../library/editSaveChunkUtils';
-import { isTabulatorSaveMessage } from '../../library/tabulatorSaveChunkUtils';
+
 import { AppDispatch, store } from '../index';
 import { clearOnlyWarnings, prependWarning } from '../slices/errorSlice';
 import { viewRequest } from '../slices/viewSlice';
-import {
-  clearEditSaveQueue,
-  getEditSaveQueueLength,
-} from './editSaveQueue';
-import {
-  clearSaveEditsQueue,
-  getSaveEditsQueueLength,
-  isSaveEditsQueueActive,
-} from './saveEditsQueue';
-import {
-  clearTabulatorSaveQueue,
-  getTabulatorSaveQueueLength,
-} from './tabulatorSaveQueue';
-import { getHarvestMsgPrefix, clearHarvestQueue, getHarvestQueueLength } from './harvestSaveQueue';
-import { getPublishMsgPrefix, clearPublishQueue, getPublishQueueLength } from './publishSaveQueue';
-import { getOwnershipMsgPrefix, clearOwnershipQueue, getOwnershipQueueLength } from './ownershipSaveQueue';
-import { visibiltyMsg } from './visibilityManagerUtils';
-import {
-  clearVisibilityQueue,
-  getVisibilityQueueLength,
-} from './visibilitySaveQueue';
 import {
   clearHydrationQueue,
   getHydrationQueueLength,
@@ -43,71 +21,6 @@ export interface SequentialThunkQueue {
  * Add new queue modules here so Ctrl+Shift+M can stop them without touching shortcut code.
  */
 export const SEQUENTIAL_THUNK_QUEUES: readonly SequentialThunkQueue[] = [
-  {
-    id: 'saveEdits',
-    label: 'save edits',
-    isSessionActive: (message, requestIsProcessing) =>
-      isSaveEditsQueueActive() && requestIsProcessing && isEditsSaveMessage(message),
-    getPendingCount: getSaveEditsQueueLength,
-    clear: clearSaveEditsQueue,
-  },
-  {
-    id: 'editSave',
-    label: 'edit save',
-    isSessionActive: (message, requestIsProcessing) =>
-      requestIsProcessing && isEditsSaveMessage(message),
-    getPendingCount: getEditSaveQueueLength,
-    clear: clearEditSaveQueue,
-  },
-  {
-    id: 'tabulatorSave',
-    label: 'tabulator save',
-    isSessionActive: (message, requestIsProcessing) =>
-      requestIsProcessing && isTabulatorSaveMessage(message),
-    getPendingCount: getTabulatorSaveQueueLength,
-    clear: clearTabulatorSaveQueue,
-  },
-  {
-    id: 'visibility',
-    label: 'visibility update',
-    isSessionActive: (message, requestIsProcessing) =>
-      requestIsProcessing && message != null && message.startsWith(visibiltyMsg),
-    getPendingCount: getVisibilityQueueLength,
-    clear: clearVisibilityQueue,
-  },
-  {
-    id: 'harvest',
-    label: 'harvest',
-    isSessionActive: (message, requestIsProcessing) =>
-      requestIsProcessing &&
-      getHarvestMsgPrefix() !== '' &&
-      message != null &&
-      message.startsWith(getHarvestMsgPrefix()),
-    getPendingCount: getHarvestQueueLength,
-    clear: clearHarvestQueue,
-  },
-  {
-    id: 'publish',
-    label: 'publish',
-    isSessionActive: (message, requestIsProcessing) =>
-      requestIsProcessing &&
-      getPublishMsgPrefix() !== '' &&
-      message != null &&
-      message.startsWith(getPublishMsgPrefix()),
-    getPendingCount: getPublishQueueLength,
-    clear: clearPublishQueue,
-  },
-  {
-    id: 'ownership',
-    label: 'ownership assert',
-    isSessionActive: (message, requestIsProcessing) =>
-      requestIsProcessing &&
-      getOwnershipMsgPrefix() !== '' &&
-      message != null &&
-      message.startsWith(getOwnershipMsgPrefix()),
-    getPendingCount: getOwnershipQueueLength,
-    clear: clearOwnershipQueue,
-  },
   {
     id: 'hydration',
     label: 'hydration',

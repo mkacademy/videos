@@ -7,13 +7,11 @@ import settingsInitializer from './settingsInitializerIJK';
 import DismissalsManager from './DismissalsManagerOPQ';
 import controlPanel from './controlPanelXYZ';
 import { statsMiddleware } from './statsMiddleware';
-import { cacheTotalsMiddleware } from './cacheTotalsMiddleware';
 import HydrationManager from './HydrationManager';
 
 // Define the middleware chain before Redux Thunk
 export const preThunkMiddleware: Middleware[] = [
   statsMiddleware,
-  cacheTotalsMiddleware,
   updateStepsImageurlGuard,
   cascadingUnstasher,
   BlobsManager,

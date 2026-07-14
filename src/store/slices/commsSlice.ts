@@ -43,7 +43,6 @@ import {
   CommsState,
 } from '../../library/commsUtils';
 import { showInfos } from '../../constants';
-import { CommunicationReply } from '../middleware/MessageReaderQRS';
 
 export type {
   TutorType,
@@ -103,14 +102,6 @@ const commsSlice = createSlice({
           isModified: false,
         }))
         .filter(({ id, type }) => !discardeds.includes(id + type));
-    },
-    updateCommunicationStatus: (state, action: PayloadAction<CommunicationReply>) => {
-      const { parentId, childId, status } = action.payload;
-      state.outgoing = state.outgoing.map((message) => {
-        if (message.id === childId && message.targets?.find((target) => parseInt(target.toString()) === parentId))
-          return { ...message, isModified: false, status: { ...message.status, communications: status } };
-        else return message;
-      });
     },
     outlineIncoming: (state, action: PayloadAction<{ ids: string[], isHighlighted?: boolean }>) => {
       const { ids, isHighlighted } = action.payload;
@@ -287,7 +278,6 @@ export const {
   outlineTutor,
   outlineOutgoing,
   outgoingModified,
-  updateCommunicationStatus,
   outlineIncoming,
   incomingModified,
   setTutors,
