@@ -2,18 +2,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { RootState } from '../types';
 import {
   CommentItem,
-  toCommentId,
-  parseCommentId,
-  CommentContentType,
 } from '../../types/comments';
 import { fetchMessageComments } from '../thunks/fetchMessageComments';
-import {
-  createContainer,
-  createCourses,
-  createQuizzes,
-  createSteps,
-  createTutorials,
-} from '../../library/actions';
 
 export type CommentsFor = 'course' | 'quiz' | 'tutorial';
 
@@ -49,46 +39,6 @@ const initialState: CommentsState = {
   tutorial: {},
   quiz: {},
 };
-
-/** Map temporary (negative) commentIds to persisted DB ids; payload is ["local_Id","db_Id",...]. */
-function remapTempCommentIds(
-  state: CommentsState,
-  payload: string[],
-  contentType: CommentContentType,
-) {
-  const ids = payload
-    .map((value) => parseInt(value, 10))
-    .filter((n) => Number.isFinite(n));
-  if (ids.length === 0) return;
-
-  const updateEntry = (entry: CommentsEntry | undefined) => {
-    if (!entry) return;
-    for (const comment of entry.comments) {
-      if (comment.contentType !== contentType) continue;
-      const cid =
-        typeof comment.commentId === 'number' ? comment.commentId : undefined;
-      if (cid === undefined || cid >= 0) continue;
-
-      const index = ids.findIndex((id) => id === cid);
-      if (index === -1 || index % 2 !== 0 || index + 1 >= ids.length) continue;
-
-      const dbId = ids[index + 1];
-      const userId =
-        typeof comment.userId === 'number'
-          ? comment.userId
-          : parseCommentId(String(comment.id)).userId;
-
-      comment.commentId = dbId;
-      comment.userId = userId;
-      comment.id = toCommentId(userId, dbId);
-    }
-  };
-
-  (['course', 'tutorial', 'quiz'] as const).forEach((_for) => {
-    const area = state[_for];
-    Object.values(area).forEach((entry) => updateEntry(entry));
-  });
-}
 
 const commentsSlice = createSlice({
   name: 'comments',
@@ -127,18 +77,6 @@ const commentsSlice = createSlice({
         area[commentsId].showSubmitHeading = !area[commentsId].showSubmitHeading;
       }
     },
-    /** Profile D Ctrl+Shift+E: merge comments stash rows into slice state. */
-    restoreCommentsStash(state, action: PayloadAction<Partial<CommentsState>>) {
-      (['course', 'tutorial', 'quiz'] as const).forEach((_for) => {
-        const incoming = action.payload[_for];
-        if (!incoming) return;
-        for (const [key, entry] of Object.entries(incoming)) {
-          const commentsId = Number(key);
-          if (!Number.isFinite(commentsId) || !entry) continue;
-          state[_for][commentsId] = entry;
-        }
-      });
-    },
   },
   extraReducers: (builder) => {
     builder.addCase(fetchMessageComments.fulfilled, (state, action) => {
@@ -155,47 +93,12 @@ const commentsSlice = createSlice({
         showSubmitHeading: hasMore,
       };
     });
-    builder
-      .addCase(createSteps, (state, action) => {
-        remapTempCommentIds(state, action.payload, 'message');
-      })
-      .addCase(createQuizzes, (state, action) => {
-        remapTempCommentIds(state, action.payload, 'quiz');
-      })
-      .addCase(createCourses, (state, action) => {
-        remapTempCommentIds(state, action.payload, 'course');
-      })
-      .addCase(createTutorials, (state, action) => {
-        remapTempCommentIds(state, action.payload, 'tutorial');
-      })
-      .addCase(createContainer, (state, action) => {
-      // Map temporary (negative) container ids to their persisted DB ids
-      // createContainer payload is ["local_Id","db_Id","local_Id","db_Id",...]
-      const ids = action.payload
-        .map((value) => parseInt(value, 10))
-        .filter((n) => Number.isFinite(n));
-      if (ids.length < 2) return;
-      for (let index = 0; index + 1 < ids.length; index += 2) {
-        const localId = ids[index];
-        const dbId = ids[index + 1];
-        // localId is a temporary (negative) container id; abs(localId) is the commentsId
-        const commentsId = Math.abs(localId);
-        (['course', 'tutorial', 'quiz'] as const).forEach((_for) => {
-          const area = state[_for];
-          const entry = area[commentsId];
-          if (!entry) return;
-          if (!entry.parentIDs.includes(dbId))
-            entry.parentIDs.push(dbId);
-        });
-      }
-    });
   },
 });
 
 export const {
   toggleCommentsOpen,
   toggleSubmitHeading,
-  restoreCommentsStash,
 } = commentsSlice.actions;
 
 const EMPTY_COMMENTS: CommentItem[] = [];

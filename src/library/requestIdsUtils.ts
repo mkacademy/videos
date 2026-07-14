@@ -4,7 +4,6 @@ import { Banner, Pennant, SlideGroup, SlideGroupItem } from '../store/slices/cou
 import { Quiz } from '../store/slices/quizSlice';
 import { SelectedRoute } from '../store/slices/searchSlice';
 import { RootState } from '../store';
-import { resolveRouteToggleBannerIdForFallback } from './quizRouteMatcherUtils';
 
 const transformSlideGroupItem = (item: SlideGroupItem) => ({
     id: item.id,
@@ -201,14 +200,8 @@ const hasHighlightedQuizQuestion = (banners: Banner[], quizId: number): boolean 
 const buildQuizQuestionFallback = (
     quiz: RootState['quiz'],
     quizId: number,
-    selectedQueryRoute: string,
 ) => {
     if (hasHighlightedQuizQuestion(quiz.banners, quizId)) return undefined;
-
-    const routeToggleQuestionId = resolveRouteToggleBannerIdForFallback(quiz, selectedQueryRoute);
-    if (routeToggleQuestionId !== undefined) {
-        return { followupQuestionId: routeToggleQuestionId };
-    }
 
     if (quiz.followupId === undefined) return undefined;
     return { followupQuestionId: quiz.followupId };
@@ -255,7 +248,7 @@ export const buildRecordStateProps = (state: RootState, curApp: number): RecordS
     const tutorial = app === 'tutorial' ? state.tutorial.banners[state.tutorial.selected]?.id : undefined;
     const chapterPennantFallback = buildChapterPennantFallback(state.course);
     const quizQuestionFallback = quiz !== undefined
-        ? buildQuizQuestionFallback(state.quiz, quiz, selectedQueryRoute)
+        ? buildQuizQuestionFallback(state.quiz, quiz)
         : undefined;
     const stateProps: RecordStateProps = {
         quizzes: quiz ? state.quiz.quizzes.filter(bannerOrTutorialBannerOrQuizPred(quiz)).map(quizPred) : [],

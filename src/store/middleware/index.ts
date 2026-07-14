@@ -2,7 +2,6 @@ import { Middleware } from '@reduxjs/toolkit';
 import updateStepsImageurlGuard from './updateStepsImageurlGuard';
 import cascadingUnstasher from './cascadingUnstasher.ts';
 import BlobsManager from './BlobsManagerPQR';
-import UrlDataMatcher, { InsertGUID } from './UrlDataMatcherYZA';
 import settingsInitializer from './settingsInitializerIJK';
 import DismissalsManager from './DismissalsManagerOPQ';
 import controlPanel from './controlPanelXYZ';
@@ -19,8 +18,6 @@ export const preThunkMiddleware: Middleware[] = [
 
 // Define the middleware chain after Redux Thunk
 export const postThunkMiddleware: Middleware[] = [
-  InsertGUID,
-  UrlDataMatcher,
   settingsInitializer,
   DismissalsManager,
   controlPanel,
