@@ -7,7 +7,7 @@ import {
   isJoinedItemsShortcutStashBase,
   isEscrowedItemsShortcutStashBase,
   parseHierarchyStampedStashKey,
-} from "./ShortcutsUtils";
+} from "./hierarchyShortcutStashKeys";
 
 const TUTORIAL_APP_INDEX = 1;
 const COURSE_APP_INDEX = 2;

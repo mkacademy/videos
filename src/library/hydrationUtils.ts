@@ -588,7 +588,7 @@ export const buildOrderedHydrationQueries = (
     : {
       ...baseParams,
       convolution: webapp,
-      isPrivateView: isPrivate,
+      isPrivateView: !!curToken || isPrivate,
       mutateRole: fetchRole,
       mailer: curMailer,
       hasCounts: false,

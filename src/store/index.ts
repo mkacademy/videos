@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 import actionReducer from './slices/actionSlice';
 import sessionReducer from './slices/sessionSlice';
 import commsReducer from './slices/commsSlice';
@@ -10,11 +11,9 @@ import interactionReducer from './slices/interactionSlice';
 import courseReducer from './slices/courseSlice';
 import paginationReducer from './slices/paginationSlice';
 import quizReducer from './slices/quizSlice';
-import responseReducer from './slices/responseSlice';
 import rowReducer from './slices/rowSlice';
 import searchReducer from './slices/searchSlice';
 import settingsReducer from './slices/settingsSlice';
-import sidebarReducer from './slices/sidebarSlice';
 import stashReducer from './slices/stashSlice';
 import textReducer from './slices/textSlice';
 import traversalReducer from './slices/traversalSlice';
@@ -37,11 +36,9 @@ export const store = configureStore({
     course: courseReducer,
     pagination: paginationReducer,
     quiz: quizReducer,
-    response: responseReducer,
     row: rowReducer,
     search: searchReducer,
     settings: settingsReducer,
-    sidebar: sidebarReducer,
     stash: stashReducer,
     text: textReducer,
     traversal: traversalReducer,
@@ -60,4 +57,4 @@ export const store = configureStore({
 });
 
 export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch; 
+export type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>; 

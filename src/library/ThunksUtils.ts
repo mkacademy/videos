@@ -13,7 +13,6 @@ import { QueryParams } from '../store/middleware/ViewManagerSTU';
 import { viewRequestFetching } from '../store/slices/viewSlice';
 import { insertStats } from './actions';
 import { setCounts } from '../store/slices/searchSlice';
-import { setResponse } from '../store/slices/sidebarSlice';
 import { withReciepients } from '../Hooks/useCommunications/useCommunications';
 import { RootState } from '../store';
 import { initTotals } from './actions';
@@ -467,12 +466,6 @@ export interface TutorialResponse {
     counts: Record<string, Record<string, number>>;
 }
 
-export interface CpanelResponse {
-    content: Record<string, Record<string, CpanelRow[]>>;
-    counts: Record<string, Record<string, number>>;
-    totals: Record<string, number>;
-    handlers: Record<string, Handler[]>;
-}
 const emptyTotals = {} as Record<string, number>;
 const emptyHandlers = {} as Record<string, Handler[]>;
 
@@ -570,13 +563,6 @@ export const validateThenDispatch = ({
         dispatch(fetchedHandles(response.handlers ?? emptyHandlers));
         dispatch(insertStats({ screen: 'tutorial', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
         if (fetchSequence && !hasRouteSliceData(response, pageroute, 'tutorial', routeReasons)) abortRemainingFetchSequence = true;
-    }
-    else if (isCpanelResponse(response)) {
-        console.log("is_cpanel_response");
-        dispatch(setResponse(response.content));
-        dispatch(fetchedHandles(response.handlers ?? emptyHandlers));
-        dispatch(insertStats({ screen: "cpanel", query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
-        setTimeout(() => dispatch(setResponse({})), 100); // reset response as responseSlice has the response;
     }
     else if (isCountsResponse(response)) {
         console.log("is_counts_response");
@@ -976,14 +962,6 @@ const isTutorialResponse = (response: FetchedData): response is TutorialResponse
     const ok = okBanners && okContent;
     if (!ok) logGuardInvalidReasons('is_tutorial_response', reasons, response);
     return ok;
-};
-
-const isCpanelResponse = (response: FetchedData): response is CpanelResponse => {
-    return 'content' in response &&
-        typeof response.content === 'object' &&
-        response.content !== null &&
-        !Array.isArray(response.content) &&
-        Object.keys(response.content).length > 0; // Record<string, Record<string, CpanelRow[]>> with actual records
 };
 
 const isCountsResponse = (response: FetchedData): response is FetchedData => {

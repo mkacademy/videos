@@ -18,7 +18,6 @@ import {
 import { extractContent } from "../../library/actions";
 import { getStashCellRows } from '../slices/stashSlice';
 import { clearOnlyWarnings, fetchedHandles, Handler, prependError as insertError, prependWarning } from "../slices/errorSlice";
-import { appendRecords as appendData } from "../slices/responseSlice";
 import { setIncomings, setOutgoings, setTutors } from "../slices/commsSlice";
 import {
   QuizFormatter,
@@ -35,7 +34,6 @@ import { withReciepients } from '../../Hooks/useCommunications/useCommunications
 import { CpanelRow } from '../../components/Core/types';
 import {
   extractContentLogic,
-  CpanelData,
   ExtractContentResult,
   payloadParentLinkError,
   questionBannersMatchSourceDashboards,
@@ -382,7 +380,7 @@ const ContentExtractor: Middleware<{}, RootState> =
             const nextIsCpanelAppend =
               "fetchedData" in na && "to" in na && "from" in na;
             if (nextIsCpanelAppend && result.cpanel && result.webapp) {
-              return next(appendData(na as CpanelData & { webapp: string }));
+              return next(action);
             }
             switch (result.webapp) {
               case "quiz":
@@ -454,13 +452,9 @@ const ContentExtractor: Middleware<{}, RootState> =
                   return result;
                 }
               default:
-                if (result.cpanel) return next(appendData(na as CpanelData & { webapp: string }));
+                if (result.cpanel) return next(action);
             }
           }
-
-          // Fallback for cases that only need cpanel action
-          if (result.cpanel && result.webapp && !result.nextAction)
-            return next(appendData({ ...result.cpanel, webapp: result.webapp }));
 
           return next(action);
         }

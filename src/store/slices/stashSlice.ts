@@ -1,6 +1,5 @@
 import type { Draft } from 'immer';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { imageTextSwap } from '../../library/actions';
 import { signedOut } from './sessionSlice';
 import { DataRow } from '../../components/Core/types';
 
@@ -76,7 +75,6 @@ export const stashSlice = createSlice({
   name: 'stash',
   initialState: initialStash,
   reducers: {
-    resetStash: () => initialStash,
     appendRoutes: (state, action: PayloadAction<StashPayload[]>) => {
       const { payload } = action;
       payload.forEach((stashPayload: StashPayload) => {
@@ -180,42 +178,11 @@ export const stashSlice = createSlice({
       .addCase(signedOut, () => {
         console.log("cleared_stash");
         return {};
-      })
-      .addCase(imageTextSwap, (state, action) => {
-        const { txtimg, txtswap } = action.payload;
-
-        for (const [routeKey, routeValues] of Object.entries(state)) {
-          if (!routeKey.endsWith("instructions")) continue;
-
-          for (const [timestampKey, cellRaw] of Object.entries(routeValues)) {
-            const cell = normalizeStashCell(cellRaw);
-            const timestampValues = cell.rows;
-            state[routeKey][timestampKey] = {
-              ...cell,
-              rows: timestampValues.map((step: DataRow) => {
-                const { imageurl, details } = step;
-                if (txtimg) {
-                  return { ...step, modified: true, imageurl: details };
-                } else if (txtswap) {
-                  return {
-                    ...step,
-                    modified: true,
-                    imageurl: details,
-                    details: imageurl,
-                  };
-                } else {
-                  return step;
-                }
-              }),
-            };
-          }
-        }
       });
   },
 });
 
 export const {
-  resetStash,
   appendRoute,
   removeStash,
   appendRoutes,

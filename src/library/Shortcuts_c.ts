@@ -411,7 +411,7 @@ export const registerOptionsCycleShortcut = (dispatch: AppDispatch) => {
 
 /**
  * Ctrl+Shift+letter (profile C only): dispatches ActionsExecutor `actionMap` actions except
- * `mutateMyAbility` and `mutateImageUrl`. Admin keys require {@link CHIEF} in `session.roles`;
+ * `mutateMyAbility`. Admin keys require {@link CHIEF} in `session.roles`;
  * approve-tree keys require {@link MOD} in `session.roles`.
  */
 export const registerActionsExecutorShortcuts = (dispatch: AppDispatch) => {

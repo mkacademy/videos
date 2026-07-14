@@ -1,10 +1,9 @@
 import React from 'react';
 import { Col, Row } from 'react-bootstrap';
-import CommentForm from './CommentForm';
 import CommentRow from './CommentRow';
 import * as styles from '../../styles/comments.module.css';
 import type { CommentFormData } from '../../types/comments';
-import { useComments } from '../../Hooks/useComments';
+import { useCommentsReadOnly } from '../../Hooks/useCommentsReadOnly';
 
 export type {
   CommentItem,
@@ -37,45 +36,24 @@ export interface CommentsProps {
   onSubmitComment?: (data: CommentFormData) => void;
 }
 
-const defaultHeadingYourComment = 'show more comments';
+const defaultLoadMoreLabel = 'show more comments';
 
 const Comments: React.FC<CommentsProps> = ({
   commentsId,
   headingCommentCount,
-  headingYourComment = defaultHeadingYourComment,
+  headingYourComment = defaultLoadMoreLabel,
   _for,
 }) => {
   const {
     isOpen,
     countLabel,
     headingLabel,
-    byId,
     displayItems,
-    replyToId,
-    editingCommentId,
-    expandedMoreReplies,
-    replyVisibility,
-    editVisibility,
-    replyTextareaRef,
-    editTextareaRef,
-    handleSubmitComment,
     handleToggleComments,
     shouldShowSubmitHeading,
     handleToggleSubmitHeading,
     isSubmitHeadingLoading,
-    onToggleHasMoreReplies,
-    onToggleCommentTagged,
-    onShowMoreReplies,
-    toggleReplyBox,
-    handleUpdateClick,
-    handleReplyClick,
-    handleEditSave,
-    handleEditCancel,
-    onReplyCancel,
-    toggleDepthReplies,
-    setReplyVisibility,
-    setEditVisibility,
-  } = useComments({
+  } = useCommentsReadOnly({
     commentsId,
     headingCommentCount,
     _for,
@@ -112,16 +90,7 @@ const Comments: React.FC<CommentsProps> = ({
                     if (item.type !== 'comment') return null;
                     const { comment, depth, showMore } = item;
                     const commentIdStr = String(comment.id);
-                    const isReplying = replyToId === commentIdStr;
-                    const isEditing = editingCommentId === commentIdStr;
-                    const editedComment = editingCommentId
-                      ? byId.get(String(editingCommentId))
-                      : null;
-                    const isParentOfEdited =
-                      !!editedComment?.parentId &&
-                      editedComment.parentId === comment.id;
                     const runLength = showMore?.comments.length ?? 0;
-                    const isExpanded = expandedMoreReplies.has(commentIdStr);
                     return (
                       <CommentRow
                         key={commentIdStr}
@@ -130,26 +99,7 @@ const Comments: React.FC<CommentsProps> = ({
                         commentId={commentIdStr}
                         depth={depth}
                         runLength={runLength}
-                        isExpanded={isExpanded}
-                        isReplying={isReplying}
-                        isEditing={isEditing}
-                        isParentOfEdited={isParentOfEdited}
-                        replyVisibility={isReplying ? replyVisibility : 'UNSELECTED'}
-                        editVisibility={isEditing ? editVisibility : 'UNSELECTED'}
-                        onToggleHasMoreReplies={onToggleHasMoreReplies}
-                        onToggleCommentTagged={onToggleCommentTagged}
-                        onToggleReplyBox={toggleReplyBox}
-                        onUpdateClick={handleUpdateClick}
-                        onShowMoreReplies={onShowMoreReplies}
-                        replyTextareaRef={replyTextareaRef}
-                        editTextareaRef={editTextareaRef}
-                        onReplyCancel={onReplyCancel}
-                        onReplySubmit={handleReplyClick}
-                        onEditCancel={handleEditCancel}
-                        onEditSave={handleEditSave}
-                        onToggleDepthReplies={toggleDepthReplies}
-                        onChangeReplyVisibility={setReplyVisibility}
-                        onChangeEditVisibility={setEditVisibility}
+                        isExpanded={false}
                       />
                     );
                   })}
@@ -182,7 +132,6 @@ const Comments: React.FC<CommentsProps> = ({
                 </h2>
               </div>
             )}
-            {isOpen && <CommentForm onSubmitComment={handleSubmitComment} />}
           </div>
         </Col>
       </Row>

@@ -1,4 +1,4 @@
-import { amendment, authenticate, fetchCommentsTree, mutateOrphans, registration, verification } from '../../library/Thunks';
+import { amendment, authenticate, registration, verification } from '../../library/Thunks';
 import {
   createCourses,
   createQuizzes,
@@ -123,10 +123,6 @@ export const errorSlice = createSlice({
       state.warnings = mapped;
       if (mapped.length > 0) state.showCount += 1;
     },
-    prependErrors: (state, action: PayloadAction<string[]>) => {
-      state.showCount += 1;
-      state.errors = [...action.payload.map((err) => splitter(err)).filter((err) => err !== undefined), ...state.errors];
-    },
     removeError: (state, action: PayloadAction<number>) => {
       if (action.payload < state.errors.length) {
         const index = action.payload;
@@ -146,10 +142,6 @@ export const errorSlice = createSlice({
     },
     clearOnlyWarnings: (state: ErrorState) => {
       state.warnings = [];
-    },
-    clearErrorsAndWarnings: (state: ErrorState) => {
-      state.warnings = [];
-      state.errors = [];
     },
     appendShortcut: (state, action: PayloadAction<string>) => {
       state.shortcuts = [...state.shortcuts, action.payload];
@@ -201,20 +193,11 @@ export const errorSlice = createSlice({
       .addCase(registration.rejected, (state, action) => {
         return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
       })
-      .addCase(mutateOrphans.rejected, (state, action) => {
-        return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
-      })
       .addCase(amendment.rejected, (state, action) => {
         return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
       })
       .addCase(verification.rejected, (state, action) => {
         return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
-      })
-      .addCase(fetchCommentsTree.rejected, (state, action) => {
-        return errorSlice.caseReducers.prependErrors(state, { ...action, payload: action.payload as string[] });
-      })
-      .addCase(mutateOrphans.fulfilled, (state, action) => {
-        return errorSlice.caseReducers.prependErrors(state, { ...action, payload: action.payload });
       })
       .addCase(verification.fulfilled, (state, action) => {
         const { success } = action.payload as AccountResult;
@@ -251,11 +234,9 @@ export const {
   prependError,
   prependWarning,
   appendWarnings,
-  prependErrors,
   removeError,
   clearOnlyErrors,
   clearOnlyWarnings,
-  clearErrorsAndWarnings,
   appendShortcut,
   clearShortcuts,
 } = errorSlice.actions;

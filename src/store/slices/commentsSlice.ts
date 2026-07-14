@@ -3,12 +3,10 @@ import type { RootState } from '../types';
 import {
   CommentItem,
   toCommentId,
-  mutateRoleToCommentAuthor,
   parseCommentId,
   CommentContentType,
 } from '../../types/comments';
-import { incrementID, isValidCommentsVisibility } from '../../utils';
-import { fetchCommentsTree, fetchCommentsBodyTree } from '../../library/Thunks';
+import { fetchMessageComments } from '../thunks/fetchMessageComments';
 import {
   createContainer,
   createCourses,
@@ -34,64 +32,6 @@ export interface CommentsState {
   quiz: CommentsByKey;
 }
 
-/** Payload for addComment */
-export interface AddCommentPayload {
-  _for: CommentsFor;
-  commentsId: number;
-  parentIDs: number[];
-  body: string;
-  userId: number;
-  authorName: string;
-  userRole: string;
-  visibility?: string;
-  type: CommentContentType;
-}
-
-/** Payload for addReply */
-export interface AddReplyPayload {
-  _for: CommentsFor;
-  commentsId: number;
-  parentId: string;
-  body: string;
-  userId: number;
-  authorName: string;
-  userRole: string;
-  visibility?: string;
-  type: CommentContentType;
-}
-
-/** Payload for updateComment */
-export interface UpdateCommentPayload {
-  _for: CommentsFor;
-  commentsId: number;
-  body: string;
-  id: string;
-  visibility?: string;
-}
-
-/** Payload for clearHasMoreReplies. runWasEmpty: true when there were no replies in the list yet (e.g. need to fetch from DB). */
-export interface ClearHasMoreRepliesPayload {
-  id: string;
-  _for: CommentsFor;
-  commentsId: number;
-  runWasEmpty: boolean;
-  type: CommentContentType;
-}
-
-/** Payload for toggleHasMoreReplies */
-export interface ToggleHasMoreRepliesPayload {
-  _for: CommentsFor;
-  commentsId: number;
-  id: string;
-}
-
-/** Payload for toggleCommentTagged */
-export interface ToggleCommentTaggedPayload {
-  _for: CommentsFor;
-  commentsId: number;
-  id: string;
-}
-
 /** Payload for toggleCommentsOpen */
 export interface ToggleCommentsOpenPayload {
   _for: CommentsFor;
@@ -109,47 +49,6 @@ const initialState: CommentsState = {
   tutorial: {},
   quiz: {},
 };
-
-const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-function buildCommentItem(
-  userId: number,
-  authorName: string,
-  userRole: Parameters<typeof mutateRoleToCommentAuthor>[0],
-  body: string,
-  parentId: string,
-  type: CommentContentType,
-  visibility?: string,
-): CommentItem {
-  const commentId = incrementID();
-  const id = toCommentId(userId, commentId);
-  const now = new Date();
-  const day = now.getDate();
-  const year = now.getFullYear();
-  const month = monthNames[now.getMonth()];
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const date = `${month} ${day}, ${year} ${hours}:${minutes}`;
-
-  const comment: CommentItem = {
-    id,
-    date,
-    userId,
-    commentId,
-    authorName,
-    owner: true,
-    body: body.trim(),
-    userRole: mutateRoleToCommentAuthor(userRole),
-    contentType: type,
-    visibility: 'NONE',
-    status: 0,
-  };
-
-  if (parentId) comment.parentId = parentId;
-  if (visibility && isValidCommentsVisibility(visibility))
-    comment.visibility = visibility;
-  return comment;
-}
 
 /** Map temporary (negative) commentIds to persisted DB ids; payload is ["local_Id","db_Id",...]. */
 function remapTempCommentIds(
@@ -195,113 +94,6 @@ const commentsSlice = createSlice({
   name: 'comments',
   initialState,
   reducers: {
-    addComment(state, action: PayloadAction<AddCommentPayload>) {
-      console.log('addComment', action.payload);
-      const { _for, commentsId, body, userId, authorName, userRole, visibility, type } =
-        action.payload;
-      const trimmed = body.trim();
-      if (!trimmed) return;
-
-      const comment = buildCommentItem(
-        userId,
-        authorName,
-        userRole,
-        body,
-        `-1:${commentsId}`,
-        type,
-        visibility
-      );
-      const area = state[_for];
-      if (!area[commentsId])
-        area[commentsId] = {
-          isOpen: false,
-          showSubmitHeading: false,
-          parentIDs: [],
-          comments: [],
-        };
-      area[commentsId].comments.push(comment);
-    },
-    addReply(state, action: PayloadAction<AddReplyPayload>) {
-      const {
-        _for,
-        commentsId,
-        parentId,
-        body,
-        userId,
-        authorName,
-        userRole,
-        visibility,
-        type,
-      } = action.payload;
-      const trimmed = body.trim();
-      if (!trimmed) return;
-
-      const comment = buildCommentItem(
-        userId,
-        authorName,
-        userRole,
-        body,
-        parentId,
-        type,
-        visibility,
-      );
-      const area = state[_for];
-      if (!area[commentsId]) return;
-      area[commentsId].comments.push(comment);
-    },
-    updateComment(state, action: PayloadAction<UpdateCommentPayload>) {
-      const { _for, commentsId, id, body, visibility } = action.payload;
-      const trimmed = body.trim();
-      if (!trimmed) return;
-
-      const entry = state[_for]?.[commentsId];
-      if (!entry) return;
-      const list = entry.comments;
-
-      const idx = list.findIndex((c) => String(c.id) === String(id));
-      if (idx >= 0) {
-        list[idx].body = trimmed;
-        if (visibility && isValidCommentsVisibility(visibility)) {
-          list[idx].visibility = visibility;
-        }
-      }
-    },
-    clearHasMoreReplies(
-      state,
-      action: PayloadAction<ClearHasMoreRepliesPayload>
-    ) {
-      const { _for, commentsId, id } = action.payload;
-      const entry = state[_for]?.[commentsId];
-      if (!entry) return;
-      const comment = entry.comments.find((c) => String(c.id) === String(id));
-      if (comment) {
-        comment.hasMoreReplies = false;
-      }
-    },
-    toggleHasMoreReplies(
-      state,
-      action: PayloadAction<ToggleHasMoreRepliesPayload>
-    ) {
-      const { _for, commentsId, id } = action.payload;
-      const entry = state[_for]?.[commentsId];
-      if (!entry) return;
-      const comment = entry.comments.find((c) => String(c.id) === String(id));
-      if (comment) {
-        comment.hasMoreReplies = !comment.hasMoreReplies;
-      }
-    },
-    toggleCommentTagged(
-      state,
-      action: PayloadAction<ToggleCommentTaggedPayload>
-    ) {
-      const { _for, commentsId, id } = action.payload;
-      const entry = state[_for]?.[commentsId];
-      if (!entry) return;
-      const comment = entry.comments.find((c) => String(c.id) === String(id));
-      if (comment) {
-        comment.tagged = !comment.tagged;
-      }
-    },
     toggleCommentsOpen(state, action: PayloadAction<ToggleCommentsOpenPayload>) {
       const { _for, commentsId } = action.payload;
       const area = state[_for];
@@ -349,73 +141,21 @@ const commentsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchCommentsTree.fulfilled, (state, action) => {
-      const { _for, commentsId, userId } = action.meta.arg;
+    builder.addCase(fetchMessageComments.fulfilled, (state, action) => {
+      const { _for, commentsId, comments, parentIDs, hasMore } = action.payload;
       const area = state[_for];
-      if (!area) return;
       const current = area[commentsId];
-      // Find the special "0:0" comment (if any)
-      const special = action.payload.find((comment) => String(comment.id) === '0:0');
-      // Decode base64 body of the special comment into an array of integers
-      let extraParentIds: number[] = [];
-      if (special?.body) {
-        try {
-          const decoded = atob(special.body);
-          // Backend encodes a comma-separated list of IDs before Base64-encoding
-          extraParentIds = decoded
-            .split(',')
-            .map((part) => Number(part))
-            .filter((n): n is number => Number.isFinite(n));
-        } catch {
-          // If decoding fails, ignore and treat as no extra parents
-          extraParentIds = [];
-        }
-      }
-      const mergedParentIDs = [...new Set([...(current?.parentIDs ?? []), ...extraParentIds])];
-      const realComments = action.payload
-        .filter((comment) => String(comment.id) !== '0:0')
-        .map((comment) => {
-          if (!(typeof userId === 'number' && userId > 0)) return comment;
-          const parentId = typeof comment.parentId === 'string' ? comment.parentId : '';
-          if (!parentId.startsWith('-1:')) return comment;
-          const parentNum = Number(parentId.slice(3));
-          if (!Number.isFinite(parentNum) || parentNum <= 0) return comment;
-          return {
-            ...comment,
-            parentId: `${userId}:${parentNum}`,
-          };
-        });
       const existing = current?.comments ?? [];
       const existingById = new Map(existing.map((c) => [String(c.id), c]));
-      for (const c of realComments) existingById.set(String(c.id), c);
-      const mergedComments = Array.from(existingById.values());
+      for (const c of comments) existingById.set(String(c.id), c);
       area[commentsId] = {
-        isOpen: current?.isOpen ?? false,
-        parentIDs: mergedParentIDs,
-        comments: mergedComments,
-        showSubmitHeading: true,
+        isOpen: current?.isOpen ?? true,
+        parentIDs: [...new Set([...(current?.parentIDs ?? []), ...parentIDs])],
+        comments: Array.from(existingById.values()),
+        showSubmitHeading: hasMore,
       };
-    }).addCase(fetchCommentsBodyTree.fulfilled, (state, action) => {
-      const { _for, commentsId } = action.meta.arg;
-      const area = state[_for];
-      if (!area[commentsId])
-        area[commentsId] = {
-          showSubmitHeading: true,
-          isOpen: true,
-          parentIDs: [],
-          comments: [],
-        };
-      const entry = area[commentsId];
-      const list = entry.comments;
-      for (const incoming of action.payload) {
-        const id = String(incoming.id);
-        const existing = list.find((c) => String(c.id) === id);
-        if (existing) {
-          for (const key of Object.keys(incoming) as (keyof CommentItem)[])
-            (existing as unknown as Record<string, unknown>)[key] = (incoming as unknown as Record<string, unknown>)[key];
-        }
-      }
-    })
+    });
+    builder
       .addCase(createSteps, (state, action) => {
         remapTempCommentIds(state, action.payload, 'message');
       })
@@ -453,12 +193,6 @@ const commentsSlice = createSlice({
 });
 
 export const {
-  addComment,
-  addReply,
-  updateComment,
-  clearHasMoreReplies,
-  toggleHasMoreReplies,
-  toggleCommentTagged,
   toggleCommentsOpen,
   toggleSubmitHeading,
   restoreCommentsStash,

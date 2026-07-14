@@ -58,10 +58,6 @@ import {
   deletedTimestamp,
   escrowTimestamp,
 } from '../../utils';
-import {
-  tabluarPrefixes,
-} from '../../constants';
-import { commandSelected as setAction } from '../slices/sidebarSlice';
 import { prependError as insertError } from '../slices/errorSlice';
 import { setCrudUrl } from '../slices/sessionSlice';
 import { toggleFormatter as setFormatters } from '../slices/settingsSlice';
@@ -520,13 +516,6 @@ const UiuxManager: Middleware<{}, RootState> = ({ getState, dispatch }) => (next
     };
 
     setTimeout(() => dispatch(extractToCpanel(cargo)));
-    dispatch(
-      setAction({
-        prefix: tabluarPrefixes[isJoin ? 1 : 2],
-        title: isJoin ? "Excludes" : "Includes",
-        isFilter: true,
-      })
-    );
     return next(escrowConvolution({ ...parents, curApp }));
   }
 

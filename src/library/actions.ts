@@ -189,7 +189,6 @@ export interface MetadataUpdate {
 }
 export const fetchedClearers: Record<string, string> = {
   "/convolution/quiz": "quiz/clearFetched",
-  "/convolution/cpanel": "response/clearFetched",
   "/convolution/tutors": "comms/clearTutors",
   "/convolution/course": "course/clearFetched",
   "/convolution/outgoing": "comms/clearOutgoing",
@@ -566,7 +565,6 @@ export const rezipOutgoing = createAction<RezipOutgoingPayload>('rezipOutgoing')
 
 // Settings apply actions
 export const mutateMyAbility = createAction('mutateMyAbility');
-export const mutateImageUrl = createAction('mutateImageUrl');
 export const contentVisibility = createAction('contentVisibility');
 export const mutateQuotas = createAction('mutateQuotas');
 export const mutateAbilities = createAction('mutateAbilities');
@@ -588,8 +586,6 @@ export const invertHighlighted = createAction<string>('invertHighlighted');
 export const unHighlightAll = createAction<string>('unHighlightAll');
 export const highlightAll = createAction<string>('highlightAll');
 
-// Overview ordinals middleware action
-export const overviewOrdinals = createAction('overviewOrdinals');
 export const saveCourseEdits = createAction<saveCourseEditsPayload>('saveCourseEdits');
 export const saveTutorialEdits = createAction<saveTutorialEditsPayload>('saveTutorialEdits');
 export const saveQuizEdits = createAction<saveQuizEditsPayload>('saveQuizEdits');//
@@ -625,7 +621,6 @@ export const initTotals = createAction('initTotals');
 export const initLoading = createAction<InitLoadingPayload>('initLoading');
 export const insertStats = createAction<InsertStatsPayload>('insertStats');
 export const initReloading = createAction<InitReloadingPayload>('initReloading');
-export const imageTextSwap = createAction<{ txtimg: boolean, txtswap: boolean }>('imageTextSwap');
 
 // View actions
 export const appendImports = createAction<{
@@ -668,13 +663,6 @@ export const coursesCompleted = createAction('coursesCompleted');
 export const containerCompleted = createAction('containerCompleted');
 export const quizzesCompleted = createAction('quizzesCompleted');
 export const stepsCompleted = createAction('stepsCompleted');
-
-export const updateStepsOrdinals = createAction<OrdinalUpdate[]>('updateStepsOrdinals');
-export const updateCoversOrdinals = createAction<OrdinalUpdate[]>('updateCoversOrdinals');
-export const updateQuestionsOrdinals = createAction<OrdinalUpdate[]>('updateQuestionsOrdinals');
-export const updatePennantsOrdinals = createAction<OrdinalUpdate[]>('updatePennantsOrdinals');
-export const updateRootsOrdinals = createAction<OrdinalUpdate[]>('updateRootsOrdinals');
-export const updateQuizOrdinals = createAction<OrdinalUpdate[]>('updateQuizOrdinals');
 
 export const updateRootsMetadata = createAction<MetadataUpdate[]>('updateRootsMetadata');
 export const updateQuizMetadata = createAction<MetadataUpdate[]>('updateQuizMetadata');

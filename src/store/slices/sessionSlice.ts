@@ -1,7 +1,6 @@
 import { Tree, getActionFromUrl, getCurAppIndex, getCurAppName, orderedWebappRoutes } from '../../utils';
 import { tabluarPrefixes } from '../../constants';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { current } from 'immer';
 import { Search } from '../../store/slices/searchSlice';
 import { clearEscrow } from './viewSlice';
 import { fetchingCompleted, hydrateData } from '../../library/actions';
@@ -156,9 +155,6 @@ const sessionSlice = createSlice({
     resetHydrationQueries: (state) => {
       state.hydrationQueries = 0;
     },
-    setTabulatorRenderOffset: (state, action: PayloadAction<number>) => {
-      state.tabulatorRenderOffset = Math.max(0, action.payload);
-    },
     shiftTabulatorRenderWindow: (state, action: PayloadAction<'prev' | 'next'>) => {
       const step = TABULATOR_RENDER_CAP;
       if (action.payload === 'prev') {
@@ -166,15 +162,6 @@ const sessionSlice = createSlice({
       } else {
         state.tabulatorRenderOffset += step;
       }
-    },
-    setTabulatorOrderStartId: (
-      state,
-      action: PayloadAction<{ routeKey: string; id: string | null }>,
-    ) => {
-      state.tabulatorOrderStartId[action.payload.routeKey] = action.payload.id;
-    },
-    resetTabulatorOrderStartId: (state) => {
-      state.tabulatorOrderStartId = {};
     },
     setCleared: (state, action: PayloadAction<boolean>) => {
       state.isCleared[state.curApp] = action.payload;
@@ -231,24 +218,6 @@ const sessionSlice = createSlice({
         ? !state.dismissals[action.payload]
         : true;
     },
-    setSingleItemFormFlag: (
-      state,
-      action: PayloadAction<{ path: string; entityKey: string; }>
-    ) => {
-      const { path, entityKey } = action.payload;
-      const key = `${path}:${entityKey}`;
-      if (!state.singleItemForms) state.singleItemForms = {};
-      state.singleItemForms[key] = !state.singleItemForms[key];
-    },
-    toggleShortcuts: (state) => {
-      state.showShortcuts = !state.showShortcuts;
-    },
-    mutateMailer: (state, action: PayloadAction<number>) => {
-      state.curMailer = state.curMailer === action.payload ? -1 : action.payload;
-    },
-    mutateOperation: (state, action: PayloadAction<string>) => {
-      state.operation = action.payload;
-    },
     mutateAppend: (state, action: PayloadAction<boolean>) => {
       state.isAppend = action.payload;
     },
@@ -271,9 +240,6 @@ const sessionSlice = createSlice({
       } else {
         state.bottomPagination = showForm;
       }
-    },
-    mutateShowRoles: (state, action: PayloadAction<boolean>) => {
-      state.showRolesToggler = action.payload;
     },
     mutateRole: (state, action: PayloadAction<{ roleIndex: number; mutateRole: string }>) => {
       state.roleIndex = action.payload.roleIndex;
@@ -351,27 +317,6 @@ const sessionSlice = createSlice({
     setAllowMimeOnlyImageurlOverrideOnUpdateSteps: (state, action: PayloadAction<boolean>) => {
       state.allowMimeOnlyImageurlOverrideOnUpdateSteps = action.payload;
     },
-    setSearchHistory: (state, action: PayloadAction<Search[]>) => {
-      // Get plain value from Immer proxy
-      const currentHistory = current(state.searchHistory);
-
-      // Use Map to deduplicate by keyword (since Search is an object)
-      const searchMap = new Map<string, Search>();
-
-      // Add existing history
-      currentHistory.forEach((search) => {
-        searchMap.set(search.keyword, search);
-      });
-
-      // Add new searches (will overwrite duplicates by keyword)
-      action.payload.forEach((search) => {
-        searchMap.set(search.keyword, search);
-      });
-
-      // Convert back to array
-      const deduplicated = Array.from(searchMap.values());
-      state.searchHistory = deduplicated;
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -443,28 +388,19 @@ export const {
   initializedLoading,
   mutateCurApp,
   toggleDismissed,
-  setSingleItemFormFlag,
-  toggleShortcuts,
-  mutateMailer,
-  mutateOperation,
   mutateAppend,
   quotaUsed,
   setCrudUrl,
   mutateRows,
   linkRows,
   togglePagination,
-  mutateShowRoles,
   mutateRole,
   mutatePrefix,
   pauseFetchers,
   signedOut,
-  setSearchHistory,
   setSelectedTraversal,
   setClearedByApp,
-  setTabulatorRenderOffset,
   shiftTabulatorRenderWindow,
-  setTabulatorOrderStartId,
-  resetTabulatorOrderStartId,
   setAllowMimeOnlyImageurlOverrideOnUpdateSteps,
 } = sessionSlice.actions;
 

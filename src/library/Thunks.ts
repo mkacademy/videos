@@ -45,34 +45,16 @@ import {
     AuthPayload,
     FormData,
     VerifyFormData,
-    MutateAbilityPayload,
-    MutateAbilityResponse,
-    MutateOrphansPayload,
-    MutateQuotaPayload,
-    MutateMimicedPayload,
     MutateVisibilityPayload,
-    MutateHierachyPayload,
-    MutateHierachyResponse,
-    mutateMotionsPayload,
-    mutateMotionsResponse,
-    sendPackagesPayload,
-    sendPackagesResponse,
     sendPackagePayload,
-    mutateAgreementsPayload,
-    mutateAgreementsResponse,
     MutateEntitiesResponse
 } from "./types";
 import { RootState } from "../store";
 import { anonymousFetch, authenticatedFetch, FetchDataPayload, validatedSkeletonsResponse, validateSkeletonsThenDispatch } from "./ThunksUtils";
 import { QueryParams } from "../store/middleware/ViewManagerSTU";
-import { CommentsFor } from "../store/slices/commentsSlice";
 import { Executedquery, validateThenDispatch, buildRecordStateProps, extractIDsAtRequest } from "./ThunksUtils";
 import { getAccountRecords, getAnonymousRecords } from "./ThunksUtils";
 import { clearIDsAtRequest, registerIDsAtRequest } from "../store/slices/statsSlice";
-import { commentsPath, commentsbodyPath, commentsUpdatePath, type CommentsBodyPath, type CommentsUpdatePath, commentsBodyArgs, commentsUpdateArgs } from "./comments-api-messagesOn-mutations";
-import type { CommentsTreePath, CommentsTreePayload } from "./comments-api-trees";
-import type { CommentMutatorPayload } from "./TutorialComentsUtils";
-import type { CommentItem } from "../types/comments";
 import {
     quizFormatter as offlineQuizFormatter,
     courseFormatter as offlineCourseFormatter,
@@ -182,6 +164,8 @@ export const authenticate = createAsyncThunk<InitializedLoadingPayload, AuthPayl
                     mutateRole: roles[roleIndex],
                     authenticated: looksLikeToken,
                     curMailer: roleIds[roleIndex],
+                    isIncognito: false,
+                    isPrivate: true,
                 };
                 const fetchRoleIndex = roles.findIndex((r: string) => r === selectedRole);
                 if (fetchRoleIndex > -1) {
@@ -266,6 +250,7 @@ export const registration = createAsyncThunk<InitializedLoadingPayload, FormData
                     roleIndex,
                     curToken: token,
                     isIncognito: false,
+                    isPrivate: true,
                     fetchRole: roles[roleIndex],
                     mutateRole: roles[roleIndex],
                     authenticated: looksLikeToken,
@@ -507,144 +492,9 @@ export const bytesFetcher = createAsyncThunk<UpdateTextsPayload[], BytesFetcherA
     }
 );
 
-export const mutateAbility = createAsyncThunk<MutateAbilityResponse, MutateAbilityPayload, { rejectValue: string }>(
-    'mutateAbility',
-    async (payload: MutateAbilityPayload, { rejectWithValue }) => {
-        const { curToken, mutateRole, enabled, candidates } = payload;
-        const variables = { curToken, mutateRole, enabled, candidates };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(ToolKit.mutateAbilityUrl, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(variables),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            const text = await response.json();
-            clearTimeout(timeoutId);
 
-            return text;
-        } catch (error) {
-            clearTimeout(timeoutId);
 
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Mutate ability failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
 
-export const mutateOrphans = createAsyncThunk<string[], MutateOrphansPayload, { rejectValue: string }>(
-    'mutateOrphans',
-    async (payload: MutateOrphansPayload, { rejectWithValue }) => {
-        const { curToken, mutateRole, limit } = payload;
-        const variables = { curToken, mutateRole, limit };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(ToolKit.mutateOrphansUrl, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(variables),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            const data = await response.json();
-            clearTimeout(timeoutId);
-            return data as string[];
-        } catch (error) {
-            clearTimeout(timeoutId);
-
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Mutate orphans failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
-
-export const mutateQuota = createAsyncThunk<number[], MutateQuotaPayload, { rejectValue: string }>(
-    'mutateQuota',
-    async (payload: MutateQuotaPayload, { rejectWithValue }) => {
-        const { curToken, mutateRole, quota, ids } = payload;
-        const variables = { curToken, mutateRole, size: quota, users: ids };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(ToolKit.mutateQuotaUrl, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(variables),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            const text = await response.json() as number[];
-            clearTimeout(timeoutId);
-
-            return text;
-        } catch (error) {
-            clearTimeout(timeoutId);
-
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Mutate quota failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
-
-export const mutateMimiced = createAsyncThunk<string, MutateMimicedPayload, { rejectValue: string }>(
-    'mutateMimiced',
-    async (payload: MutateMimicedPayload, { rejectWithValue }) => {
-        const { curToken, mutateRole, member, seconds } = payload;
-        const variables = { curToken, mutateRole, member, seconds };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(ToolKit.mutateMimicedUrl, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(variables),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            const text = await response.text() as string;
-            clearTimeout(timeoutId);
-
-            return text;
-        } catch (error) {
-            clearTimeout(timeoutId);
-
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Mutate mimiced failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
 
 export const mutateVisibility = createAsyncThunk<string, MutateVisibilityPayload, { rejectValue: string }>(
     'mutateVisibility',
@@ -681,105 +531,8 @@ export const mutateVisibility = createAsyncThunk<string, MutateVisibilityPayload
     }
 );
 
-export const mutateHierachy = createAsyncThunk<MutateHierachyResponse, MutateHierachyPayload, { rejectValue: string }>(
-    'mutateHierachy',
-    async (payload: MutateHierachyPayload, { rejectWithValue }) => {
-        const { curToken, mutateRole, candidates, selector } = payload;
-        const variables = { curToken, mutateRole, candidates, selector };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(ToolKit.mutateHierachyUrl, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(variables),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            const text = await response.json();
-            clearTimeout(timeoutId);
-            return text as MutateHierachyResponse;
-        } catch (error) {
-            clearTimeout(timeoutId);
 
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Mutate hierarchy failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
 
-export const executeMotions = createAsyncThunk<mutateMotionsResponse, mutateMotionsPayload, { rejectValue: string }>(
-    'executeMotions',
-    async (payload: mutateMotionsPayload, { rejectWithValue }) => {
-        const { curToken, mutateRole, curMailer, modified, quota } = payload;
-        const variables = { curToken, mutateRole, curMailer, tutors: modified, quota };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(ToolKit.executeMotionsUrl, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(variables),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            const text = await response.json();
-            clearTimeout(timeoutId);
-            return text as mutateMotionsResponse;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Execute motions failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
-
-export const sendPackages = createAsyncThunk<sendPackagesResponse, sendPackagesPayload, { rejectValue: string }>(
-    'sendPackages',
-    async (payload: sendPackagesPayload, { rejectWithValue }) => {
-        const { curToken, mutateRole, modified, quota } = payload;
-        const variables = { curToken, mutateRole, modified, quota };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(ToolKit.sendPackagesUrl, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(variables),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            const data = await response.json() as sendPackagesResponse;
-            clearTimeout(timeoutId);
-            return data;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Send packages failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
 
 export const sendPackage = createAsyncThunk<MutateEntitiesResponse[], sendPackagePayload, { rejectValue: string }>(
     'sendPackage',
@@ -814,38 +567,6 @@ export const sendPackage = createAsyncThunk<MutateEntitiesResponse[], sendPackag
     }
 );
 
-export const mutateAgreements = createAsyncThunk<mutateAgreementsResponse, mutateAgreementsPayload, { rejectValue: string }>(
-    'mutateAgreements',
-    async (payload: mutateAgreementsPayload, { rejectWithValue }) => {
-        const { curToken, mutateRole, connections, abilities } = payload;
-        const variables = { curToken, mutateRole, connections, abilities };
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const response = await fetch(ToolKit.mutateAgreementsUrl, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(variables),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            const text = await response.json();
-            clearTimeout(timeoutId);
-            return text;
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Mutate agreements failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
 
 export const mutateIncoming = createAsyncThunk<MutateEntitiesResponse[], mutateIncomingPayload, { rejectValue: string }>(
     'mutateIncoming',
@@ -1071,188 +792,6 @@ export const mutateEntity = createAsyncThunk<MutateEntitiesResponse[], MutationD
             }
             if (error instanceof Error)
                 return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
-
-export const commentsCreator = createAsyncThunk<MutateEntitiesResponse[], CommentMutatorPayload, { rejectValue: string }>(
-    'commentsCreator',
-    async ({ path, payload }: CommentMutatorPayload, { rejectWithValue }) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const url = commentsPath(path);
-            const response = await fetch(url, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            clearTimeout(timeoutId);
-            return await response.json();
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Comments mutator failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
-
-export interface CommentsUpdatePayload {
-    path: CommentsUpdatePath;
-    payload: commentsUpdateArgs;
-}
-
-export const commentsUpdater = createAsyncThunk<MutateEntitiesResponse[], CommentsUpdatePayload, { rejectValue: string }>(
-    'commentsUpdater',
-    async ({ path, payload }: CommentsUpdatePayload, { rejectWithValue }) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const url = commentsUpdatePath(path);
-            const response = await fetch(url, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            clearTimeout(timeoutId);
-            return await response.json();
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Comments update mutator failed after ${timeout}ms`);
-            }
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
-
-/** Payload for fetchCommentsTree: path and payload union allowed for comments-tree endpoints */
-export interface FetchCommentsTreePayload {
-    userId?: number;
-    _for: CommentsFor;
-    commentsId: number;
-    path: CommentsTreePath;
-    payload: CommentsTreePayload;
-}
-export interface ValidationError {
-    param: string;
-    message: string;
-}
-
-export const fetchCommentsTree = createAsyncThunk<CommentItem[], FetchCommentsTreePayload, { rejectValue: string[] }>(
-    'comments/fetchCommentsTree',
-    async ({ path, payload }: FetchCommentsTreePayload, { rejectWithValue }) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const url = commentsPath(path);
-            const response = await fetch(url, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            clearTimeout(timeoutId);
-            const data = await response.json();
-
-            // If the response is an array, determine whether it's comments or validation errors
-            if (Array.isArray(data)) {
-                if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null && 'param' in data[0] && 'message' in data[0]) {
-                    const validationErrors = (data as ValidationError[]).map(err => `${err.param}:${err.message}`);
-                    return rejectWithValue(validationErrors);
-                }
-                return data as CommentItem[];
-            }
-
-            // If the response wraps comments in an object
-            if (Array.isArray(data?.comments)) {
-                return data.comments as CommentItem[];
-            }
-
-            // If the response wraps validation errors in an object
-            if (Array.isArray(data?.errors)) {
-                const validationErrors = (data.errors as ValidationError[]).map(err => `${err.param}:${err.message}`);
-                return rejectWithValue(validationErrors);
-            }
-
-            // Fallback for unexpected payloads
-            return rejectWithValue(['Invalid comments response format']);
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue([`Request timeout: Fetch comments tree failed after ${timeout}ms`]);
-            }
-            if (error instanceof Error)
-                return rejectWithValue([error.message]);
-            return rejectWithValue(['An unknown error occurred']);
-        }
-    }
-);
-
-export interface FetchCommentsBodyTreePayload {
-    _for: CommentsFor;
-    commentsId: number;
-    path: CommentsBodyPath;
-    payload: commentsBodyArgs;
-}
-export const fetchCommentsBodyTree = createAsyncThunk<CommentItem[], FetchCommentsBodyTreePayload, { rejectValue: string }>(
-    'comments/fetchCommentsBodyTree',
-    async ({ path, payload }: FetchCommentsBodyTreePayload, { rejectWithValue }) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), timeout);
-        try {
-            const url = commentsbodyPath(path);
-            const response = await fetch(url, {
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                method: 'POST',
-                signal: controller.signal,
-            });
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(errorText);
-            }
-            clearTimeout(timeoutId);
-            const data = await response.json();
-
-            if (Array.isArray(data)) {
-                return data as CommentItem[];
-            }
-
-            if (Array.isArray(data?.comments)) {
-                return data.comments as CommentItem[];
-            }
-
-            return rejectWithValue('Invalid comments body response format');
-        } catch (error) {
-            clearTimeout(timeoutId);
-            if (error instanceof Error && error.name === 'AbortError') {
-                return rejectWithValue(`Request timeout: Fetch comments body tree failed after ${timeout}ms`);
-            }
-            if (error instanceof Error) {
-                return rejectWithValue(error.message);
-            }
             return rejectWithValue('An unknown error occurred');
         }
     }
@@ -1525,7 +1064,7 @@ export const fetchData = createAsyncThunk<
                     path: ToolKit.anonymousRecordsUrl,
                 };
 
-            console.log("recordsHook_fired");
+            console.log("recordsHook_fired", params);
             const content = isAccount
                 ? await getAccountRecords(params)
                 : await getAnonymousRecords(params);

@@ -15,6 +15,7 @@ import {
 import { clearChunkBuffer, updateChunkBuffer } from '../../store/slices/playbackSlice';
 import AudioWaveformPlayer from './AudioWaveformPlayer';
 import { useAudioChunkPlayer } from './useAudioChunkPlayer';
+import Comments from '../views/Comments';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 type TutorialAudioPlaybackProps = {
@@ -43,6 +44,7 @@ const TutorialAudioPlayback: React.FC<TutorialAudioPlaybackProps> = ({
   const dispatch = useDispatch();
   const [playerError, setPlayerError] = useState<string | null>(null);
   const bufferQueueLoadedForRef = useRef<string | null>(null);
+  const commentsId = selectedTutorialGroup[0]?.banner.id ?? 0;
 
   const playableChunkCount = useMemo(
     () => chunkPlaylist.filter(isPlaylistChunkPlayable).length,
@@ -216,6 +218,10 @@ const TutorialAudioPlayback: React.FC<TutorialAudioPlaybackProps> = ({
           </div>
         </Card>
       </div>
+
+      {commentsId > 0 && (
+        <Comments _for="tutorial" commentsId={commentsId} />
+      )}
     </div>
   );
 };

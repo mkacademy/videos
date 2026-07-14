@@ -5,10 +5,8 @@ import { ErrorState } from './slices/errorSlice';
 import { CourseState } from './slices/courseSlice';
 import { PaginationState } from './slices/paginationSlice';
 import { QuizState } from './slices/quizSlice';
-import { ResponseState } from './slices/responseSlice';
 import { TutorialState } from './slices/tutorialSlice';
 import { CommsState } from './slices/commsSlice';
-import { SidebarState } from './slices/sidebarSlice';
 import { TextState } from './slices/textSlice';
 import { TraversalState } from './slices/traversalSlice';
 import { RowState } from './slices/rowSlice';
@@ -21,7 +19,7 @@ import { StashState } from './slices/stashSlice';
 import { StatsState } from './slices/statsSlice';
 import { CommentsState } from './slices/commentsSlice';
 import { PlaybackState } from './slices/playbackSlice';
-import { store } from './index';
+import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 
 export interface RootState {
   session: SessionState;
@@ -32,9 +30,7 @@ export interface RootState {
   course: CourseState;
   quiz: QuizState;
   pagination: PaginationState;
-  response: ResponseState;
   search: SearchState;
-  sidebar: SidebarState;
   text: TextState;
   traversal: TraversalState;
   row: RowState;
@@ -49,7 +45,7 @@ export interface RootState {
   playback: PlaybackState;
 }
 
-export type AppDispatch = typeof store.dispatch;
+export type AppDispatch = ThunkDispatch<RootState, unknown, UnknownAction>;
 
 export interface StatsMiddlewareState {
   session: {

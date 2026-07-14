@@ -2,7 +2,6 @@ import { Tree } from '../../utils';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { tabledFetcher } from '../../library/Thunks';
 import {
-  applyReOrderRows,
   type ReOrderRowsPayload,
 } from '../middleware/TabulatorOrderingUtils';
 import { BaseFormattedData, DataRow, BaseEntity } from '../../components/Core/types';
@@ -120,15 +119,6 @@ export const rowSlice = createSlice({
   name: 'row',
   initialState,
   reducers: {
-    reOrderRows: (state, action: PayloadAction<ReOrderRowsPayload>) => {
-      return applyReOrderRows(state, action.payload);
-    },
-    invertSelection: (state) => {
-      return state.map((row) => ({
-        ...row,
-        checked: row.deleted ? row.checked : !row.checked,
-      }));
-    },
     toggleRow: (state, action: PayloadAction<string>) => {
       return state.map((row) => ({
         ...row,
@@ -153,12 +143,6 @@ export const rowSlice = createSlice({
     },
     selectAll: (state) => {
       return state.map((row) => ({ ...row, checked: true }));
-    },
-    updateOrdinals: (state, action: PayloadAction<UpdateOrdinalsPayload[]>) => {
-      return state.map((row) => {
-        const modified = action.payload.find((order: UpdateOrdinalsPayload) => order.id === row.id);
-        return modified !== undefined ? { ...row, ...modified } : { ...row };
-      });
     },
     prependRowz: (state, action: PayloadAction<FormattedRowsPayload>) => {
       const affirm = (r: Row) => (R: Row) => R.id === r.id;
@@ -197,25 +181,6 @@ export const rowSlice = createSlice({
       const rouws = state.filter((r) => !removeIds.has(r.id));
       return rouws.map((row, i) => ({ ...row, index: i }));
     },
-    hideRow: (state, action: PayloadAction<string>) => {
-      return state.map((row) => {
-        return action.payload === row.id ? { ...row, deleted: true } : { ...row };
-      });
-    },
-    unhideRows: (state) => {
-      return state.map((row) => {
-        return row.deleted
-          ? { ...row, deleted: false, checked: true }
-          : { ...row };
-      });
-    },
-    hideRows: (state) => {
-      return state.map((row) => {
-        return row.checked
-          ? { ...row, deleted: true, checked: false }
-          : { ...row };
-      });
-    },
     updateIds: (state, action: PayloadAction<string[]>) => {
       const ids = action.payload;
       return state.map((row) => {
@@ -239,19 +204,13 @@ export const rowSlice = createSlice({
 });
 
 export const {
-  reOrderRows,
-  invertSelection,
   toggleRow,
   selectRows,
   unselectAll,
   selectAll,
-  updateOrdinals,
   prependRowz,
   appendRowz,
   removeRows,
-  hideRow,
-  unhideRows,
-  hideRows,
   updateIds,
   clearData,
 } = rowSlice.actions;

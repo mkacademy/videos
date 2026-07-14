@@ -1,15 +1,7 @@
 import { signedOut } from './sessionSlice';
 import type {
-  dismissAttemptPayload,
-  dismissFollowupOptionPayload,
-  dismissFollowupPayload,
-  dismissOptionPayload,
-  dismissQuestionPayload,
-  dismissQuizPayload,
-  dismissChoicePayload,
   Quiz,
   QuizState,
-  QuizStartId,
   SetQuizzesPayload,
 } from '../../library/QuizUtils';
 import {
@@ -17,17 +9,8 @@ import {
   applyClearSelectedQuizBranches,
   applyCourseReducer,
   applyCreateCoursesQuizState,
-  applyDismissFollowup,
-  applyDismissFollowupOption,
-  applyDismissQuestion,
-  applyDismissOption,
-  applyDismissQuizToState,
-  applyGroupReOrderQuizSelection,
   applyHighlightAttemptBreathSelection,
   applyHighlightQuestionBreathSelection,
-  applyHighlightQuestionDepthSelection,
-  applyHighlightQuizDepthSelection,
-  applyReOrderQuestionSelection,
   applySetBanners,
   applySetFollowupOptions,
   applySetQuizzes,
@@ -68,11 +51,7 @@ import {
   finalizer,
   idsMerger,
   textsMerger,
-  orderPredicate,
-  sorter,
-  contiguousOrdinalQuizzesPred,
 } from '../../library/sliceUtils';
-import { applyOrdinalRangeReorder, ordinalForReorder } from '../../library/TutorialUtils';
 import { getChoices, getAttempts, getFocuses } from '../../library/quizAttemptManager';
 import {
   createSteps,
@@ -82,15 +61,10 @@ import {
   createTutorials,
   persistSteps,
   updateQuizzes,
-  updateQuizOrdinals,
-  updatePennantsOrdinals,
-  updateCoversOrdinals,
-  updateStepsOrdinals,
   updateCourses,
   updateTutorials,
   erasePayload,
   updateSteps,
-  updateQuestionsOrdinals,
   createQuizzes,
   updateQuestionsMetadata,
   updateQuizMetadata,
@@ -132,9 +106,6 @@ const quizSlice = createSlice({
       if (canToggle && state.selected === index) {
         state.selected = -1;
       } else state.selected = index;
-    },
-    setSelected: (state, action: PayloadAction<number>) => {
-      if (action.payload >= -1) state.selected = action.payload;
     },
     setFollowupId: (state, action: PayloadAction<number | undefined>) => {
       state.followupId = action.payload;
@@ -178,102 +149,17 @@ const quizSlice = createSlice({
           : quiz
       );
     },
-    highlightQuizDepthSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
-      applyHighlightQuizDepthSelection(state, action.payload);
-    },
     highlightAttemptBreathSelection: (state, action: PayloadAction<{ ids: (number | string)[]; isHighlighted?: boolean; isShow?: boolean }>) => {
       applyHighlightAttemptBreathSelection(state, action.payload, getChoices);
     },
     highlightQuestionBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
       applyHighlightQuestionBreathSelection(state, action.payload);
     },
-    highlightQuestionDepthSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
-      applyHighlightQuestionDepthSelection(state, action.payload);
-    },
-    dismissQuestion: (state, action: PayloadAction<dismissQuestionPayload>) => {
-      applyDismissQuestion(state, action.payload);
-    },
-    dismissOption: (state, action: PayloadAction<dismissOptionPayload>) => {
-      applyDismissOption(state, action.payload.choice);
-    },
-    dismissFollowupOption: (state, action: PayloadAction<dismissFollowupOptionPayload>) => {
-      applyDismissFollowupOption(state, action.payload.choice);
-    },
-    dismissFollowup: (state, action: PayloadAction<dismissFollowupPayload>) => {
-      applyDismissFollowup(state, action.payload);
-    },
-    dismissQuiz: (state, action: PayloadAction<dismissQuizPayload>) => {
-      applyDismissQuizToState(state, action.payload);
-    },
-    dismissAttempt: (state, action: PayloadAction<dismissAttemptPayload>) => {
-      const { ids, isDismissed } = action.payload;
-      if (ids.length === 0) return;
-      const idSet = new Set(ids);
-      for (const quiz of state.quizzes) {
-        for (let i = 0; i < quiz.pennants.length; i++) {
-          if (idSet.has(quiz.pennants[i].id)) {
-            const pennant = quiz.pennants[i];
-            quiz.pennants[i] = {
-              ...pennant,
-              isDismissed: isDismissed ?? !pennant.isDismissed,
-            };
-          }
-        }
-      }
-    },
-    dismissChoice: (state, action: PayloadAction<dismissChoicePayload>) => {
-      const { selected, quizzes } = state;
-      if (selected <= -1) return;
-      const { choice } = action.payload;
-      const dismissedSubmission = Object.keys(choice || {}).pop();
-      state.quizzes = quizzes.map(
-        ({ pennants: submissions, ...q }) => ({
-          ...q,
-          pennants: submissions.map((sub) => {
-            if (dismissedSubmission === undefined) return sub;
-            const isMatch = getChoices(sub)[dismissedSubmission];
-            return !isMatch ? sub : { ...sub, isDismissed: action.payload.isDismissed ?? !sub.isDismissed };
-          }),
-        })
-      );
-    },
     clearSelected: (state, action: PayloadAction<erasePayload>) => {
       applyClearSelectedQuizBranches(state, action.payload, getChoices);
     },
     clearFetched: (state, action: PayloadAction<boolean>) => {
       applyClearFetched(state, action.payload);
-    },
-    reOrderQuizSelection: (
-      state,
-      action: PayloadAction<{ ids: number[]; direction: boolean; groupReorder?: boolean }>,
-    ) => {
-      const { ids, direction, groupReorder } = action.payload;
-      if (ids.length < 2) return;
-      if (groupReorder) {
-        applyGroupReOrderQuizSelection(state, { ids });
-        return;
-      }
-      if (!ids.every((id) => state.quizzes.some((q) => q.id === id))) return;
-      applyOrdinalRangeReorder(state.quizzes, ids, direction, ordinalForReorder);
-      state.quizzes = contiguousOrdinalQuizzesPred(sorter([...state.quizzes]) as Quiz[]);
-      state.focus = getFocuses(state.quizzes);
-      state.attempt = getAttempts(state.quizzes);
-    },
-    reOrderQuestionSelection: (
-      state,
-      action: PayloadAction<{ ids: number[]; direction: boolean; groupReorder?: boolean }>,
-    ) => {
-      applyReOrderQuestionSelection(state, action.payload);
-    },
-    setShiftHighlightStartIdLane: (
-      state,
-      action: PayloadAction<{ lane: keyof QuizStartId; id: number | string | null }>,
-    ) => {
-      const { lane, id } = action.payload;
-      state.startId[lane] = id as never;
-    },
-    resetShiftHighlightStartId: (state) => {
-      state.startId = createQuizStartIdInitial();
     },
   },
   extraReducers: (builder) => {
@@ -364,14 +250,6 @@ const quizSlice = createSlice({
         const { content } = applyCourseReducer(state, action);
         state.content = content || state.content;
       })
-      .addCase(updateQuizOrdinals, (state, action) => {
-        const { quizzes } = state;
-        const nState = quizzes.map(quiz => ({
-          ...quiz,
-          ordinal: action.payload.find(({ id }) => id === quiz.id)?.ordinal ?? quiz.ordinal
-        }));
-        state.quizzes = nState.sort(orderPredicate);
-      })
       .addCase(updateQuizMetadata, (state, action) => {
         const { quizzes } = state;
         const nState = quizzes.map(quiz => ({
@@ -391,15 +269,7 @@ const quizSlice = createSlice({
         }));
         state.quizzes = nState;
       })
-      .addCase(updateQuestionsOrdinals, (state, action) => {
-        const { banners } = applyCourseReducer(state, action);
-        if (banners) state.banners = banners;
-      })
       .addCase(updateQuestionsMetadata, (state, action) => {
-        const { banners } = applyCourseReducer(state, action);
-        if (banners) state.banners = banners;
-      })
-      .addCase(updatePennantsOrdinals, (state, action) => {
         const { banners } = applyCourseReducer(state, action);
         if (banners) state.banners = banners;
       })
@@ -407,15 +277,7 @@ const quizSlice = createSlice({
         const { banners } = applyCourseReducer(state, action);
         if (banners) state.banners = banners;
       })
-      .addCase(updateCoversOrdinals, (state, action) => {
-        const { content } = applyCourseReducer(state, action);
-        if (content) state.content = content;
-      })
       .addCase(updateCoversMetadata, (state, action) => {
-        const { content } = applyCourseReducer(state, action);
-        if (content) state.content = content;
-      })
-      .addCase(updateStepsOrdinals, (state, action) => {
         const { content } = applyCourseReducer(state, action);
         if (content) state.content = content;
       })
@@ -467,33 +329,15 @@ export const {
   toggleQuiz,
   setQuizzes,
   highlightQuizBreathSelection,
-  highlightQuizDepthSelection,
   highlightAttemptBreathSelection,
   highlightQuestionBreathSelection,
-  highlightQuestionDepthSelection,
-  dismissOption,
-  dismissFollowupOption,
-  dismissChoice,
-  dismissQuestion,
-  dismissFollowup,
-  dismissQuiz,
-  dismissAttempt,
   clearSelected,
   clearFetched,
   setBanners,
   setFollowupOptions,
-  setSelected,
   setFollowupId,
   setRouteToggleMarks,
   clearRouteToggleMarks,
-  setShiftHighlightStartIdLane,
-  resetShiftHighlightStartId,
-  reOrderQuizSelection,
-  reOrderQuestionSelection,
 } = quizSlice.actions;
-
-// Export aliases for backward compatibility
-export const highlightQuiz = highlightQuizBreathSelection;
-export const highlightQuestion = highlightQuestionBreathSelection;
 
 export default quizSlice.reducer; 

@@ -6,7 +6,7 @@ import { RootState } from '../../store';
 import { signOut } from '../../utils';
 import { clearData as clearReducers } from '../../store/slices/rowSlice';
 import { resetPlayback, setPlaybackWebapp } from '../../store/slices/playbackSlice';
-import { setAllowMimeOnlyImageurlOverrideOnUpdateSteps } from '../../store/slices/sessionSlice';
+import { mutateCurApp, setAllowMimeOnlyImageurlOverrideOnUpdateSteps } from '../../store/slices/sessionSlice';
 import {
   buildChunkPlaylistFromCourseSlideGroup,
   buildChunkPlaylistFromTutorialVideoGroup,
@@ -43,7 +43,7 @@ const exitIconSrc = new URL('../../Images/3094700.png', import.meta.url).href;
 
 function buildLibraryUrl(
   tab: MediaPlayerTab,
-  params?: { videoId?: number; audioId?: number; quizId?: number },
+  params?: { videoId?: number; audioId?: number; quizId?: number; ldr?: string | null },
 ): string {
   const search = new URLSearchParams({ tab });
   if (params?.quizId !== undefined) {
@@ -54,6 +54,9 @@ function buildLibraryUrl(
   }
   if (params?.videoId !== undefined) {
     search.set('videoId', String(params.videoId));
+  }
+  if (params?.ldr) {
+    search.set('ldr', params.ldr);
   }
   return `/media-player?${search.toString()}`;
 }
@@ -126,6 +129,7 @@ const MediaPlayer: React.FC = () => {
   const stickyFsq = useSelector((state: RootState) => stickyFsqFromState(state));
   const tabParam = searchParams.get('tab');
   const activeTab = resolveMediaPlayerTab(tabParam, curApp);
+  const ldr = searchParams.get('ldr');
   const videoIdParam = searchParams.get('videoId');
   const audioIdParam = searchParams.get('audioId');
   const quizIdParam = searchParams.get('quizId');
@@ -162,6 +166,12 @@ const MediaPlayer: React.FC = () => {
       return next;
     }, { replace: true });
   }, [tabParam, curApp, setSearchParams]);
+
+  // Sync curApp to the active tab so switching tabs triggers hydration for that
+  // webapp (HydrationManager reacts to mutateCurApp, mirroring the editor's screen switch).
+  React.useEffect(() => {
+    dispatch(mutateCurApp(activeTab));
+  }, [activeTab, dispatch]);
 
   const courseLibrary = useMemo(
     () => {
@@ -269,27 +279,27 @@ const MediaPlayer: React.FC = () => {
   }, [activeTab, dispatch, hasSelectedMedia, quizId]);
 
   const handleTabSelect = useCallback((tab: MediaPlayerTab) => {
-    setSearchParams({ tab });
-  }, [setSearchParams]);
+    setSearchParams(ldr ? { tab, ldr } : { tab });
+  }, [ldr, setSearchParams]);
 
   const handleChangeCourseMedia = useCallback(() => {
     if (videoId !== null) {
       setExitedCourseVideoId(videoId);
     }
-    navigate(buildLibraryUrl('course', { quizId: quizId ?? undefined }));
-  }, [navigate, quizId, videoId]);
+    navigate(buildLibraryUrl('course', { quizId: quizId ?? undefined, ldr }));
+  }, [ldr, navigate, quizId, videoId]);
 
   const handleChangeTutorialMedia = useCallback(() => {
     if (audioId !== null) {
       setExitedTutorialAudioId(audioId);
     }
-    navigate(buildLibraryUrl('tutorial'));
-  }, [audioId, navigate]);
+    navigate(buildLibraryUrl('tutorial', { ldr }));
+  }, [audioId, ldr, navigate]);
 
   const handlePlayCourseVideo = useCallback((id: number) => {
     setExitedCourseVideoId(null);
-    navigate(buildLibraryUrl('course', { videoId: id, quizId: quizId ?? undefined }));
-  }, [navigate, quizId]);
+    navigate(buildLibraryUrl('course', { videoId: id, quizId: quizId ?? undefined, ldr }));
+  }, [ldr, navigate, quizId]);
 
   const handleReleaseCourseVideoPayload = useCallback((id: number) => {
     const banners = quizId !== null ? quizBanners : courseBanners;
@@ -346,8 +356,8 @@ const MediaPlayer: React.FC = () => {
 
   const handlePlayTutorialAudio = useCallback((id: number) => {
     setExitedTutorialAudioId(null);
-    navigate(buildLibraryUrl('tutorial', { audioId: id }));
-  }, [navigate]);
+    navigate(buildLibraryUrl('tutorial', { audioId: id, ldr }));
+  }, [ldr, navigate]);
 
   const handleExit = useCallback(() => {
     navigateConvolutionOrWarn(dispatch, navigate, getConvolutionExitPath(activeTab), undefined, stickyFsq);
@@ -402,7 +412,7 @@ const MediaPlayer: React.FC = () => {
         {activeTab === 'course' && quizId !== null && (
           <div className={styles['filterBanner']}>
             <span>Showing course videos for quiz #{quizId}</span>
-            <Link to={buildLibraryUrl('quiz')}>Back to quizzes</Link>
+            <Link to={buildLibraryUrl('quiz', { ldr })}>Back to quizzes</Link>
           </div>
         )}
 
@@ -507,7 +517,7 @@ const MediaPlayer: React.FC = () => {
                   </div>
                   <Button
                     variant="outline-primary"
-                    onClick={() => navigate(buildLibraryUrl('course', { quizId: quiz.id }))}
+                    onClick={() => navigate(buildLibraryUrl('course', { quizId: quiz.id, ldr }))}
                   >
                     Browse
                   </Button>
@@ -535,7 +545,7 @@ const MediaPlayer: React.FC = () => {
         <Alert variant="warning">
           No {mediaLabel} with a valid chunk sequence found for id <strong>{mediaId}</strong>.
         </Alert>
-        <Link to={buildLibraryUrl(activeTab, { quizId: quizId ?? undefined })}>Back to library</Link>
+        <Link to={buildLibraryUrl(activeTab, { quizId: quizId ?? undefined, ldr })}>Back to library</Link>
       </div>
     );
   }
@@ -586,7 +596,7 @@ const MediaPlayer: React.FC = () => {
       <Alert variant="warning">
         Playback is only available on the tutorial and course tabs.
       </Alert>
-      <Link to={buildLibraryUrl(activeTab, { quizId: quizId ?? undefined })}>Back to library</Link>
+      <Link to={buildLibraryUrl(activeTab, { quizId: quizId ?? undefined, ldr })}>Back to library</Link>
     </div>
   );
 };

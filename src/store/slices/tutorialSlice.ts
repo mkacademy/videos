@@ -5,7 +5,6 @@ import {
   finalizer,
   textsMerger,
   idsMerger,
-  ordinalsUpdator,
   metadataUpdator,
 } from '../../library/sliceUtils';
 import {
@@ -15,8 +14,6 @@ import {
   persistSteps,
   updateSteps,
   updateTutorials,
-  updateStepsOrdinals,
-  updateRootsOrdinals,
   updateRootsMetadata,
   updateStepsMetadata,
   FETCH_SKELETONS_FULFILLED,
@@ -26,23 +23,16 @@ import type { erasePayload } from '../../library/actions';
 import {
   type Banner,
   type Content,
-  type dismissTutorialPayload,
   type SetTutorialsPayload,
-  type TutorialStartId,
   type TutorialState,
   applySetTutorials,
-  applyDismissTutorial,
-  applyHighlightTutorialDepthSelection,
   applyHighlightContentBreathSelection,
   applyClearSelectedTutorial,
   applyClearFetchedTutorial,
-  applyReOrderTutorialSelection,
-  applyReOrderContentSelection,
   applyMergeTutorialFetchSkeletonsFulfilled,
   assignTutorialContentContiguousOrdinals,
   createTutorialStartIdInitial,
   applyUpdateOwnership,
-  type TutorialReOrderSelectionPayload,
 } from '../../library/TutorialUtils';
 
 export type {
@@ -85,9 +75,6 @@ const tutorialSlice = createSlice({
     setTutorials: (state, action: PayloadAction<SetTutorialsPayload>) => {
       applySetTutorials(state, action.payload);
     },
-    dismissTutorial: (state, action: PayloadAction<dismissTutorialPayload>) => {
-      applyDismissTutorial(state, action.payload);
-    },
     toggleTutorial: (state, action: PayloadAction<{ selectedId?: number, canToggle?: boolean }>) => {
       const { selectedId, canToggle = true } = action.payload;
       const index = state.banners.findIndex(({ id }) => id === selectedId);
@@ -97,9 +84,6 @@ const tutorialSlice = createSlice({
         state.selected = index;
       }
     },
-    setSelected: (state, action: PayloadAction<number>) => {
-      if (action.payload >= -1) state.selected = action.payload;
-    },
     highlightTutorialBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
       const { ids, isHighlighted } = action.payload;
       state.banners = state.banners.map((banner) =>
@@ -107,9 +91,6 @@ const tutorialSlice = createSlice({
           ? { ...banner, isHighlighted: isHighlighted ?? !banner.isHighlighted }
           : banner
       );
-    },
-    highlightTutorialDepthSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
-      applyHighlightTutorialDepthSelection(state, action.payload);
     },
     highlightContentBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
       applyHighlightContentBreathSelection(state, action.payload);
@@ -119,21 +100,6 @@ const tutorialSlice = createSlice({
     },
     clearFetched: (state, action: PayloadAction<boolean>) => {
       applyClearFetchedTutorial(state, action.payload);
-    },
-    reOrderTutorialSelection: (state, action: PayloadAction<TutorialReOrderSelectionPayload>) => {
-      applyReOrderTutorialSelection(state, action.payload);
-    },
-    reOrderContentSelection: (state, action: PayloadAction<TutorialReOrderSelectionPayload>) => {
-      applyReOrderContentSelection(state, action.payload);
-    },
-    setShiftHighlightStartIdLane: (
-      state,
-      action: PayloadAction<{ lane: keyof TutorialStartId; id: number | null }>,
-    ) => {
-      state.startId[action.payload.lane] = action.payload.id;
-    },
-    resetShiftHighlightStartId: (state) => {
-      state.startId = createTutorialStartIdInitial();
     },
   },
   extraReducers: (builder) => {
@@ -164,18 +130,10 @@ const tutorialSlice = createSlice({
       .addCase(updateTutorials, (state, action) => {
         state.banners = state.banners.map(textsMerger(action.payload));
       })
-      .addCase(updateStepsOrdinals, (state, action) => {
-        state.content = assignTutorialContentContiguousOrdinals(
-          state.content.map((rows) => rows.map(ordinalsUpdator(action.payload, true))),
-        );
-      })
       .addCase(updateStepsMetadata, (state, action) => {
         state.content = assignTutorialContentContiguousOrdinals(
           state.content.map((rows) => rows.map(metadataUpdator(action.payload, true))),
         );
-      })
-      .addCase(updateRootsOrdinals, (state, action) => {
-        state.banners = state.banners.map(ordinalsUpdator(action.payload, false)).sort(orderPredicate);
       })
       .addCase(updateRootsMetadata, (state, action) => {
         state.banners = state.banners.map(metadataUpdator(action.payload, false)).sort(orderPredicate);
@@ -197,18 +155,11 @@ const tutorialSlice = createSlice({
 export const {
   toggleTutorialDismissed,
   setTutorials,
-  dismissTutorial,
   toggleTutorial,
   highlightTutorialBreathSelection,
-  highlightTutorialDepthSelection,
   highlightContentBreathSelection,
   clearSelected,
   clearFetched,
-  setSelected,
-  setShiftHighlightStartIdLane,
-  resetShiftHighlightStartId,
-  reOrderTutorialSelection,
-  reOrderContentSelection,
 } = tutorialSlice.actions;
 
 export default tutorialSlice.reducer;

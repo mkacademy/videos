@@ -142,7 +142,9 @@ const LoadingAnimation: React.FC = () => {
       }
 
       const webapp = primaryLoadingWebapp(resolvedSearch, foundPairs);
-      navigate(`/media-player?tab=${webapp}`, { replace: true });
+      const currentUrl = `${location.pathname}${location.search}`;
+      const mediaSearch = new URLSearchParams({ tab: webapp, ldr: currentUrl });
+      navigate(`/media-player?${mediaSearch.toString()}`, { replace: true });
     };
 
     if (shouldHydrate && hydrateEnabledAt.current === null) {

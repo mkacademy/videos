@@ -378,9 +378,6 @@ export const settingsSlice = createSlice({
     toggleExport: (state) => {
       state.eXport = !state.eXport;
     },
-    aquiredVoucher: (state, action: PayloadAction<string>) => {
-      state.voucher = action.payload;
-    },
     algorithmSelected: (state, action: PayloadAction<string>) => {
       state.algorithm = action.payload;
     },
@@ -494,12 +491,6 @@ export const settingsSlice = createSlice({
       state.isTabled = cargo;
       state.prefix = cargo ? state.affix || "/app/tabulator/" : "/app/";
     },
-    toggleRoute: (state, action: PayloadAction<string>) => {
-      const { selectedRoutes: routes } = state;
-      const found = routes.find((s) => s === action.payload);
-      if (found) state.selectedRoutes = routes.filter((s) => s !== found);
-      else state.selectedRoutes = [...routes, action.payload];
-    },
     toggleRoutes: (state, action: PayloadAction<{ action: string; selecteds: string[] }>) => {
       const { action: actionType, selecteds } = action.payload;
       const { selectedRoutes: routes } = state;
@@ -570,41 +561,6 @@ export const settingsSlice = createSlice({
     setStatus: (state, action: PayloadAction<number | undefined>) => {
       state.status = action.payload;
     },
-    eraseDeletedTreeIDs: (state, action: PayloadAction<number[]>) => {
-      const Ids = action.payload;
-      state.TutorialTrees = Object.fromEntries(
-        Object.entries(state.TutorialTrees)
-          .filter(([key]) => !Ids.includes(parseInt(key)))
-      );
-      state.CourseTrees = Object.fromEntries(
-        Object.entries(state.CourseTrees)
-          .filter(([key]) => !Ids.includes(parseInt(key)))
-      );
-      state.QuizTrees = Object.fromEntries(
-        Object.entries(state.QuizTrees)
-          .filter(([key]) => !Ids.includes(parseInt(key)))
-      );
-
-      state.unzippedTrees = state.unzippedTrees.map((item: unzippedTrees) => {
-        const remainingTutorialTrees = Object.entries(item.tutorialTrees)
-          .filter(([key]) => !Ids.includes(parseInt(key)))
-        const remainingCourseTrees = Object.entries(item.courseTrees)
-          .filter(([key]) => !Ids.includes(parseInt(key)))
-        const remainingQuizTrees = Object.entries(item.quizTrees)
-          .filter(([key]) => !Ids.includes(parseInt(key)))
-        return {
-          ...item,
-          tutorialTrees: remainingTutorialTrees.length > 0 ? Object.fromEntries(remainingTutorialTrees) : {},
-          courseTrees: remainingCourseTrees.length > 0 ? Object.fromEntries(remainingCourseTrees) : {},
-          quizTrees: remainingQuizTrees.length > 0 ? Object.fromEntries(remainingQuizTrees) : {},
-        };
-      }
-      ).filter((item: unzippedTrees) =>
-        Object.keys(item.tutorialTrees).length > 0 ||
-        Object.keys(item.courseTrees).length > 0 ||
-        Object.keys(item.quizTrees).length > 0
-      );
-    },
     clearTutorialTrees: (state) => {
       state.TutorialTrees = {};
     },
@@ -655,36 +611,6 @@ export const settingsSlice = createSlice({
     },
     addUnzippedTrees: (state, action: PayloadAction<unzippedTrees>) => {
       state.unzippedTrees.push(action.payload);
-    },
-    clearUnzippedTutorialTrees: (state) => {
-      state.unzippedTrees.forEach(item => {
-        item.tutorialTrees = {};
-      });
-      state.unzippedTrees = state.unzippedTrees.filter(item =>
-        Object.keys(item.tutorialTrees).length > 0 ||
-        Object.keys(item.courseTrees).length > 0 ||
-        Object.keys(item.quizTrees).length > 0
-      );
-    },
-    clearUnzippedCourseTrees: (state) => {
-      state.unzippedTrees.forEach(item => {
-        item.courseTrees = {};
-      });
-      state.unzippedTrees = state.unzippedTrees.filter(item =>
-        Object.keys(item.tutorialTrees).length > 0 ||
-        Object.keys(item.courseTrees).length > 0 ||
-        Object.keys(item.quizTrees).length > 0
-      );
-    },
-    clearUnzippedQuizTrees: (state) => {
-      state.unzippedTrees.forEach(item => {
-        item.quizTrees = {};
-      });
-      state.unzippedTrees = state.unzippedTrees.filter(item =>
-        Object.keys(item.tutorialTrees).length > 0 ||
-        Object.keys(item.courseTrees).length > 0 ||
-        Object.keys(item.quizTrees).length > 0
-      );
     },
     clearTypeSelected: (state) => {
       state.clearType = !state.clearType;
@@ -865,7 +791,6 @@ export const {
   toggleAlgorithm,
   toggleSelection,
   toggleAquireVoucher,
-  aquiredVoucher,
   toggleTraversals,
   algorithmSelected,
   secondsSelected,
@@ -896,7 +821,6 @@ export const {
   toggleAlgorithmExtraction,
   toggleFocus,
   formatSelected,
-  toggleRoute,
   toggleRoutes,
   catalinaSelected,
   orphansSizeSelected,
@@ -910,7 +834,6 @@ export const {
   toggleBreathSelection,
   toggleRemoveTrees,
   toggleInsertTrees,
-  eraseDeletedTreeIDs,
   clearTutorialTrees,
   clearCourseTrees,
   clearQuizTrees,
@@ -925,9 +848,6 @@ export const {
   completedSkeletons,
   clearContentTypeSelected,
   addUnzippedTrees,
-  clearUnzippedTutorialTrees,
-  clearUnzippedCourseTrees,
-  clearUnzippedQuizTrees,
   switchToMinimunFeature,
   switchToMaximunFeature,
   toggleUnzipCourses_,

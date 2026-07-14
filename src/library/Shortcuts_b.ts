@@ -27,7 +27,6 @@ import {
   escrowRows,
   extractMocks,
   initLoading,
-  overviewOrdinals,
   simpleSelector,
   simpleUnselector,
   simpleInverter,
@@ -1804,7 +1803,6 @@ export const registerGoBackShortcut = (navigate: NavigateFunction) => {
           undefined,
           stickyFsqFromState(store.getState()),
         );
-        store.dispatch(overviewOrdinals());
         store.dispatch(clearEscrow());
       }
       return;

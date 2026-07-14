@@ -17,6 +17,7 @@ import {
 } from '../../library/videoChunkPlayback';
 import { clearChunkBuffer, updateChunkBuffer } from '../../store/slices/playbackSlice';
 import { useVideoChunkPlayer } from './useVideoChunkPlayer';
+import Comments from '../views/Comments';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 type CourseVideoPlaybackProps = {
@@ -367,6 +368,10 @@ const CourseVideoPlayback: React.FC<CourseVideoPlaybackProps> = ({
           </div>
         </Card>
       </div>
+
+      {selectedCourseBanner.id > 0 && (
+        <Comments _for="course" commentsId={selectedCourseBanner.id} />
+      )}
     </div>
   );
 };

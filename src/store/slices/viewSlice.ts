@@ -118,9 +118,6 @@ const viewSlice = createSlice({
         || (state.message?.startsWith("hydrating") && !action.payload.startsWith("hydrating"));
       state.message = !iswaiting ? action.payload : state.message;
     },
-    toggleLayout: (state) => {
-      state.toggleLayout = !state.toggleLayout;
-    },
     viewLoading: (state) => {
       state.isFetching = true;
     },
@@ -129,9 +126,6 @@ const viewSlice = createSlice({
     },
     viewRequestSkeletons: (state, action: PayloadAction<boolean>) => {
       state.requestIsSkeletons = action.payload;
-    },
-    viewYoinks: (state, action: PayloadAction<string[]>) => {
-      state.yoinks = action.payload;
     },
     viewExports: (state, action: PayloadAction<ExportedData>) => {
       state.actionType = action.payload.actionType;
@@ -170,29 +164,8 @@ const viewSlice = createSlice({
         state.parent = parentData.parent;
       }
     },
-    viewParentData: (state, action: PayloadAction<Array<string | number>>) => {
-      const { parent, IDs = [], curApp = 0 } = state.parentData ?? {};
-      const combinedIDs = [
-        ...new Set([...IDs, ...action.payload].map((id) => String(id))),
-      ];
-      state.parentData = { parent, IDs: combinedIDs, curApp };
-    },
-    removeParent: (state, action: PayloadAction<string>) => {
-      if (!state.parentData?.IDs || !state.parentData?.curApp) return;
-      const index = state.parentData.IDs.indexOf(action.payload);
-      state.parentData.IDs = state.parentData.IDs.filter((_, i) => i !== index);
-    },
-    viewUrlParams: (state, action: PayloadAction<UrlParamsPayload>) => {
-      state.params = action.payload;
-    },
-    viewSpread: (state, action: PayloadAction<number>) => {
-      state.menus = action.payload;
-    },
     viewMenu: (state, action: PayloadAction<number>) => {
       state.selectedMenu = action.payload;
-    },
-    viewKeywords: (state, action: PayloadAction<string[]>) => {
-      state.keywords = action.payload;
     },
     viewRequest: (state, action: PayloadAction<RequestPayload>) => {
       const { message, completed } = action.payload;
@@ -204,46 +177,9 @@ const viewSlice = createSlice({
       state.fetchedData = undefined;
       state.interactions = undefined;
     },
-    clearExports: (state) => {
-      console.log("cleared_exports");
-      state.exportedData = undefined;
-      state.exportedDatas = undefined;
-      state.actionType = undefined;
-    },
-    viewKeyIds: (state, action: PayloadAction<number[]>) => {
-      if (action.payload.length > 0) {
-        const { IDs } = state.parentData ?? {};
-        const filt = (i: number | undefined): i is number => i !== undefined && i > -1;
-        const predicate = (keyId: number) => IDs?.findIndex((id: string) => keyId === parseInt(id));
-        const indeces = action.payload.map(predicate).filter(filt);
-        state.keyids = action.payload;
-        state.parentIndeces = indeces;
-      } else {
-        state.keyids = action.payload;
-        state.parentIndeces = [];
-      }
-    },
-    toggleParents: (state) => {
-      state.visibility.parents = !state.visibility.parents;
-    },
-    toggleSearches: (state) => {
-      state.visibility.searches = !state.visibility.searches;
-    },
     viewPage: (state, action: PayloadAction<string>) => {
       state.pages = [...state.pages, action.payload];
     },
-    removePage: (state, action: PayloadAction<string>) => {
-      state.pages = state.pages.filter(page => page !== action.payload);
-    },
-    viewYoink: (state, action: PayloadAction<string>) => {
-      state.yoinks = [...state.yoinks, action.payload];
-    },
-    removeYoink: (state, action: PayloadAction<string>) => {
-      state.yoinks = state.yoinks.filter(yoink => yoink !== action.payload);
-    },
-    signedOut: () => {
-      return initialState;
-    }
   },
   extraReducers: (builder) => {
     builder
@@ -255,31 +191,16 @@ const viewSlice = createSlice({
 
 export const {
   cpanelMessage,
-  toggleLayout,
   viewLoading,
   viewRequestFetching,
   viewRequestSkeletons,
-  viewYoinks,
   viewExports,
   initFileManager,
   viewPayload,
-  viewParentData,
-  removeParent,
-  viewUrlParams,
-  viewSpread,
   viewMenu,
-  viewKeywords,
   viewRequest,
   clearEscrow,
-  clearExports,
-  viewKeyIds,
-  toggleParents,
-  toggleSearches,
   viewPage,
-  removePage,
-  viewYoink,
-  removeYoink,
-  signedOut
 } = viewSlice.actions;
 
 export default viewSlice.reducer; 

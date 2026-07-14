@@ -45,30 +45,6 @@ export const searchSlice = createSlice({
   name: 'search',
   initialState,
   reducers: {
-    resetSearch: () => initialState,
-    setRoutes: (state, action: PayloadAction<{ routes: Record<string, Route>; searches: Search[] }>) => {
-      const { routes, searches } = action.payload;
-      state.routes = routes;
-      state.searches = searches;
-      state.selectedRoute = {
-        traversal: '',
-        keywords: [],
-        index: 0,
-      };
-
-      // Update routesRef
-      state.routesRef.current = Object.entries(routes)
-        .filter(([_, route]) => {
-          const { keywords, count, index } = route;
-          return !isNaN(Number(count)) && Number(count) > 0 && keywords[index];
-        })
-        .map(([key, route]) => {
-          const { keywords, index } = route;
-          return {
-            [key]: keywords[index].keyword,
-          };
-        });
-    },
     setCounts: (state, action: PayloadAction<Record<string, Record<string, number>>>) => {
       const { routes, selectedRoute } = state;
       const { traversal, keywords: aKeywords, index: aIndex } = selectedRoute;
@@ -195,56 +171,6 @@ export const searchSlice = createSlice({
       const newSearch = existingSearch ? { ...action.payload, count: existingSearch.count } : action.payload;
       state.searches = [newSearch, ...filteredSearches];
     },
-    removeKeyword: (state, action: PayloadAction<Search>) => {
-      const { keyword } = action.payload;
-      const {
-        routes,
-        searches,
-        selectedRoute: { traversal, keywords, index },
-      } = state;
-
-      const predicate = ({ keyword: k }: { keyword: string }) => k !== keyword;
-      const selected = keywords[index]?.keyword;
-      const newKwords = keywords.filter(predicate);
-
-      const entries = Object.entries(routes) as [string, Route][];
-      const newRoutes = Object.fromEntries(
-        entries.map(([key, values]) => {
-          const { keywords: routeKeywords, index: routeIndex } = values;
-          const sel = routeKeywords[routeIndex]?.keyword;
-          const filtered = routeKeywords.filter(predicate);
-          return [
-            key,
-            {
-              ...values,
-              keywords: filtered,
-              index: filtered.findIndex(({ keyword }) => keyword === sel),
-            } as Route,
-          ];
-        })
-      ) as Record<string, Route>;
-
-      // Update routesRef
-      state.routesRef.current = Object.entries(newRoutes)
-        .filter(([_, route]) => {
-          const { keywords, index, count } = route;
-          return !isNaN(Number(count)) && Number(count) > 0 && keywords[index];
-        })
-        .map(([key, route]) => {
-          const { keywords, index } = route;
-          return {
-            [key]: keywords[index].keyword,
-          };
-        });
-
-      state.routes = newRoutes;
-      state.searches = searches.filter(predicate);
-      state.selectedRoute = {
-        traversal,
-        keywords: newKwords,
-        index: newKwords.findIndex(({ keyword }) => keyword === selected),
-      };
-    },
     unmatchKeyword: (state, action: PayloadAction<Search>) => {
       const { keyword } = action.payload;
       const { traversal, keywords, index } = state.selectedRoute;
@@ -317,12 +243,9 @@ export const searchSlice = createSlice({
 });
 
 export const {
-  resetSearch,
-  setRoutes,
   setCounts,
   matchKeyword,
   insertKeyword,
-  removeKeyword,
   unmatchKeyword,
   setSelectedRoute,
 } = searchSlice.actions;

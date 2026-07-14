@@ -31,10 +31,7 @@ import {
   handleCourseFormatters,
   handleQuizFormatters,
   handleTutorialFormatters,
-  getExtractContentPayloads
 } from '../../library/cpanelFormatingUtils';
-import { extractContentLogic, ExtractContentParams } from '../../library/contentExtractorUtils';
-import { appendRecords as appendData } from '../slices/responseSlice';
 import { isDehydrated } from '../../library/controlPanelUtils';
 import { prependError } from '../slices/errorSlice';
 
@@ -153,17 +150,6 @@ const controlPanel: Middleware<{}, RootState> = ({ dispatch, getState }) => (nex
       const queueItems: QueueItem[] = queue.filter(predicate);
       if (queueItems.length === queue.length) {
         queue.length = 0;
-        const data = queueItems.filter(({ item }: QueueItem) => (item as DataRow[]).length > 0);
-        const extractContentPayloads: ExtractContentParams[] = getExtractContentPayloads(data);
-        extractContentPayloads.forEach((payload: ExtractContentParams) => {
-          const { cpanel, webapp } = extractContentLogic(payload);
-          setTimeout(() => cpanel && webapp && dispatch(appendData({
-            fetchedData: cpanel.fetchedData,
-            from: cpanel.from,
-            to: cpanel.to,
-            webapp,
-          })));
-        });
       }
     }
     else next(viewPayload(rest));

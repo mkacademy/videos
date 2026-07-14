@@ -37,20 +37,6 @@ export interface RestoreInteractionsPayload {
   dest: string;
 }
 
-export interface CreateInteractionPayload {
-  compositeId: [number | null, number];
-  childID: string;
-  parentID: string;
-}
-
-export interface DeleteInteractionPayload {
-  compositeId: [number | null, number];
-  childID: string;
-  parentID: string;
-}
-
-
-
 interface FetchingCompletedPayload {
   dest?: string;
   orig?: string;
@@ -68,69 +54,12 @@ const mergeInteractionsHelper = (state: InteractionOption[], fetched: LinkTableP
     };
   });
 
-const createInteractionHelper = (state: InteractionOption[], compositeId: [number | null, number], rightID: string, leftID: string) => {
-  const [parentID, childID] = compositeId;
-  return state.map((interaction) => {
-    const iDMatched = interaction[rightID] === childID;
-    const isNull = interaction[leftID] === null;
-    const isMatchFound = iDMatched && isNull;
-    return isMatchFound
-      ? { ...interaction, [leftID]: parentID, undone: !interaction.undone }
-      : { ...interaction };
-  });
-};
-
-const deleteInteractionHelper = (state: InteractionOption[], compositeId: [number | null, number], rightID: string, leftID: string) => {
-  const [parentID, childID] = compositeId;
-  return state.map((interaction) => {
-    const isNull = parentID === null;
-    const iD1Matched = interaction[leftID] === parentID;
-    const iD2Matched = interaction[rightID] === childID;
-    const isMatchFound = !isNull && iD1Matched && iD2Matched;
-    if (isMatchFound || (isNull && iD2Matched))
-      return { ...interaction, [leftID]: null, undone: !interaction.undone };
-    else return { ...interaction };
-  });
-};
-
 const initialState: InteractionState = { options: [], clicked: [] };
 
 export const interactionSlice = createSlice({
   name: 'interaction',
   initialState,
-  reducers: {
-    createInteraction: (state, action: PayloadAction<CreateInteractionPayload>) => {
-      const { compositeId, childID, parentID } = action.payload;
-      state.options = createInteractionHelper(state.options, compositeId, childID, parentID);
-    },
-    deleteInteraction: (state, action: PayloadAction<DeleteInteractionPayload>) => {
-      const { compositeId, childID, parentID } = action.payload;
-      state.options = deleteInteractionHelper(state.options, compositeId, childID, parentID);
-    },
-    clearInteractions: (_, action: PayloadAction<boolean>) => {
-      const isAbort = action.payload;
-      if (isAbort) console.log("interactions_clear_aborted");
-      else console.log("interactions_cleared");
-      if (!isAbort) {
-        return initialState;
-      }
-    },
-    clickInteractions: (state, action: PayloadAction<number[]>) => {
-      console.log("clicked_interactions");
-      state.clicked = action.payload;
-    },
-    unclickInteractions: (state) => {
-      console.log("unclicked_interactions");
-      state.clicked = [];
-    },
-    saveInteractions: (state) => {
-      console.log("interactions_committed");
-      state.options = state.options.map((interaction) => ({
-        ...interaction,
-        undone: false,
-      }));
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(mergeInteractions, (state, action: PayloadAction<MergeInteractionsPayload>) => {
@@ -198,14 +127,5 @@ export const interactionSlice = createSlice({
       });
   },
 });
-
-export const {
-  createInteraction,
-  deleteInteraction,
-  clearInteractions,
-  clickInteractions,
-  unclickInteractions,
-  saveInteractions,
-} = interactionSlice.actions;
 
 export default interactionSlice.reducer; 

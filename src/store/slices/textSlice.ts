@@ -7,11 +7,9 @@ import {
   getOrderedTexts,
   mergeMetaDatas,
   updateMetadataID,
-  updateMetadataIDs,
 } from './contentSlice';
 import { getInteractionIDs, calcBytes } from '../../utils';
 import { DataRow, DatabaseTableProps, Metadata, TabulatorProps } from '../../components/Core/types';
-import { UpdateSelectedParams } from '../../Hooks/useSaveLinkToParent';
 
 type UpdateTextsFields = Pick<
   DatabaseTableProps,
@@ -70,15 +68,6 @@ export const textSlice = createSlice({
           row["modified"] === true
           ? { ...row, ...updates, sizeInBytes: calcBytes(row) }
           : { ...row, ...updates };
-      });
-    },
-    
-    updateRowMetadata: (state, action: PayloadAction<UpdateSelectedParams>) => {
-      const { checkedIds, ...freight } = action.payload;
-      return state.map((row) => {
-        return checkedIds?.includes(row.id.toString()) ?? false
-          ? { ...row, metadata: updateMetadataIDs(textRowToContentItem(row), freight) }
-          : { ...row };
       });
     },
   },
@@ -188,5 +177,5 @@ export const textSlice = createSlice({
   },
 });
 
-export const { updateTexts, updateRowMetadata } = textSlice.actions;
+export const { updateTexts } = textSlice.actions;
 export default textSlice.reducer; 

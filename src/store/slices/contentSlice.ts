@@ -1,9 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { getInteractionIDs, calcBytes, Tree, ADD_ROWS, REMOVE_ROWS } from '../../utils';
+import { getInteractionIDs, calcBytes, Tree, ADD_ROWS } from '../../utils';
 import { clearData, updateIds, unselectAll, selectAll, prependRowz, appendRowz } from './rowSlice';
 import { updateMetadataId, insertMetadata } from '../../library/actions';
 import { DataRow, Metadata } from '../../components/Core/types';
-import { UpdateSelectedParams } from '../../Hooks/useSaveLinkToParent';
 
 export type ContentState = DataRow[];
 
@@ -68,13 +67,6 @@ export const contentSlice = createSlice({
   name: 'content',
   initialState,
   reducers: {
-    hideContent: (state) => {
-      return state.map((row) => {
-        return row.checked
-          ? { ...row, deleted: true, checked: false }
-          : { ...row };
-      });
-    },
     removeContent: (state, action: PayloadAction<number[]>) => {
       const ids = action.payload;
       const pred = (r: DataRow) => (ID: number) => parseInt(ID.toString()) === r.id;
@@ -117,33 +109,6 @@ export const contentSlice = createSlice({
         .concat(overlaps)
         .concat(nonOverlapedState);
       return getOrderedTexts(nonOverlapedData, unorderedMess, state);
-    },
-    unhideContent: (state) => {
-      return state.map((row) => {
-        return row.deleted
-          ? { ...row, deleted: false, checked: true }
-          : { ...row };
-      });
-    },
-    toggleContent: (state, action: PayloadAction<number>) => {
-      return state.map((row) => {
-        return row.id === action.payload
-          ? { ...row, checked: !row.checked }
-          : { ...row };
-      });
-    },
-    hideArticle: (state, action: PayloadAction<number>) => {
-      return state.map((row) => {
-        return action.payload === row.id ? { ...row, deleted: true } : { ...row };
-      });
-    },
-    appendContentMetadataIds: (state, action: PayloadAction<UpdateSelectedParams>) => {
-      const { evaluators: { parentIdsCount, operation } } = action.payload;
-      return state.map((row) => {
-        return evaluator(operation, parentIdsCount)(row)
-          ? { ...row, metadata: updateMetadataIDs(row, action.payload) }
-          : { ...row };
-      });
     },
   },
   extraReducers: (builder) => {
@@ -214,15 +179,10 @@ export const contentSlice = createSlice({
 });
 
 export const {
-  hideContent,
   removeContent,
   selectContent,
-  unhideContent,
-  toggleContent,
-  hideArticle,
   appendContentz,
   prependContentz,
-  appendContentMetadataIds,
 } = contentSlice.actions;
 
 export const appendContent = ({
@@ -249,11 +209,4 @@ export const appendContent = ({
     type: isAppend ? contentSlice.actions.appendContentz.type : contentSlice.actions.prependContentz.type,
   };
   };
-  const evaluator =  (operation: string, parentIdsCount: number) => (row: DataRow): boolean => {
-  const isChecked = row.checked === true;
-  const isFrozen = row.frozen === true;
-  return operation === REMOVE_ROWS && parentIdsCount > 0
-      ? isChecked && isFrozen
-      : isChecked && !isFrozen;
-}
 export default contentSlice.reducer; 

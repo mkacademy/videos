@@ -21,18 +21,9 @@ import {
 } from '../../library/actions';
 import { signedOut } from './sessionSlice';
 import { finalizer, orderPredicate, contiguousOrdinalPred, textsMergerComms, idsMergerComms } from '../../library/sliceUtils';
-import { ordinalForReorder } from '../../library/TutorialUtils';
-import { commsOutlineRangeHasDifferentTypes } from '../middleware/RangeSelectionOrReorderMangerUtils';
 import {
-  appendCommsReorderOrdinalBatches,
-  applyCommsAltGroupLaneReorder,
-  applyOrdinalRangeReorderByKeys,
-  applyTutorsModified,
-  applySetSelectedTutors,
   mergeOutgoingMessages,
-  applyHierarchyMutationToTutors,
   bossPred,
-  commsOutlineKey,
   createCommsStartIdInitial,
   deletedPred,
   inDashPred,
@@ -44,20 +35,13 @@ import {
   outFilPred,
   outIntrPred,
   outSiftPred,
-  toggleIncomingMsg,
-  toggleOutgoingMsg,
   underbossPred,
   applyUpdateCommsOwnership,
-  type CommsStartId,
   type IncomingMessage,
   type OutgoingMessage,
   type Tutor,
-  type TutorSelectedPayload,
-  IncommingButtonLabel,
-  OutgoingButtonLabel,
   CommsState,
 } from '../../library/commsUtils';
-import { MutateAbilityResponse, MutateHierachyResponse } from '../../library/types';
 import { showInfos } from '../../constants';
 import { CommunicationReply } from '../middleware/MessageReaderQRS';
 
@@ -93,10 +77,6 @@ const commsSlice = createSlice({
   name: 'comms',
   initialState,
   reducers: {
-    tutorsModified: (state, action: PayloadAction<{ agreements: string[], abilities: string[] }>) => {
-      const { agreements, abilities } = action.payload;
-      state.tutors = applyTutorsModified(state.tutors, agreements, abilities);
-    },
     outlineTutor: (state, action: PayloadAction<{ ids: string[], isHighlighted?: boolean }>) => {
       const { ids, isHighlighted } = action.payload;
       state.tutors = state.tutors.map((tutor) =>
@@ -105,28 +85,11 @@ const commsSlice = createSlice({
           : tutor
       );
     },
-    toggleTutor: (state, action: PayloadAction<string>) => {
-      state.tutors = state.tutors.map((tutor) =>
-        action.payload === tutor.id + tutor.type
-          ? { ...tutor, isDismissed: !tutor.isDismissed }
-          : tutor
-      );
-    },
-    setSelectedTutors: (state, action: PayloadAction<TutorSelectedPayload>) => {
-      state.tutors = applySetSelectedTutors(state.tutors, action.payload);
-    },
     outlineOutgoing: (state, action: PayloadAction<{ ids: string[], isHighlighted?: boolean }>) => {
       const { ids, isHighlighted } = action.payload;
       state.outgoing = state.outgoing.map((message) =>
         ids.includes(message.id + message.type)
           ? { ...message, isHighlighted: isHighlighted ?? !message.isHighlighted }
-          : message
-      );
-    },
-    toggleOutgoing: (state, action: PayloadAction<string>) => {
-      state.outgoing = state.outgoing.map((message) =>
-        action.payload === message.id + message.type
-          ? { ...message, isDismissed: !message.isDismissed }
           : message
       );
     },
@@ -149,26 +112,11 @@ const commsSlice = createSlice({
         else return message;
       });
     },
-    setSelectedOutgoings: (state, action: PayloadAction<{ id: string, btnLabel: OutgoingButtonLabel }>) => {
-      const { id, btnLabel } = action.payload;
-      state.outgoing = state.outgoing.map((message) =>
-        message.id + message.type !== id
-          ? message
-          : { ...message, ...toggleOutgoingMsg(btnLabel) }
-      );
-    },
     outlineIncoming: (state, action: PayloadAction<{ ids: string[], isHighlighted?: boolean }>) => {
       const { ids, isHighlighted } = action.payload;
       state.incoming = state.incoming.map((message) =>
         ids.includes(message.id + message.type)
           ? { ...message, isHighlighted: isHighlighted ?? !message.isHighlighted }
-          : message
-      );
-    },
-    toggleIncoming: (state, action: PayloadAction<string>) => {
-      state.incoming = state.incoming.map((message) =>
-        action.payload === message.id + message.type
-          ? { ...message, isDismissed: !message.isDismissed }
           : message
       );
     },
@@ -182,14 +130,6 @@ const commsSlice = createSlice({
           isModified: false,
         }))
         .filter(({ id, type }) => !discardeds.includes(id + type));
-    },
-    setSelectedIncomings: (state, action: PayloadAction<{ id: string, btnLabel: IncommingButtonLabel, source: string }>) => {
-      const { id, btnLabel, source } = action.payload;
-      state.incoming = state.incoming.map((message) =>
-        message.id + message.type !== id
-          ? message
-          : { ...message, ...toggleIncomingMsg(btnLabel, source) }
-      );
     },
     setTutors: (state, action: PayloadAction<Tutor[]>) => {
       state.tutors = Object.values(
@@ -224,22 +164,6 @@ const commsSlice = createSlice({
     },
     setOutgoings: (state, action: PayloadAction<OutgoingMessage[]>) => {
       state.outgoing = mergeOutgoingMessages(state.outgoing, action.payload);
-    },
-    abilityMutated: (state, action: PayloadAction<MutateAbilityResponse>) => {
-      const { candidates, enabled } = action.payload;
-      state.tutors = state.tutors.map((tutor) => {
-        if (!candidates.includes(tutor.id)) return tutor;
-        tutor.isAble.isModified = false;
-        tutor.status = enabled ? 1 : 0;
-        return tutor;
-      });
-    },
-    hierachyMutated: (state, action: PayloadAction<MutateHierachyResponse>) => {
-      const { candidates: tokens, selector } = action.payload;
-      state.tutors = applyHierarchyMutationToTutors(state.tutors, tokens, selector);
-    },
-    motionsCompleted: (state) => {
-      state.tutors = state.tutors.map(({ motion, ...tutor }) => tutor);
     },
     eraseTutors: (state, action: PayloadAction<erasePayload>) => {
       const { Ids = [], isShow } = action.payload;
@@ -284,87 +208,6 @@ const commsSlice = createSlice({
       state.outgoing = state.outgoing.filter(
         ({ isDismissed }) => isDismissed === undismissed
       );
-    },
-    reOrderTutors: (state, action: PayloadAction<{ ids: string[]; direction: boolean; groupReorder?: boolean }>) => {
-      const { ids, direction, groupReorder } = action.payload;
-      if (ids.length < 2) return;
-      if (commsOutlineRangeHasDifferentTypes(state, 'tutorOutline', ids)) return;
-      const beforeOrdinals = new Map(state.tutors.map((t) => [commsOutlineKey(t), t.ordinal]));
-      if (groupReorder) {
-        const next = applyCommsAltGroupLaneReorder(state.tutors, ids);
-        if (next === null) return;
-        state.tutors = next;
-      } else {
-        if (!ids.every((k) => state.tutors.some((r) => commsOutlineKey(r) === k))) return;
-        applyOrdinalRangeReorderByKeys(
-          state.tutors,
-          ids,
-          direction,
-          ordinalForReorder,
-          commsOutlineKey,
-        );
-        state.tutors = [...state.tutors]
-          .sort(orderPredicate)
-          .map((row, index, array) => contiguousOrdinalPred(row, index, array));
-      }
-      appendCommsReorderOrdinalBatches(state.modifiedOrdinals, 'tutor', state.tutors, beforeOrdinals);
-    },
-    reOrderOutgoing: (state, action: PayloadAction<{ ids: string[]; direction: boolean; groupReorder?: boolean }>) => {
-      const { ids, direction, groupReorder } = action.payload;
-      if (ids.length < 2) return;
-      if (commsOutlineRangeHasDifferentTypes(state, 'outgoingOutline', ids)) return;
-      const beforeOrdinals = new Map(state.outgoing.map((m) => [commsOutlineKey(m), m.ordinal]));
-      if (groupReorder) {
-        const next = applyCommsAltGroupLaneReorder(state.outgoing, ids);
-        if (next === null) return;
-        state.outgoing = next;
-      } else {
-        if (!ids.every((k) => state.outgoing.some((r) => commsOutlineKey(r) === k))) return;
-        applyOrdinalRangeReorderByKeys(
-          state.outgoing,
-          ids,
-          direction,
-          ordinalForReorder,
-          commsOutlineKey,
-        );
-        state.outgoing = [...state.outgoing]
-          .sort(orderPredicate)
-          .map((row, index, array) => contiguousOrdinalPred(row, index, array));
-      }
-      appendCommsReorderOrdinalBatches(state.modifiedOrdinals, 'outgoing', state.outgoing, beforeOrdinals);
-    },
-    reOrderIncoming: (state, action: PayloadAction<{ ids: string[]; direction: boolean; groupReorder?: boolean }>) => {
-      const { ids, direction, groupReorder } = action.payload;
-      if (ids.length < 2) return;
-      if (commsOutlineRangeHasDifferentTypes(state, 'incomingOutline', ids)) return;
-      const beforeOrdinals = new Map(state.incoming.map((m) => [commsOutlineKey(m), m.ordinal]));
-      if (groupReorder) {
-        const next = applyCommsAltGroupLaneReorder(state.incoming, ids);
-        if (next === null) return;
-        state.incoming = next;
-      } else {
-        if (!ids.every((k) => state.incoming.some((r) => commsOutlineKey(r) === k))) return;
-        applyOrdinalRangeReorderByKeys(
-          state.incoming,
-          ids,
-          direction,
-          ordinalForReorder,
-          commsOutlineKey,
-        );
-        state.incoming = [...state.incoming]
-          .sort(orderPredicate)
-          .map((row, index, array) => contiguousOrdinalPred(row, index, array));
-      }
-      appendCommsReorderOrdinalBatches(state.modifiedOrdinals, 'incoming', state.incoming, beforeOrdinals);
-    },
-    setShiftHighlightStartIdLane: (
-      state,
-      action: PayloadAction<{ lane: keyof CommsStartId; id: string | null }>,
-    ) => {
-      state.startId[action.payload.lane] = action.payload.id;
-    },
-    resetShiftHighlightStartId: (state) => {
-      state.startId = createCommsStartIdInitial();
     },
   },
   extraReducers: (builder) => {
@@ -441,36 +284,21 @@ const commsSlice = createSlice({
 });
 
 export const {
-  tutorsModified,
   outlineTutor,
-  toggleTutor,
-  setSelectedTutors,
   outlineOutgoing,
-  toggleOutgoing,
   outgoingModified,
   updateCommunicationStatus,
-  setSelectedOutgoings,
   outlineIncoming,
-  toggleIncoming,
   incomingModified,
-  setSelectedIncomings,
   setTutors,
   setIncomings,
   setOutgoings,
-  abilityMutated,
-  hierachyMutated,
-  motionsCompleted,
   eraseTutors,
   eraseIncoming,
   eraseOutgoing,
   clearTutors,
   clearIncoming,
   clearOutgoing,
-  setShiftHighlightStartIdLane,
-  resetShiftHighlightStartId,
-  reOrderTutors,
-  reOrderOutgoing,
-  reOrderIncoming,
 } = commsSlice.actions;
 
 export default commsSlice.reducer; 

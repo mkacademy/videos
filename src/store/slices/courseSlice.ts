@@ -3,7 +3,6 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   textsMerger,
   finalizer,
-  ordinalsUpdator,
   metadataUpdator,
   orderPredicate,
   getSlideIndeces,
@@ -14,10 +13,6 @@ import {
   persistTutorials,
   persistSteps,
   updateCourses,
-  updateRootsOrdinals,
-  updatePennantsOrdinals,
-  updateCoversOrdinals,
-  updateStepsOrdinals,
   updateTutorials,
   updateSteps,
   erasePayload,
@@ -39,7 +34,6 @@ import type {
   SlideItem,
   dismissCoursePayload,
   dismissSlidePayload,
-  CourseReOrderSelectionPayload,
   CourseHighlightSlideBreathSelectionPayload,
   CourseHighlightCoversBreathSelectionPayload,
   CourseSetSlidesPayload,
@@ -50,7 +44,6 @@ import {
   applyClearFetchedCourseState,
   applyDismissChapter,
   applyDismissSlide,
-  applyDismissCourseWithSelection,
   applyDismissCourseWithoutSelection,
   applyHighlightCoversBreathSelection,
   applyHighlightCourseDepthSelection,
@@ -60,21 +53,15 @@ import {
   applyCreateSteps,
   applyCreateTutorials,
   applyPersistSteps,
-  applyReOrderCoversSelection,
-  applyReOrderCourseSelection,
-  applyReOrderPennantSelection,
-  applyReOrderSlideSelection,
   applySetChaptersViaPennantId,
   applySetChaptersViaSlideId,
   applySetCourses,
   applySetSlides,
   applyUpdateCoversMetadata,
-  applyUpdateCoversOrdinals,
   applyUpdateSteps,
   applyUpdateOwnership,
   createCourseStartIdInitial,
   mergeCourseFetchSkeletonsContent,
-  type CourseStartId,
 } from '../../library/CourseUtils';
 
 export type {
@@ -129,12 +116,6 @@ const courseSlice = createSlice({
         state.selected = index;
       }
       state.chapters = [];
-    },
-    setSelected: (state, action: PayloadAction<number>) => {
-      if (action.payload >= -1) {
-        state.selected = action.payload;
-        state.chapters = [];
-      }
     },
     setChapters: (state, action: PayloadAction<number[]>) => {
       if (state.selected < 0 && state.chapters.length > 0) {
@@ -204,11 +185,6 @@ const courseSlice = createSlice({
       if (ids.length === 0 || state.selected > -1) return;
       for (const id of ids) applyDismissCourseWithoutSelection(state, id, isDismissed, isShow);
     },
-    dimissMainslide: (state, action: PayloadAction<dismissCoursePayload>) => {
-      const { ids, isDismissed } = action.payload;
-      if (ids.length === 0) return;
-      for (const id of ids) applyDismissCourseWithSelection(state, id, isDismissed);
-    },
     dismissChapter: (state, action: PayloadAction<dismissCoursePayload>) => {
       applyDismissChapter(state, action.payload);
     },
@@ -220,27 +196,6 @@ const courseSlice = createSlice({
     },
     clearFetched: (state, action: PayloadAction<boolean>) => {
       applyClearFetchedCourseState(state, action.payload);
-    },
-    reOrderSlideSelection: (state, action: PayloadAction<CourseReOrderSelectionPayload>) => {
-      applyReOrderSlideSelection(state, action.payload);
-    },
-    reOrderCoversSelection: (state, action: PayloadAction<CourseReOrderSelectionPayload>) => {
-      applyReOrderCoversSelection(state, action.payload);
-    },
-    reOrderCourseSelection: (state, action: PayloadAction<CourseReOrderSelectionPayload>) => {
-      applyReOrderCourseSelection(state, action.payload);
-    },
-    reOrderPennantSelection: (state, action: PayloadAction<CourseReOrderSelectionPayload>) => {
-      applyReOrderPennantSelection(state, action.payload);
-    },
-    setShiftHighlightStartIdLane: (
-      state,
-      action: PayloadAction<{ lane: keyof CourseStartId; id: number | null }>,
-    ) => {
-      state.startId[action.payload.lane] = action.payload.id;
-    },
-    resetShiftHighlightStartId: (state) => {
-      state.startId = createCourseStartIdInitial();
     },
     coupleChapterAndCovers: (state) => {
       state.couplings = getSlideIndeces(state.banners, state.content);
@@ -302,14 +257,6 @@ const courseSlice = createSlice({
         })) as Banner[];
         state.banners = nState;
       })
-      .addCase(updateRootsOrdinals, (state, action) => {
-        const { banners } = state;
-        const nState = banners.map(banner => ({
-          ...banner,
-          ordinal: action.payload.find(({ id }) => id === banner.id)?.ordinal ?? banner.ordinal
-        }));
-        state.banners = nState.sort(orderPredicate);
-      })
       .addCase(updateRootsMetadata, (state, action) => {
         const { banners } = state;
         const nState = banners.map(banner => ({
@@ -317,15 +264,6 @@ const courseSlice = createSlice({
           ...(action.payload.find(({ id }) => id === banner.id) ?? {}),
         }));
         state.banners = nState;
-      })
-      .addCase(updatePennantsOrdinals, (state, action) => {
-        const { banners } = state;
-        const nState = banners.map(({ pennants, ...fields }: Banner) => ({
-          ...fields,
-          pennants: pennants.map(ordinalsUpdator(action.payload, true)).sort(orderPredicate)
-        }));
-        state.banners = nState;
-        state.couplings = getSlideIndeces(nState, state.content);
       })
       .addCase(updatePennantsMetadata, (state, action) => {
         const { banners } = state;
@@ -336,21 +274,8 @@ const courseSlice = createSlice({
         state.banners = nState;
         state.couplings = getSlideIndeces(nState, state.content);
       })
-      .addCase(updateCoversOrdinals, (state, action) => {
-        applyUpdateCoversOrdinals(state, action.payload);
-      })
       .addCase(updateCoversMetadata, (state, action) => {
         applyUpdateCoversMetadata(state, action.payload);
-      })
-      .addCase(updateStepsOrdinals, (state, action) => {
-        const { content } = state;
-        const nState = content.map(({ slides, ...fields }: SlideGroup) => ({
-          ...fields,
-          slides: slides.map((rows: SlideItem[]) =>
-            rows.map(ordinalsUpdator(action.payload, true)).sort((a, b) => (a.ordinal || 0) - (b.ordinal || 0))
-          ),
-        })) as SlideGroup[];
-        state.content = nState;
       })
       .addCase(updateStepsMetadata, (state, action) => {
         const { content } = state;
@@ -394,21 +319,13 @@ export const {
   highlightPennantDepthSelection,
   highlightCourseDepthSelection,
   dismissCourse,
-  dimissMainslide,
   dismissChapter,
   clearSelected,
   clearFetched,
-  setSelected,
   setChapters,
   resetChapters,
   setChaptersViaSlideId,
   setChaptersViaPennantId,
-  setShiftHighlightStartIdLane,
-  resetShiftHighlightStartId,
-  reOrderSlideSelection,
-  reOrderCoversSelection,
-  reOrderCourseSelection,
-  reOrderPennantSelection,
   coupleChapterAndCovers,
 } = courseSlice.actions;
 
