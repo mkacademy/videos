@@ -1,7 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { fetchingCompleted } from '../../library/actions';
 import { DataRow } from '../../components/Core/types';
-import { Traversal } from './traversalSlice';
 import { IconKey } from '../../Hooks/useIconsAssembler';
 import { InteractionState } from './interactionSlice';
 
@@ -24,11 +23,8 @@ export interface ViewState {
   parentData: ParentData | undefined;
   fetchedData: DataRow[] | undefined;
   interactions: InteractionState | undefined;
-  exportedData: Traversal[] | DataRow[] | undefined;
-  exportedDatas: Record<string, DataRow[]> | undefined;
   requestIsProcessing: boolean;
   requestIsFetching: boolean;
-  requestIsSkeletons: boolean;
   visibility: {
     searches: boolean;
     parents: boolean;
@@ -43,8 +39,6 @@ export interface ParentData {
 
 export interface ExportedData {
   actionType: string;
-  exportedData?: Traversal[] | DataRow[];
-  exportedDatas?: Record<string, DataRow[]>;
 }
 
 
@@ -101,10 +95,7 @@ const initialState: ViewState = {
   parentData: undefined,
   fetchedData: undefined,
   interactions: undefined,
-  exportedData: undefined,
-  exportedDatas: undefined,
   requestIsFetching: false,
-  requestIsSkeletons: false,
   requestIsProcessing: false,
   visibility: { searches: true, parents: true },
 };
@@ -124,19 +115,7 @@ const viewSlice = createSlice({
     viewRequestFetching: (state, action: PayloadAction<boolean>) => {
       state.requestIsFetching = action.payload;
     },
-    viewRequestSkeletons: (state, action: PayloadAction<boolean>) => {
-      state.requestIsSkeletons = action.payload;
-    },
-    viewExports: (state, action: PayloadAction<ExportedData>) => {
-      state.actionType = action.payload.actionType;
-      if (action.payload.exportedDatas !== undefined) {
-        state.exportedDatas = action.payload.exportedDatas;
-        state.exportedData = undefined;
-      } else {
-        state.exportedData = action.payload.exportedData;
-        state.exportedDatas = undefined;
-      }
-    },
+
     initFileManager: (state, action: PayloadAction<string>) => {
       state.actionType = action.payload;
     },
@@ -193,8 +172,6 @@ export const {
   cpanelMessage,
   viewLoading,
   viewRequestFetching,
-  viewRequestSkeletons,
-  viewExports,
   initFileManager,
   viewPayload,
   viewMenu,

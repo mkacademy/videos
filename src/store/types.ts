@@ -8,7 +8,6 @@ import { QuizState } from './slices/quizSlice';
 import { TutorialState } from './slices/tutorialSlice';
 import { CommsState } from './slices/commsSlice';
 import { TextState } from './slices/textSlice';
-import { TraversalState } from './slices/traversalSlice';
 import { RowState } from './slices/rowSlice';
 import { ContentState } from './slices/contentSlice';
 import { InteractionState } from './slices/interactionSlice';
@@ -30,7 +29,6 @@ export interface RootState {
   pagination: PaginationState;
   search: SearchState;
   text: TextState;
-  traversal: TraversalState;
   row: RowState;
   content: ContentState;
   interaction: InteractionState;

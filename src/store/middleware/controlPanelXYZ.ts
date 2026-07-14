@@ -7,7 +7,6 @@ import { hydrateData, hydratedThenFetch } from '../../library/actions';
 import { appendRowz } from "../slices/rowSlice";
 import { EntityTypeMap } from '../slices/rowSlice';
 import { viewPayload, viewRequest } from '../slices/viewSlice';
-import { uncacheTraversal } from "../slices/traversalSlice";
 import { Tree as entities, ADD_ROWS, getInteractionIDs, getCurAppName, getPlural } from "../../utils";
 import { abortIfHydrationDisabled, handleHydrationLogic } from '../../library/hydrationUtils';
 import { BaseFormattedData, DataRow } from '../../components/Core/types';
@@ -63,10 +62,6 @@ const controlPanel: Middleware<{}, RootState> = ({ dispatch, getState }) => (nex
       insertedRows,
       ...initializeData
     } = payload;
-
-    if (urlData && parent && entity)
-      dispatch(uncacheTraversal(parent + entity));
-
 
     if (urlData && insertedRows && insertedRows.length > 0) {
       const { parentID, childID } = getInteractionIDs(parent!, entity!);

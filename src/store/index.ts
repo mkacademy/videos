@@ -14,7 +14,6 @@ import searchReducer from './slices/searchSlice';
 import settingsReducer from './slices/settingsSlice';
 import stashReducer from './slices/stashSlice';
 import textReducer from './slices/textSlice';
-import traversalReducer from './slices/traversalSlice';
 import tutorialReducer from './slices/tutorialSlice';
 import viewReducer from './slices/viewSlice';
 import commentsReducer from './slices/commentsSlice';
@@ -37,7 +36,6 @@ export const store = configureStore({
     settings: settingsReducer,
     stash: stashReducer,
     text: textReducer,
-    traversal: traversalReducer,
     tutorial: tutorialReducer,
     view: viewReducer,
     comments: commentsReducer,
