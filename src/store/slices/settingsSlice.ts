@@ -1,9 +1,6 @@
 import { signedOut } from './sessionSlice';
-import { userApps, memberApps, adminsApps } from '../../constants';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { fetchData } from '../../library/Thunks';
-import { getEntity, normalizeQueryLimit, orderedWebappRoutes, Tree as tree } from '../../utils';
-import { WebApps } from '../../components/Core/types';
 import { fileManager } from '../../library/FileManager';
 import { CourseTrees, QuizTrees, TutorialTrees } from '../../library/controlPanelUtils';
 import { setQuizzes } from './quizSlice';
@@ -282,24 +279,7 @@ const initialSettings: SettingsState = {
   randomizedType: 'both',
 };
 
-const validatedCombination = (
-  selection: { selectedChild: string; selectedParent: string },
-  notReturnAliases?: boolean,
-  webapp?: string,
-  log?: boolean
-) => {
-  const entity: string = getEntity(selection.selectedChild);
-  const parent: string = getEntity(selection.selectedParent);
-  const unlocked: string[] = tree.getProperty(parent, "unlocked") || [];
-  const webapps: WebApps = tree.getProperty(parent, "webapps") || {} as WebApps;
-  const { [webapp || '']: permitted = unlocked } = webapps;
-  const isValid: boolean =
-    unlocked?.indexOf(entity) > -1 && permitted?.indexOf(entity) > -1;
-  if (!isValid && log) console.log("valid_routes", parent, unlocked);
-  if (notReturnAliases)
-    return { selectedChild: entity, selectedParent: parent, isValid };
-  else return { ...selection, isValid };
-};
+
 
 export const settingsSlice = createSlice({
   name: 'settings',
@@ -315,181 +295,12 @@ export const settingsSlice = createSlice({
         next.includeBase64 = false;
       return next;
     },
-    quotaSelected: (state, action: PayloadAction<number>) => {
-      state.quota = action.payload;
+    toggleShouldHydrate: (state, action: PayloadAction<boolean | undefined>) => {
+      if (action.payload !== undefined) state.shouldHydrate = action.payload;
+      else state.shouldHydrate = !state.shouldHydrate;
     },
-    childSelected: (state, action: PayloadAction<string>) => {
-      const { selectedParent } = state;
-      const childParent = { selectedChild: action.payload, selectedParent };
-      const validated = validatedCombination(childParent);
-      state.action = "tabulator";
-      state.selectedChild = validated.selectedChild;
-      state.selectedParent = validated.selectedParent;
-      state.isValid = validated.isValid;
-    },
-    parentSelected: (state, action: PayloadAction<string>) => {
-      const { selectedChild } = state;
-      const parentChild = { selectedParent: action.payload, selectedChild };
-      const validated = validatedCombination(parentChild);
-      state.action = "tabulator";
-      state.selectedChild = validated.selectedChild;
-      state.selectedParent = validated.selectedParent;
-      state.isValid = validated.isValid;
-    },
-    accountCreated: (state, action: PayloadAction<AccountResult>) => {
-      const { attempts, success } = action.payload;
-      if (success) state.registerAttempts = -1;
-      else state.registerAttempts = attempts;
-    },
-    escrowUploads: (state, action: PayloadAction<SerializableFile[] | null>) => {
-      if (action.payload) state.uploads = [...state.uploads, ...action.payload];
-      else {
-        state.uploads = [];
-        fileManager.clearFiles();
-      }
-    },
-    roleSelected: (state, action: PayloadAction<string>) => {
-      state.role = action.payload;
-    },
-    toggleTextToImg: (state) => {
-      state.txtimg = !state.txtimg;
-    },
-    toggleTextSwap: (state) => {
-      state.txtswap = !state.txtswap;
-    },
-    toggleAlgorithm: (state) => {
-      state.exRoots = !state.exRoots;
-    },
-    toggleSelection: (state) => {
-      state.seltype = !state.seltype;
-    },
-    toggleAquireVoucher: (state) => {
-      state.dowTok = !state.dowTok;
-    },
-    toggleTraversals: (state) => {
-      state.exHistory = !state.exHistory;
-    },
-    encodingSource: (state) => {
-      state.dismisstype = !state.dismisstype;
-    },
-    toggleImport: (state) => {
-      state.iMport = !state.iMport;
-    },
-    toggleExport: (state) => {
-      state.eXport = !state.eXport;
-    },
-    algorithmSelected: (state, action: PayloadAction<string>) => {
-      state.algorithm = action.payload;
-    },
-    secondsSelected: (state, action: PayloadAction<number>) => {
-      state.seconds = action.payload;
-    },
-    takeSelected: (state, action: PayloadAction<number>) => {
-      state.take = action.payload;
-      if (action.payload !== 1) {
-        state.includeBase64 = false;
-      }
-      else if (action.payload === 1) {
-        state.includeBase64 = true;
-      }
-    },
-    queryLimitSelected: (state, action: PayloadAction<number>) => {
-      state.queryLimit = normalizeQueryLimit(action.payload);
-    },
-    fsqSelected: (state, action: PayloadAction<number>) => {
-      state.fsq = action.payload;
-    },
-    connectSelecteds: (state, action: PayloadAction<string>) => {
-      state.connects = action.payload;
-    },
-    actionSelected: (state, action: PayloadAction<string>) => {
-      state.action = action.payload;
-    },
-    extractionSource: (state, action: PayloadAction<string>) => {
-      state.source = action.payload;
-    },
-    skeletonsFromSelected: (state, action: PayloadAction<string>) => {
-      state.skeletonsFrom = action.payload;
-    },
-    commentsFromSelected: (state, action: PayloadAction<string>) => {
-      state.commentsFrom = action.payload;
-    },
-    timeSelected: (state, action: PayloadAction<string>) => {
-      state.timestamp = action.payload;
-    },
-    toggleFormatter: (state, action: PayloadAction<string>) => {
-      state.formatters = action.payload;
-    },
-    toggleCacher: (state, action: PayloadAction<string>) => {
-      state.cacher = action.payload;
-    },
-    approuteSelected: (state, action: PayloadAction<string>) => {
-      state.approute = action.payload;
-    },
-    toggleDomain: (state, action: PayloadAction<boolean | undefined>) => {
-      state.domain = action.payload ?? !state.domain;
-    },
-    userappSelected: (state, action: PayloadAction<number>) => {
-      if (action.payload === 0) {
-        state.userapp = action.payload;
-        state.permittedRoutes = [];
-        return;
-      }
-      const app = userApps[action.payload].toLowerCase();
-      const permittedRoutes = orderedWebappRoutes(tree.entities, app);
-      state.userapp = action.payload;
-      state.permittedRoutes = permittedRoutes;
-      state.selectedRoutes = [...permittedRoutes];
-    },
-    memberappSelected: (state, action: PayloadAction<number>) => {
-      if (action.payload === 0) {
-        state.memberapp = action.payload;
-        state.permittedRoutes = [];
-        return;
-      }
-      const app = memberApps[action.payload].toLowerCase();
-      const permittedRoutes = orderedWebappRoutes(tree.entities, app);
-      state.memberapp = action.payload;
-      state.permittedRoutes = permittedRoutes;
-      state.selectedRoutes = [...permittedRoutes];
-    },
-    adminappSelected: (state, action: PayloadAction<number>) => {
-      if (action.payload === 0) {
-        state.adminapp = action.payload;
-        state.permittedRoutes = [];
-        return;
-      }
-      const app = adminsApps[action.payload].toLowerCase();
-      const permittedRoutes = orderedWebappRoutes(tree.entities, app);
-      state.adminapp = action.payload;
-      state.permittedRoutes = permittedRoutes;
-      state.selectedRoutes = [...permittedRoutes];
-    },
-    appendSelected: (state, action: PayloadAction<number>) => {
-      state.creates = action.payload;
-    },
-    paddingSelected: (state, action: PayloadAction<number>) => {
-      state.padding = action.payload;
-    },
-    toggleAvailability: (state, action: PayloadAction<boolean | undefined>) => {
-      state.availability = action.payload ?? !state.availability;
-    },
-    toggleDeleteAccount: (state) => {
-      state.delaccount = !state.delaccount;
-    },
-    toggleKeywordsExtraction: (state) => {
-      state.isExtractKeys = !state.isExtractKeys;
-    },
-    toggleAlgorithmExtraction: (state) => {
-      state.isExtractAlgo = !state.isExtractAlgo;
-    },
-    toggleFocus: (state, action: PayloadAction<boolean>) => {
-      state.isParentSelection = action.payload;
-    },
-    formatSelected: (state, action: PayloadAction<boolean | undefined>) => {
-      const cargo = action.payload ?? !state.isTabled;
-      state.isTabled = cargo;
-      state.prefix = cargo ? state.affix || "/app/tabulator/" : "/app/";
+    randomizedTypeSelected: (state, action: PayloadAction<'both' | 'Imageurls' | 'details'>) => {
+      state.randomizedType = action.payload;
     },
     toggleRoutes: (state, action: PayloadAction<{ action: string; selecteds: string[] }>) => {
       const { action: actionType, selecteds } = action.payload;
@@ -501,74 +312,6 @@ export const settingsSlice = createSlice({
         const selectedRoutes = new Set([...routes, ...selecteds]);
         state.selectedRoutes = [...selectedRoutes];
       }
-    },
-    catalinaSelected: (state, action: PayloadAction<number>) => {
-      state.catalina = action.payload;
-    },
-    orphansSizeSelected: (state, action: PayloadAction<number>) => {
-      state.deletedOrphans = action.payload;
-    },
-    toggleMotion: (state, action: PayloadAction<boolean>) => {
-      const { isPromoted, isDemoted } = state;
-      if (action.payload === true && isDemoted === false) {
-        state.isPromoted = true;
-      } else if (action.payload === true && isDemoted === true) {
-        state.isDemoted = false;
-      } else if (action.payload === false && isPromoted === false) {
-        state.isDemoted = true;
-      } else if (action.payload === false && isPromoted === true) {
-        state.isPromoted = false;
-      }
-    },
-    toggleAbility: (state, action: PayloadAction<boolean>) => {
-      const { isEnabled, isDisabled } = state;
-      if (action.payload === true && isDisabled === false) {
-        state.isEnabled = true;
-      } else if (action.payload === true && isDisabled === true) {
-        state.isDisabled = false;
-      } else if (action.payload === false && isEnabled === false) {
-        state.isDisabled = true;
-      } else if (action.payload === false && isEnabled === true) {
-        state.isEnabled = false;
-      }
-    },
-    toggleAssembleBase64: (state) => {
-      state.isAssembleBase64 = !state.isAssembleBase64;
-    },
-    toggleAssembleTexts: (state) => {
-      state.isAssembleTexts = !state.isAssembleTexts;
-    },
-    toggleCoursesToQuizzes: (state) => {
-      state.isCoursesToQuizzes = !state.isCoursesToQuizzes;
-    },
-    toggleTutorialsToCourses: (state) => {
-      state.isTutorialsToCourses = !state.isTutorialsToCourses;
-    },
-    toggleDepthSelection: (state) => {
-      state.isDepthSelection = true;
-      state.isBreathSelection = false;
-    },
-    toggleBreathSelection: (state) => {
-      state.isBreathSelection = true;
-      state.isDepthSelection = false;
-    },
-    toggleRemoveTrees: (state) => {
-      state.isRemoveTrees = !state.isRemoveTrees;
-    },
-    toggleInsertTrees: (state) => {
-      state.isInsertTrees = !state.isInsertTrees;
-    },
-    setStatus: (state, action: PayloadAction<number | undefined>) => {
-      state.status = action.payload;
-    },
-    clearTutorialTrees: (state) => {
-      state.TutorialTrees = {};
-    },
-    clearCourseTrees: (state) => {
-      state.CourseTrees = {};
-    },
-    clearQuizTrees: (state) => {
-      state.QuizTrees = {};
     },
     toggleUnzipCourses: (state, action: PayloadAction<boolean | undefined>) => {
       if (action.payload !== undefined) state.isUnzipCourses = action.payload;
@@ -633,90 +376,6 @@ export const settingsSlice = createSlice({
       state.isUnzipQuizzes = false;
       state.editMode = false;
     },
-    createTutorialPresetSelected: (state, action: PayloadAction<string>) => {
-      state.createTutorialPreset = action.payload;
-    },
-    createQuizPresetSelected: (state, action: PayloadAction<string>) => {
-      state.createQuizPreset = action.payload;
-    },
-    createCoursePresetSelected: (state, action: PayloadAction<string>) => {
-      state.createCoursePreset = action.payload;
-    },
-    snapshotIntervalSelected: (state, action: PayloadAction<number>) => {
-      state.snapshotIntervalSec = action.payload;
-    },
-    randomizedTypeSelected: (state, action: PayloadAction<SettingsState['randomizedType']>) => {
-      state.randomizedType = action.payload;
-    },
-    includeCurrentInTemplatesSelected: (state, action: PayloadAction<string>) => {
-      state.currentToIncludeInTemplates = action.payload;
-    },
-    toggleIncludeCurrentInTemplates: (state) => {
-      state.isIncludeCurrentIntemplates = !state.isIncludeCurrentIntemplates;
-    },
-    toggleShowCopyIcons: (state) => {
-      state.showCopyIcons = !state.showCopyIcons;
-    },
-    toggleAquiredClipboardConsent: (state) => {
-      state.aquiredClipboardConsent = !state.aquiredClipboardConsent;
-    },
-    toggleEditMode: (state) => {
-      state.editMode = !state.editMode;
-    },
-    toggleShouldDelete: (state) => {
-      state.shouldDelete = !state.shouldDelete;
-    },
-    setShiftKeyDown: (state, action: PayloadAction<boolean>) => {
-      state.shiftKeyDown = action.payload;
-    },
-    setCtrlKeyDown: (state, action: PayloadAction<boolean>) => {
-      state.ctrlKeyDown = action.payload;
-    },
-    setAltKeyDown: (state, action: PayloadAction<boolean>) => {
-      state.altKeyDown = action.payload;
-    },
-    fetchTutorialPresetSelected: (state, action: PayloadAction<string>) => {
-      state.fetchTutorialPreset = action.payload;
-    },
-    fetchQuizPresetSelected: (state, action: PayloadAction<string>) => {
-      state.fetchQuizPreset = action.payload;
-    },
-    fetchCoursePresetSelected: (state, action: PayloadAction<string>) => {
-      state.fetchCoursePreset = action.payload;
-    },
-    includeCurrentInSkeletonsSelected: (state, action: PayloadAction<string>) => {
-      state.currentToIncludeInSkeletons = action.payload;
-    },
-    toggleIncludeCurrentInSkeletons: (state) => {
-      state.isIncludeCurrentInSkeletons = !state.isIncludeCurrentInSkeletons;
-    },
-    fetchTutorialCommentsPresetSelected: (state, action: PayloadAction<string>) => {
-      state.fetchTutorialCommentsPreset = action.payload;
-    },
-    fetchQuizCommentsPresetSelected: (state, action: PayloadAction<string>) => {
-      state.fetchQuizCommentsPreset = action.payload;
-    },
-    fetchCourseCommentsPresetSelected: (state, action: PayloadAction<string>) => {
-      state.fetchCourseCommentsPreset = action.payload;
-    },
-    fetchCommentsTypeSelected: (state, action: PayloadAction<string>) => {
-      state.fetchCommentsType = action.payload;
-    },
-    currentToExportCommentsSelected: (state, action: PayloadAction<string>) => {
-      state.currentToExportComments = action.payload;
-    },
-    toggleExportComments: (state) => {
-      state.isExportComments = !state.isExportComments;
-    },
-    toggleShouldHydrate: (state) => {
-      state.shouldHydrate = !state.shouldHydrate;
-    },
-    toggleIncludeBase64: (state) => {
-      state.includeBase64 = !state.includeBase64;
-      if (state.includeBase64) state.take = 1;
-      else state.take = 10;
-
-    },
   },
   extraReducers: (builder) => {
     builder
@@ -759,64 +418,7 @@ export const settingsSlice = createSlice({
 });
 
 export const {
-  mutateSettings,
-  quotaSelected,
-  childSelected,
-  parentSelected,
-  accountCreated,
-  escrowUploads: _escrowUploads,
-  roleSelected,
-  toggleTextToImg,
-  toggleTextSwap,
-  toggleAlgorithm,
-  toggleSelection,
-  toggleAquireVoucher,
-  toggleTraversals,
-  algorithmSelected,
-  secondsSelected,
-  takeSelected,
-  queryLimitSelected,
-  fsqSelected,
-  connectSelecteds,
-  actionSelected,
-  extractionSource,
-  skeletonsFromSelected,
-  commentsFromSelected,
-  timeSelected,
-  toggleFormatter,
-  toggleCacher,
-  approuteSelected,
-  encodingSource,
-  toggleDomain,
-  toggleImport,
-  toggleExport,
-  userappSelected,
-  memberappSelected,
-  adminappSelected,
-  appendSelected,
-  paddingSelected,
-  toggleAvailability,
-  toggleDeleteAccount,
-  toggleKeywordsExtraction,
-  toggleAlgorithmExtraction,
-  toggleFocus,
-  formatSelected,
-  toggleRoutes,
-  catalinaSelected,
-  orphansSizeSelected,
-  toggleMotion,
-  toggleAbility,
-  toggleAssembleTexts,
-  toggleAssembleBase64,
-  toggleCoursesToQuizzes,
-  toggleTutorialsToCourses,
-  toggleDepthSelection,
-  toggleBreathSelection,
-  toggleRemoveTrees,
-  toggleInsertTrees,
-  clearTutorialTrees,
-  clearCourseTrees,
-  clearQuizTrees,
+  mutateSettings, 
   toggleUnzipCourses,
   toggleUnzipTutorials,
   toggleUnzipQuizzes,
@@ -833,45 +435,9 @@ export const {
   toggleUnzipCourses_,
   toggleUnzipTutorials_,
   toggleUnzipQuizzes_,
-  setStatus,
   setAssertOwnership,
-  createTutorialPresetSelected,
-  createQuizPresetSelected,
-  createCoursePresetSelected,
-  snapshotIntervalSelected,
-  randomizedTypeSelected,
-  includeCurrentInTemplatesSelected,
-  toggleIncludeCurrentInTemplates,
-  toggleShowCopyIcons,
-  toggleAquiredClipboardConsent,
-  toggleEditMode,
-  toggleShouldDelete,
-  setShiftKeyDown,
-  setCtrlKeyDown,
-  setAltKeyDown,
-  fetchTutorialPresetSelected,
-  fetchQuizPresetSelected,
-  fetchCoursePresetSelected,
-  includeCurrentInSkeletonsSelected,
-  toggleIncludeCurrentInSkeletons,
-  fetchTutorialCommentsPresetSelected,
-  fetchQuizCommentsPresetSelected,
-  fetchCourseCommentsPresetSelected,
-  fetchCommentsTypeSelected,
-  currentToExportCommentsSelected,
-  toggleExportComments,
   toggleShouldHydrate,
-  toggleIncludeBase64,
+  randomizedTypeSelected,
 } = settingsSlice.actions;
-
-// Helper action creator that accepts File objects and converts them to SerializableFile objects
-export const escrowUploads = (files: File[] | null) => {
-  if (files) {
-    const serializableFiles = fileManager.storeFiles(files);
-    return _escrowUploads(serializableFiles);
-  } else {
-    return _escrowUploads(null);
-  }
-};
 
 export default settingsSlice.reducer; 
