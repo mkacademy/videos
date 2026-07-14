@@ -3,38 +3,21 @@ import { Metadata } from "../components/Core/types";
 import type { QuizTrees } from "./controlPanelUtils";
 import type {
   Banner,
-  CourseModifiedOrdinals,
   CourseState,
   Pennant,
   SlideGroup,
   SlideGroupItem,
   SlideItem,
-  CourseStartId,
 } from "./CourseUtils";
-import { createCourseStartIdInitial } from "./CourseUtils";
-import { applyUpdateOwnership as applyCourseUpdateOwnership } from "./CourseUtils";
 import courseReducer from "../store/slices/courseSlice";
 import {
-  contiguousOrdinalBannersPred,
   contiguousOrdinalQuizzesPred,
   courseBannerDedupKey,
   idsMerger,
   mergePennants,
   orderPredicate,
-  sorter,
   textsMerger,
-  ownershipUpdator,
-  toOwnershipIdSet,
 } from "./sliceUtils";
-import {
-  altGroupRangeReorderSegment,
-  applyOrdinalRangeReorder,
-  assignDenseOrdinalsZeroBased,
-  findContiguousSortedRange,
-  mergeGloballySortedWithAltGroupSegment,
-  ordinalForReorder,
-} from "./TutorialUtils";
-import type { OwnershipPayload } from "./actions";
 import type { RandomizedType } from "./randomizedQuery";
 
 export interface Submition {
@@ -84,46 +67,15 @@ export interface Quiz {
   descendentsSums?: Record<string, number>;
 }
 
-/** Shift+range anchors: quiz-native lanes plus course highlighter lanes reused on quiz (see UiuxManager `highlighters`). */
-export type QuizStartId = {
-  quizBreath: number | null;
-  quizDepth: number | null;
-  attemptBreath: number | string | null;
-  questionBreath: number | null;
-  questionDepth: number | null;
-} & CourseStartId;
 
-export const createQuizStartIdInitial = (): QuizStartId => ({
-  ...createCourseStartIdInitial(),
-  quizBreath: null,
-  quizDepth: null,
-  attemptBreath: null,
-  questionBreath: null,
-  questionDepth: null,
-});
 
 export interface QuizState {
   selected: number;
   noQuizzes: boolean;
-  focus: Record<string, boolean>;
-  attempt: { [x: string]: Attempt };
-  combinations: string[][][];
   followupId: number | undefined;
-  followupCombinations: Record<number, string[][]>;
-  /** Banner ids with a green bottom o, keyed by that o's color route. */
-  routeToggleGreenIds: Record<string, number[]>;
-  routeToggleOrangeMarks: {
-    bannerId: number;
-    view: 'question' | 'followup';
-    side: 'left' | 'right';
-  }[];
-  /** Side (left/right) selected on last fresh activation; drives global white/orange layout. */
-  routeTogglePrimarySide: 'left' | 'right' | null;
   content: SlideGroup[];
   banners: Banner[];
   quizzes: Quiz[];
-  startId: QuizStartId;
-  modifiedOrdinals: CourseModifiedOrdinals;
 }
 
 export interface dismissOptionPayload {
@@ -430,32 +382,7 @@ export const appendCourseSlideItem = (state: Pick<QuizState, 'banners' | 'conten
   }
 };
 
-export const recomputeFollowupCombinations = (state: QuizState) => {
-  if (state.followupId === undefined) {
-    state.followupCombinations = {};
-    return;
-  }
-  const parent = state.banners.find((b) => b.id === state.followupId);
-  if (!parent) {
-    state.followupCombinations = {};
-    return;
-  }
-  const allSlides: SlideItem[] = [];
-  for (const group of state.content) {
-    if (!group.slides) continue;
-    for (const row of group.slides) {
-      for (const slide of row) {
-        allSlides.push(slide);
-      }
-    }
-  }
-  const next: Record<number, string[][]> = {};
-  for (const pennant of parent.pennants ?? []) {
-    const collected = allSlides.filter((s) => s.bannerId === pennant.id);
-    next[pennant.id] = getCombinationFromSlideItems(collected);
-  }
-  state.followupCombinations = next;
-};
+
 
 export const appendCourseSlideGroupItem = (state: Pick<QuizState, 'banners' | 'content'>, item: SlideGroupItem) => {
   const groupIndex = state.content.findIndex(
@@ -476,212 +403,6 @@ export const appendCourseSlideGroupItem = (state: Pick<QuizState, 'banners' | 'c
   }
 };
 
-/** Merge attempt and set SlideGroupItem isDismissed from choice keys (e.g. choice7 → bannerId 7). */
-export const applyDismissOption = (state: QuizState, choice: Record<string, Attempt>) => {
-  state.attempt = { ...state.attempt, ...choice };
-  const bannerIdsFromChoice = new Set(
-    Object.keys(choice)
-      .map((k) => parseInt(k.replace(/^choice/, ''), 10))
-      .filter((n) => !Number.isNaN(n))
-  );
-  const slideGroupItemIdsToDismiss = new Set<number>();
-  for (const key of Object.keys(choice)) {
-    const attemptForBanner = choice[key];
-    const value = attemptForBanner?.[key];
-    if (value != null && typeof value === 'string') {
-      const slideGroupItemId = parseInt(value, 10);
-      if (!Number.isNaN(slideGroupItemId)) {
-        slideGroupItemIdsToDismiss.add(slideGroupItemId);
-      }
-    }
-  }
-  if (bannerIdsFromChoice.size === 0) return;
-  state.content = state.content.map((group) => {
-    const { slides, ...rest } = group;
-    const updatedRest = Object.entries(rest).reduce(
-      (acc, [key, value]) => {
-        const item = value as SlideGroupItem;
-        if (
-          typeof item === 'object' &&
-          item !== null &&
-          'id' in item &&
-          'isDismissed' in item &&
-          'bannerId' in item &&
-          bannerIdsFromChoice.has(item.bannerId)
-        ) {
-          acc[key as unknown as number] = {
-            ...item,
-            isDismissed: slideGroupItemIdsToDismiss.has(item.id),
-          };
-        } else {
-          acc[key as unknown as number] = item;
-        }
-        return acc;
-      },
-      {} as { [x: number]: SlideGroupItem }
-    );
-    return { ...updatedRest, slides } as SlideGroup;
-  });
-};
-
-/** Apply followup-option dismiss via course dismissSlide using followupId as selected banner. */
-export const applyDismissFollowupOption = (state: QuizState, choice: Record<string, Attempt>) => {
-  state.attempt = { ...state.attempt, ...choice };
-  const followupIndex = state.banners.findIndex((banner) => banner.id === state.followupId);
-  if (followupIndex < 0) return;
-  const selectedBanner = state.banners[followupIndex];
-  if (!selectedBanner) return;
-
-  const pennantIdsFromChoice = new Set(
-    Object.keys(choice)
-      .map((k) => parseInt(k.replace(/^choice/, ''), 10))
-      .filter((n) => !Number.isNaN(n))
-  );
-  if (pennantIdsFromChoice.size === 0) return;
-
-  const selectedSlideItemIds = new Set<number>();
-  for (const key of Object.keys(choice)) {
-    const attemptForBanner = choice[key];
-    const value = attemptForBanner?.[key];
-    if (value != null && typeof value === 'string') {
-      const slideItemId = parseInt(value, 10);
-      if (!Number.isNaN(slideItemId)) selectedSlideItemIds.add(slideItemId);
-    }
-  }
-
-  const group = state.content.find((contentGroup) => contentGroup[0]?.bannerId === selectedBanner.id);
-  if (!group?.slides) return;
-
-  const allItems: { id: number; slideIndex: number }[] = [];
-  const selectedItems: { id: number; slideIndex: number }[] = [];
-  group.slides.forEach((row, slideIndex) => {
-    row.forEach((slide: SlideItem) => {
-      if (!pennantIdsFromChoice.has(slide.bannerId)) return;
-      const item = { id: slide.id, slideIndex };
-      allItems.push(item);
-      if (selectedSlideItemIds.has(slide.id)) selectedItems.push(item);
-    });
-  });
-  if (allItems.length === 0) return;
-
-  const resetAction = {
-    type: 'course/dismissSlide',
-    payload: { items: allItems, isDismissed: false },
-  };
-  const selectAction = {
-    type: 'course/dismissSlide',
-    payload: { items: selectedItems, isDismissed: true },
-  };
-  const courseState: CourseState = {
-    content: state.content,
-    banners: state.banners,
-    selected: followupIndex,
-    chapters: [],
-    couplings: {},
-    noCourses: true,
-    startId: createCourseStartIdInitial(),
-    modifiedOrdinals: state.modifiedOrdinals,
-  };
-  const resetResult = courseReducer(courseState, resetAction);
-  const selectResult = courseReducer(resetResult, selectAction);
-  state.content = selectResult.content;
-  state.modifiedOrdinals = selectResult.modifiedOrdinals;
-};
-
-/** Dismiss question flow; branches to dismissChapter when selected quiz has followupId context. */
-export const applyDismissQuestion = (state: QuizState, payload: dismissQuestionPayload) => {
-  const { selected, banners, quizzes, followupId } = state;
-  if (selected <= -1) return;
-  const { ids, isShow, isDismissed } = payload;
-  if (ids.length === 0) return;
-  if (followupId !== undefined) {
-    const followupIndex = banners.findIndex((banner) => banner.id === followupId);
-    if (followupIndex < 0) return;
-    const courseAction = {
-      type: 'course/dismissChapter',
-      payload: { ids, isDismissed },
-    };
-    const courseState: CourseState = {
-      content: state.content,
-      banners: state.banners,
-      selected: followupIndex,
-      chapters: [],
-      couplings: {},
-      noCourses: true,
-      startId: createCourseStartIdInitial(),
-      modifiedOrdinals: state.modifiedOrdinals,
-    };
-    const result = courseReducer(courseState, courseAction);
-    state.banners = result.banners;
-    state.content = result.content;
-    state.modifiedOrdinals = result.modifiedOrdinals;
-    return;
-  }
-  const quiz = quizzes[selected];
-  const predicate = (banner: Banner) => banner.bannerId === quiz?.id;
-  const group = banners.filter(predicate).map((b) => b.id);
-  const idSet = new Set(ids);
-  const dismissedQuestionIds = banners
-    .filter((question) => idSet.has(question.id) && group.includes(question.id))
-    .map((question) => question.id);
-  const courseAction = {
-    type: 'course/dismissCourse',
-    payload: { ids: dismissedQuestionIds, isShow, isDismissed },
-  };
-  const courseState: CourseState = {
-    content: state.content,
-    banners: state.banners,
-    selected: -1,
-    chapters: [],
-    couplings: {},
-    noCourses: true,
-    startId: createCourseStartIdInitial(),
-    modifiedOrdinals: state.modifiedOrdinals,
-  };
-  const result = courseReducer(courseState, courseAction);
-  state.banners = result.banners;
-  state.content = result.content;
-  state.modifiedOrdinals = result.modifiedOrdinals;
-};
-
-export const applyUpdateOwnership = (state: QuizState, payload: OwnershipPayload): void => {
-  const idSet = toOwnershipIdSet(payload.ids);
-  if (idSet.size === 0) return;
-
-  switch (payload.route.toLowerCase()) {
-    case "foundationdashboards":
-      state.quizzes = state.quizzes.map(ownershipUpdator(idSet, payload.owner));
-      break;
-    case "dashboardssifters":
-      state.banners = state.banners.map(ownershipUpdator(idSet, payload.owner));
-      break;
-    case "dashboardsfilters":
-      state.quizzes = state.quizzes.map(({ pennants, ...fields }) => ({
-        ...fields,
-        pennants: pennants.map(ownershipUpdator(idSet, payload.owner)),
-      }));
-      break;
-    case "siftersfilters":
-    case "siftersinstructions":
-    case "filtersinstructions": {
-      const courseState: CourseState = {
-        content: state.content,
-        banners: state.banners,
-        selected: -1,
-        chapters: [],
-        couplings: {},
-        noCourses: true,
-        startId: createCourseStartIdInitial(),
-        modifiedOrdinals: state.modifiedOrdinals,
-      };
-      applyCourseUpdateOwnership(courseState, payload);
-      state.banners = courseState.banners;
-      state.content = courseState.content;
-      break;
-    }
-  }
-};
-
 /** Apply course slice reducer to quiz slice's course-shaped fields (content, banners). */
 export const applyCourseReducer = (
   state: QuizState,
@@ -694,11 +415,8 @@ export const applyCourseReducer = (
     chapters: [],
     couplings: {},
     noCourses: true,
-    startId: createCourseStartIdInitial(),
-    modifiedOrdinals: state.modifiedOrdinals,
   };
   const result = courseReducer(courseState, action);
-  state.modifiedOrdinals = result.modifiedOrdinals;
   return {
     banners: result.banners,
     content: result.content,
@@ -709,7 +427,6 @@ const quizSliceCourseState = (
   content: SlideGroup[],
   banners: Banner[],
   selected: number,
-  modifiedOrdinals: CourseModifiedOrdinals,
 ): CourseState => ({
   content,
   banners,
@@ -717,8 +434,6 @@ const quizSliceCourseState = (
   chapters: [],
   couplings: {},
   selected,
-  startId: createCourseStartIdInitial(),
-  modifiedOrdinals,
 });
 
 export const applySetQuizzes = (state: QuizState, payload: SetQuizzesPayload) => {
@@ -744,16 +459,13 @@ export const applySetQuizzes = (state: QuizState, payload: SetQuizzesPayload) =>
   const newNoQuizzes = !state.quizzes.length ? newQuizzesState.length === 0 : state.noQuizzes;
   const courseAction = { type: 'course/setCourses', payload: { content: newContent, banners: newBanners } };
   const courseResult = courseReducer(
-    quizSliceCourseState(state.content, state.banners, -1, state.modifiedOrdinals),
+    quizSliceCourseState(state.content, state.banners, -1),
     courseAction,
   );
   const { banners, content } = courseResult;
-  state.modifiedOrdinals = courseResult.modifiedOrdinals;
   state.banners = banners;
   if (newContent?.length > 0) {
     state.content = content;
-    state.combinations = getCombination(content);
-    recomputeFollowupCombinations(state);
   }
 
   state.quizzes = newQuizzesState;
@@ -763,149 +475,19 @@ export const applySetQuizzes = (state: QuizState, payload: SetQuizzesPayload) =>
 export const applySetBanners = (state: QuizState, bannersPayload: Banner[]) => {
   const courseAction = { type: 'course/setCourses', payload: { banners: bannersPayload, content: [] } };
   const courseResult = courseReducer(
-    quizSliceCourseState(state.content, state.banners, -1, state.modifiedOrdinals),
+    quizSliceCourseState(state.content, state.banners, -1),
     courseAction,
   );
-  state.modifiedOrdinals = courseResult.modifiedOrdinals;
   state.banners = courseResult.banners;
 };
 
 export const applySetFollowupOptions = (state: QuizState, content: SlideItem[][]) => {
   const courseAction = { type: 'course/setSlides', payload: { content } };
   const courseResult = courseReducer(
-    quizSliceCourseState(state.content, state.banners, -1, state.modifiedOrdinals),
+    quizSliceCourseState(state.content, state.banners, -1),
     courseAction,
   );
-  state.modifiedOrdinals = courseResult.modifiedOrdinals;
   state.content = courseResult.content;
-  recomputeFollowupCombinations(state);
-};
-
-export const applyDismissFollowup = (state: QuizState, payload: dismissFollowupPayload) => {
-  const { ids, isDismissed } = payload;
-  if (state.followupId === undefined || ids.length === 0) return;
-  const followupIndex = state.banners.findIndex((banner) => banner.id === state.followupId);
-  if (followupIndex < 0) return;
-  const courseAction = {
-    type: 'course/dismissChapter',
-    payload: { ids, isDismissed },
-  };
-  const result = courseReducer(
-    quizSliceCourseState(state.content, state.banners, followupIndex, state.modifiedOrdinals),
-    courseAction,
-  );
-  state.banners = result.banners;
-  state.content = result.content;
-  state.modifiedOrdinals = result.modifiedOrdinals;
-};
-
-export const applyClearFetched = (state: QuizState, payload: boolean) => {
-  const { selected } = state;
-  if (selected > -1) {
-    const { banners, content, quizzes } = state;
-    const quiz = quizzes[selected];
-    if (!quiz) return;
-    const predicate0 = (banner: Banner) => banner.bannerId !== quiz.id;
-    const newBanners = banners.filter(predicate0);
-    const predicate1 = (group: SlideGroup) => {
-      const firstItem = group[0] as SlideGroupItem | undefined;
-      return firstItem && newBanners.find(({ id }) => id === firstItem.bannerId);
-    };
-    state.banners = newBanners;
-    state.content = content.filter(predicate1);
-  } else {
-    const { quizzes, banners, content } = state;
-    const newQuizzes = quizzes.filter(
-      ({ isDismissed }) => isDismissed === !payload
-    );
-    const predicate = (banner: Banner) =>
-      newQuizzes.find(({ id }) => id === banner.bannerId);
-    const newBanners = banners.filter(predicate);
-    const predicate0 = (group: SlideGroup) => {
-      const firstItem = group[0] as SlideGroupItem | undefined;
-      return firstItem && newBanners.find(({ id }) => id === firstItem.bannerId);
-    };
-    state.noQuizzes = true;
-    state.quizzes = newQuizzes;
-    state.banners = newBanners;
-    state.content = content.filter(predicate0);
-  }
-};
-
-export const applyGroupReOrderQuizSelection = (state: QuizState, payload: { ids: number[] }) => {
-  const { ids } = payload;
-  if (ids.length < 2) return;
-  const byId = new Map(state.quizzes.map((q) => [q.id, q]));
-  if (!ids.every((id) => byId.has(id))) return;
-  const fullSorted = [...state.quizzes].sort((a, b) => ordinalForReorder(a) - ordinalForReorder(b));
-  const idSet = new Set(ids);
-  const range = findContiguousSortedRange(fullSorted, (q) => idSet.has(q.id), idSet.size);
-  if (!range) return;
-  const segment = fullSorted.slice(range.lo, range.hi + 1);
-  const newSeg = altGroupRangeReorderSegment(segment, (q) => !!q.isHighlighted);
-  if (!newSeg) return;
-  const newFull = [...fullSorted.slice(0, range.lo), ...newSeg, ...fullSorted.slice(range.hi + 1)];
-  assignDenseOrdinalsZeroBased(newFull);
-  state.quizzes = contiguousOrdinalQuizzesPred(sorter([...state.quizzes]) as Quiz[]);
-};
-
-export const applyReOrderQuestionSelection = (
-  state: QuizState,
-  payload: { ids: number[]; direction: boolean; groupReorder?: boolean },
-) => {
-  const { ids, direction, groupReorder } = payload;
-  if (ids.length < 2) return;
-
-  if (state.selected > -1 && state.followupId !== undefined) {
-    const bannerIndex = state.banners.findIndex((b) => b.id === state.followupId);
-    if (bannerIndex === -1) return;
-    const pennants = state.banners[bannerIndex].pennants;
-    if (!ids.every((id) => pennants.some((p) => p.id === id))) return;
-    if (groupReorder) {
-      const idSet = new Set(ids);
-      const fullSorted = [...pennants].sort((a, b) => ordinalForReorder(a) - ordinalForReorder(b));
-      const range = findContiguousSortedRange(fullSorted, (p) => idSet.has(p.id), idSet.size);
-      if (!range) return;
-      const segment = fullSorted.slice(range.lo, range.hi + 1);
-      const newSeg = altGroupRangeReorderSegment(segment, (p) => !!p.isHighlighted);
-      if (!newSeg) return;
-      const newFull = [...fullSorted.slice(0, range.lo), ...newSeg, ...fullSorted.slice(range.hi + 1)];
-      assignDenseOrdinalsZeroBased(newFull);
-    } else {
-      applyOrdinalRangeReorder(pennants, ids, direction, ordinalForReorder);
-    }
-    sorter(pennants);
-    state.banners[bannerIndex].pennants = contiguousOrdinalBannersPred([...pennants]) as Pennant[];
-    return;
-  }
-
-  const { quizzes, selected, banners } = state;
-  const quizIds =
-    selected === -1
-      ? quizzes.map((q) => q.id)
-      : selected > -1 && quizzes[selected]
-        ? [quizzes[selected].id]
-        : [];
-  const pool = banners.filter(
-    (b) => typeof b.bannerId === 'number' && quizIds.includes(b.bannerId as number),
-  );
-  if (!ids.every((id) => pool.some((b) => b.id === id))) return;
-  if (groupReorder) {
-    const keyStrSet = new Set(ids.map(String));
-    const poolSorted = [...pool].sort((a, b) => ordinalForReorder(a) - ordinalForReorder(b));
-    const range = findContiguousSortedRange(poolSorted, (b) => keyStrSet.has(String(b.id)), ids.length);
-    if (!range) return;
-    const segment = poolSorted.slice(range.lo, range.hi + 1);
-    const newSeg = altGroupRangeReorderSegment(segment, (b) => !!b.isHighlighted);
-    if (!newSeg) return;
-    const globalSorted = [...banners].sort((a, b) => ordinalForReorder(a) - ordinalForReorder(b));
-    const merged = mergeGloballySortedWithAltGroupSegment(globalSorted, keyStrSet, (b) => String(b.id), newSeg);
-    if (!merged) return;
-    assignDenseOrdinalsZeroBased(merged);
-  } else {
-    applyOrdinalRangeReorder(pool, ids, direction, ordinalForReorder);
-  }
-  state.banners = contiguousOrdinalBannersPred(sorter([...banners]) as Banner[]);
 };
 
 export const applyCreateCoursesQuizState = (
@@ -953,373 +535,7 @@ export const applyPersistTutorialsQuizState = (
   if (banners) state.banners = banners;
 };
 
-export const applyHighlightAttemptBreathSelection = (
-  state: QuizState,
-  payload: { ids: (number | string)[]; isHighlighted?: boolean; isShow?: boolean },
-  getChoices: (args: Partial<Submition>) => { [x: string]: (string | null | undefined)[] }
-) => {
-  const { focus, quizzes } = state;
-  const { ids, isHighlighted, isShow } = payload;
-  if (isHighlighted !== undefined && ids.find((id) => typeof id === 'number' && !isNaN(id))) {
-    const focused: string[] = [];
-    const newQuizzes = quizzes.map(({ pennants: attempts, ...quiz }) => ({
-      ...quiz,
-      pennants: attempts.map((attempt) =>
-        ids.includes(attempt.id)
-          ? (focused.push(attempt.quote),
-          {
-            ...attempt,
-            isHighlighted: isHighlighted ?? !attempt.isHighlighted,
-          })
-          : attempt
-      ),
-    }));
-    const highlighted = focused
-      .map(quote => getChoices({ quote }))
-      .reduce((prev, cur) => ({ ...prev, ...cur }), {});
-    state.quizzes = newQuizzes;
-    state.focus = { ...focus, ...highlighted } as Record<string, boolean>;
-  } else if (isShow !== undefined && ids.find((id) => typeof id === 'string' && id.startsWith("choice"))) {
-    const newFocus: Record<string, boolean> = {};
-    ids
-      .filter((id): id is string => typeof id === 'string' && id.startsWith("choice"))
-      .forEach((id) => (newFocus[id] = isShow));
-    state.focus = { ...focus, ...newFocus };
-  }
-};
 
-export const applyHighlightQuestionBreathSelection = (
-  state: QuizState,
-  payload: { ids: number[]; isHighlighted?: boolean }
-) => {
-  const bannerIds: number[] = [];
-  const { ids, isHighlighted } = payload;
-  const { banners, quizzes, selected, followupId } = state;
-  if (selected > -1 && followupId !== undefined) {
-    const followupIndex = banners.findIndex((banner) => banner.id === followupId);
-    if (followupIndex < 0) return;
-    const courseAction = {
-      type: 'course/highlightPennantBreathSelection',
-      payload: { ids, isHighlighted },
-    };
-    const courseState: CourseState = {
-      content: state.content,
-      banners: state.banners,
-      selected: followupIndex,
-      chapters: [],
-      couplings: {},
-      noCourses: true,
-      startId: createCourseStartIdInitial(),
-      modifiedOrdinals: state.modifiedOrdinals,
-    };
-    const result = courseReducer(courseState, courseAction);
-    state.banners = result.banners;
-    state.content = result.content;
-    state.modifiedOrdinals = result.modifiedOrdinals;
-    return;
-  }
-  if (selected === -1)
-    bannerIds.push(...quizzes.map(({ id }) => id));
-  else bannerIds.push(quizzes[selected]?.id);
-  const predicate = (banner: Banner, index: number) => ({
-    isMatch: bannerIds.includes(banner.bannerId as number),
-    index,
-  });
-  const candIndeces = banners
-    .map(predicate)
-    .filter(({ isMatch }) => isMatch)
-    .map(({ index }) => index);
-  const questionIds = candIndeces
-    .map((index) => banners[index])
-    .filter((question): question is Banner => !!question && ids.includes(question.id))
-    .map((question) => question.id);
-  if (questionIds.length === 0) return;
-  const courseAction = {
-    type: 'course/highlightCourseBreathSelection',
-    payload: { ids: questionIds, isHighlighted },
-  };
-  const courseState: CourseState = {
-    content: state.content,
-    banners: state.banners,
-    selected: -1,
-    chapters: [],
-    couplings: {},
-    noCourses: true,
-    startId: createCourseStartIdInitial(),
-    modifiedOrdinals: state.modifiedOrdinals,
-  };
-  const result = courseReducer(courseState, courseAction);
-  state.banners = result.banners;
-  state.content = result.content;
-  state.modifiedOrdinals = result.modifiedOrdinals;
-};
-
-export const applyHighlightQuestionDepthSelection = (
-  state: QuizState,
-  payload: { ids: number[]; isHighlighted?: boolean }
-) => {
-  const { ids, isHighlighted } = payload;
-  const { quizzes, banners, content, selected, followupId } = state;
-  if (selected > -1 && followupId !== undefined) {
-    const followupIndex = banners.findIndex((banner) => banner.id === followupId);
-    if (followupIndex < 0) return;
-    const courseAction = {
-      type: 'course/highlightPennantDepthSelection',
-      payload: { ids, isHighlighted },
-    };
-    const courseState: CourseState = {
-      content,
-      banners,
-      selected: followupIndex,
-      chapters: [],
-      couplings: {},
-      noCourses: true,
-      startId: createCourseStartIdInitial(),
-      modifiedOrdinals: state.modifiedOrdinals,
-    };
-    const result = courseReducer(courseState, courseAction);
-    state.banners = result.banners;
-    state.content = result.content;
-    state.modifiedOrdinals = result.modifiedOrdinals;
-    return;
-  }
-  const quizIds = selected === -1
-    ? quizzes.map(({ id }) => id)
-    : [quizzes[selected]?.id];
-  const predicate = (banner: Banner) => (quizIds.includes(banner.bannerId as number) && ids.includes(banner.id));
-  const questionIdsArray = banners.filter(predicate).map(({ id }) => id);
-  if (questionIdsArray.length > 0) {
-    const courseAction = {
-      type: 'course/highlightCourseDepthSelection',
-      payload: { ids: questionIdsArray, isHighlighted },
-    };
-    const courseState: CourseState = {
-      content,
-      banners,
-      selected: -1,
-      chapters: [],
-      couplings: {},
-      noCourses: true,
-      startId: createCourseStartIdInitial(),
-      modifiedOrdinals: state.modifiedOrdinals,
-    };
-    const result = courseReducer(courseState, courseAction);
-    state.banners = result.banners;
-    state.content = result.content;
-    state.modifiedOrdinals = result.modifiedOrdinals;
-  }
-};
-
-/** Highlight selected quiz(es), their pennants, then course depth for related banners. */
-export const applyHighlightQuizDepthSelection = (
-  state: QuizState,
-  payload: { ids: number[]; isHighlighted?: boolean }
-) => {
-  const { ids, isHighlighted } = payload;
-  const { quizzes, banners, selected } = state;
-  const quizIds = selected === -1
-    ? quizzes.map(({ id }) => id).filter((id) => ids.includes(id))
-    : [quizzes[selected]?.id];
-
-  const pennantIdsToHighlight = new Set<number>();
-
-  const questionIdsToHighlight = new Set<number>();
-
-  state.quizzes = quizzes.map((quiz) => {
-    const shouldHighlightQuiz = quizIds.includes(quiz.id);
-
-    if (shouldHighlightQuiz) {
-      banners
-        .filter((banner) => banner.bannerId === quiz.id)
-        .forEach((banner) => questionIdsToHighlight.add(banner.id));
-    }
-
-    const updatedPennants = shouldHighlightQuiz ? quiz.pennants.map((pennant) => {
-      pennantIdsToHighlight.add(pennant.id);
-      return { ...pennant, isHighlighted: isHighlighted ?? !pennant.isHighlighted };
-    }) : quiz.pennants;
-
-    return shouldHighlightQuiz
-      ? {
-        ...quiz,
-        isHighlighted: isHighlighted ?? !quiz.isHighlighted,
-        pennants: updatedPennants,
-      }
-      : {
-        ...quiz,
-        pennants: updatedPennants,
-      };
-  });
-
-  const questionIdsArray = Array.from(questionIdsToHighlight);
-  if (questionIdsArray.length > 0) {
-    const courseAction = {
-      type: 'course/highlightCourseDepthSelection',
-      payload: { ids: questionIdsArray, isHighlighted },
-    };
-    const courseState: CourseState = {
-      content: state.content,
-      banners: state.banners,
-      selected: -1,
-      chapters: [],
-      couplings: {},
-      noCourses: true,
-      startId: createCourseStartIdInitial(),
-      modifiedOrdinals: state.modifiedOrdinals,
-    };
-    const result = courseReducer(courseState, courseAction);
-    state.banners = result.banners;
-    state.content = result.content;
-    state.modifiedOrdinals = result.modifiedOrdinals;
-  }
-};
-
-type GetChoicesFn = (args: Partial<Submition>) => { [x: string]: (string | null | undefined)[] };
-
-/** Quiz grid dismiss (selected === -1); mutates banners, content, quizzes, noQuizzes. */
-export const applyDismissQuizToState = (state: QuizState, payload: dismissQuizPayload) => {
-  if (state.selected > -1) return;
-  const { ids, isShow } = payload;
-  if (ids.length === 0) return;
-
-  for (const id of ids) {
-    const { quizzes, banners } = state;
-
-    const dismissedQuiz = quizzes.find((q) => id === q.id);
-    const newIsDismissed = dismissedQuiz ? payload.isDismissed ?? !dismissedQuiz.isDismissed : false;
-
-    const newState = quizzes.map((q) =>
-      id === q.id
-        ? {
-          ...q,
-          isDismissed: newIsDismissed,
-          pennants: q.pennants.map((pennant) => ({
-            ...pennant,
-            isDismissed: newIsDismissed,
-          })),
-        }
-        : q
-    );
-
-    if (dismissedQuiz) {
-      const quizBannerIds = banners
-        .filter((banner) => banner.bannerId === dismissedQuiz.id)
-        .map((banner) => banner.id);
-
-      const courseAction = {
-        type: 'course/dismissCourse',
-        payload: { ids: quizBannerIds, isShow, isDismissed: payload.isDismissed },
-      };
-      const courseState: CourseState = {
-        content: state.content,
-        banners: state.banners,
-        selected: -1,
-        chapters: [],
-        couplings: {},
-        noCourses: true,
-        startId: createCourseStartIdInitial(),
-        modifiedOrdinals: state.modifiedOrdinals,
-      };
-      const result = courseReducer(courseState, courseAction);
-      state.banners = result.banners;
-      state.content = result.content;
-      state.modifiedOrdinals = result.modifiedOrdinals;
-    }
-
-    const visbles = newState.filter(
-      ({ isDismissed }) => isDismissed === isShow
-    );
-    state.quizzes = newState;
-    state.noQuizzes = visbles.length === 0;
-  }
-};
-
-export const applyClearSelectedQuizBranches = (
-  state: QuizState,
-  payload: QuizClearSelectedErasePayload,
-  getChoices: GetChoicesFn
-) => {
-  const { Ids = [], IDs = [], route, isShow } = payload;
-  switch (route) {
-    case "foundationdashboards": {
-      const { quizzes, content, banners, selected } = state;
-      const newQuizzes = quizzes.filter(
-        ({ id, isDismissed }) => isDismissed !== isShow || !(Ids as number[]).includes(id)
-      );
-      const visbles = newQuizzes.filter(
-        ({ isDismissed }) => isDismissed === isShow
-      );
-      const predicate = (banner: Banner) =>
-        newQuizzes.find(({ id }) => id === banner.bannerId);
-      const newBanners = banners.filter(predicate);
-      const predicate0 = (group: SlideGroup) => {
-        const firstItem = group[0] as SlideGroupItem | undefined;
-        return firstItem && newBanners.find(({ id }) => id === firstItem.bannerId);
-      };
-      state.banners = newBanners;
-      state.quizzes = newQuizzes;
-      state.noQuizzes = visbles.length === 0;
-      state.content = content.filter(predicate0);
-      state.selected =
-        selected < 0 || selected >= newQuizzes.length ? -1 : selected;
-      break;
-    }
-    case "dashboardsfilters": {
-      const focused: string[] = [];
-      const { focus, attempt, quizzes } = state;
-      const newQuizzes = quizzes.map(({ pennants, ...props }) => ({
-        pennants: pennants.filter(
-          ({ id, isDismissed, bannerId, quote }) => {
-            const result =
-              isDismissed !== isShow ||
-              (IDs.length === 0 && !(Ids as number[]).includes(id)) ||
-              (IDs.length > 0 &&
-                !((Ids as number[]).includes(id) && IDs.includes(bannerId)));
-            return result ? true : (focused.push(quote), false);
-          }
-        ),
-        ...props,
-      }));
-      const resetattempts = Object.entries(focus)
-        .filter(([_, v]) => v)
-        .reduce((prev, [key]) => ({ ...prev, [key]: { [key]: null } }), {});
-      const deleteed = focused.map(quote => getChoices({ quote }));
-      const distiller = ([key, _]: [string, unknown]) =>
-        deleteed.find((choices) => {
-          const [deletedkey] = Object.entries(choices).pop() || [];
-          return deletedkey === key;
-        }) === undefined;
-      const newAttemptState = Object.entries({
-        ...attempt,
-        ...resetattempts,
-      })
-        .filter(distiller)
-        .reduce((p, [k, v]) => ({ ...p, [k]: v }), {});
-      state.quizzes = newQuizzes;
-      state.attempt = newAttemptState;
-      break;
-    }
-    default: {
-      const { content, banners } = state;
-      const courseAction = { type: 'course/clearSelected', payload: { Ids, IDs, route, isShow } };
-      const courseState: CourseState = {
-        content,
-        banners,
-        selected: -1,
-        chapters: [],
-        noCourses: true,
-        couplings: {},
-        startId: createCourseStartIdInitial(),
-        modifiedOrdinals: state.modifiedOrdinals,
-      };
-      const courseResult = courseReducer(courseState, courseAction);
-      state.banners = courseResult.banners;
-      state.content = courseResult.content;
-      state.modifiedOrdinals = courseResult.modifiedOrdinals;
-      break;
-    }
-  }
-};
 
 type SyncFocusAttemptFn = (state: QuizState) => void;
 
@@ -1380,8 +596,7 @@ export const mergeQuizFetchSkeletonsFulfilledIfQuiz = (
 
   syncFocusAttempt(state);
   if (state.content.length > 0) {
-    state.combinations = getCombination(state.content);
-    recomputeFollowupCombinations(state);
+    getCombination(state.content);
   }
   if (state.quizzes.length > 0) {
     const visibles = state.quizzes.filter(({ isDismissed }) => !isDismissed);

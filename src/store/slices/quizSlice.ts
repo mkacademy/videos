@@ -6,7 +6,6 @@ import type {
 import {
   applyCourseReducer,
   applySetQuizzes,
-  createQuizStartIdInitial,
 } from '../../library/QuizUtils';
 
 export type {
@@ -31,21 +30,12 @@ import {
   updateAnswersMetadata,
 } from '../../library/actions';
 const initialState: QuizState = {
-  startId: createQuizStartIdInitial(),
-  followupCombinations: {},
   followupId: undefined,
-  routeToggleGreenIds: {},
-  routeToggleOrangeMarks: [],
-  routeTogglePrimarySide: null,
-  modifiedOrdinals: {},
-  combinations: [],
   noQuizzes: true,
   selected: -1,
   content: [],
   banners: [],
   quizzes: [],
-  attempt: {},
-  focus: {},
 };
 
 const quizSlice = createSlice({

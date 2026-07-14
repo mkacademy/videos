@@ -2,11 +2,8 @@ import { Status } from "../components/Core/types";
 import { Metadata } from "../components/Core/types";
 import type { CourseTrees } from "./controlPanelUtils";
 import {
-  sorter,
   sorterCourse,
   contiguousOrdinalBannersPred,
-  contiguousOrdinalSlidesPred,
-  contiguousOrdinalThumbsPred,
   getSlideIndeces,
   getCoverCouplingIndexes,
   mergePennants,
@@ -22,14 +19,7 @@ import {
   toOwnershipIdSet,
   type CourseCouplings,
 } from "./sliceUtils";
-import {
-  altGroupRangeReorderSegment,
-  applyOrdinalRangeReorder,
-  assignDenseOrdinalsZeroBased,
-  findContiguousSortedRange,
-  ordinalForReorder,
-} from "./TutorialUtils";
-import { isPersistableOrdinal, sanitizeNumericOrdinalBatch, type MetadataUpdate, type OrdinalUpdate, type OwnershipPayload, type UpdatePayload } from "./actions";
+import { type MetadataUpdate, type OrdinalUpdate, type OwnershipPayload, type UpdatePayload } from "./actions";
 
 export interface SlideItem {
   id: number;
@@ -118,24 +108,6 @@ export interface Pennant {
 }
 
 /** Per-highlight-lane anchor for Shift+single-id highlight tracking (see `RangeSelectionOrReorderManger`). */
-export interface CourseStartId {
-  slideBreath: number | null;
-  coversBreath: number | null;
-  courseBreath: number | null;
-  pennantBreath: number | null;
-  pennantDepth: number | null;
-  courseDepth: number | null;
-}
-
-export const createCourseStartIdInitial = (): CourseStartId => ({
-  slideBreath: null,
-  coversBreath: null,
-  courseBreath: null,
-  pennantBreath: null,
-  pennantDepth: null,
-  courseDepth: null,
-});
-
 /** One batch of id → new `ordinal` values recorded after a reorder action. */
 export type CourseModifiedOrdinalBatch = Record<number, number>;
 
@@ -147,12 +119,6 @@ export type CourseModifiedOrdinalBatch = Record<number, number>;
  * - `cover`: parent course banner id
  * - `slide`: parent pennant id
  */
-export interface CourseModifiedOrdinals {
-  banner?: Record<number, CourseModifiedOrdinalBatch[]>;
-  pennant?: Record<number, CourseModifiedOrdinalBatch[]>;
-  cover?: Record<number, CourseModifiedOrdinalBatch[]>;
-  slide?: Record<number, CourseModifiedOrdinalBatch[]>;
-}
 
 export interface CourseState {
   /** Nested as courseId → coverId → slide indexes (guards shared cover ids across courses). */
@@ -162,8 +128,6 @@ export interface CourseState {
   banners: Banner[];
   selected: number;
   chapters: number[];
-  startId: CourseStartId;
-  modifiedOrdinals: CourseModifiedOrdinals;
 }
 
 /** One slide row (`SlideItem[]`) that contains `slideId`, if any. Used for Ctrl+range slide reorder. */
@@ -420,20 +384,6 @@ export const resolveSlidesForChapterInSelectedCourse = (
   return 'no-coupling';
 };
 
-function recordCourseModifiedOrdinalBatches(
-  modifiedOrdinals: CourseModifiedOrdinals,
-  kind: keyof CourseModifiedOrdinals,
-  batchesByParentKey: Map<number, Record<number, number>>,
-) {
-  if (batchesByParentKey.size === 0) return;
-  const branch = modifiedOrdinals[kind] ?? (modifiedOrdinals[kind] = {});
-  for (const [parentKey, batch] of batchesByParentKey) {
-    const sanitized = sanitizeNumericOrdinalBatch(batch);
-    if (Object.keys(sanitized).length === 0) continue;
-    const list = branch[parentKey] ?? (branch[parentKey] = []);
-    list.push(sanitized);
-  }
-}
 
 export interface dismissCoursePayload {
   ids: number[];
@@ -1249,221 +1199,9 @@ export interface CourseReOrderSelectionPayload {
   groupReorder?: boolean;
 }
 
-export const applyReOrderSlideSelection = (
-  state: CourseState,
-  { ids, direction, groupReorder }: CourseReOrderSelectionPayload
-): void => {
-  if (ids.length < 2) return;
-  const row = findCourseSlideRowForSlideId(state.content, ids[0]);
-  if (!row) return;
-  const rowIds = ids.filter((id) => row.some((s) => s.id === id));
-  if (rowIds.length < 2) return;
-  const beforeOrdinals = new Map(row.map((s) => [s.id, s.ordinal]));
-  if (groupReorder) {
-    const idSet = new Set(rowIds);
-    const fullSorted = [...row].sort((a, b) => ordinalForReorder(a) - ordinalForReorder(b));
-    const range = findContiguousSortedRange(fullSorted, (s) => idSet.has(s.id), idSet.size);
-    if (!range) return;
-    const segment = fullSorted.slice(range.lo, range.hi + 1);
-    const newSeg = altGroupRangeReorderSegment(segment, (s) => !!s.isHighlighted);
-    if (!newSeg) return;
-    const newFull = [...fullSorted.slice(0, range.lo), ...newSeg, ...fullSorted.slice(range.hi + 1)];
-    assignDenseOrdinalsZeroBased(newFull);
-  } else {
-    applyOrdinalRangeReorder(row, rowIds, direction, ordinalForReorder);
-  }
-  sorter(row);
-  const ordered = contiguousOrdinalSlidesPred(row);
-  for (let gi = 0; gi < state.content.length; gi++) {
-    const slides = state.content[gi].slides ?? [];
-    const ri = slides.findIndex((r) => r === row);
-    if (ri !== -1) {
-      state.content[gi].slides![ri] = ordered;
-      break;
-    }
-  }
-  state.couplings = getSlideIndeces(state.banners, state.content);
-  const pennantKey = ordered[0]?.bannerId ?? -1;
-  const batch: Record<number, number> = {};
-  for (const slide of ordered) {
-    const prev = beforeOrdinals.get(slide.id);
-    if (prev !== undefined && prev !== slide.ordinal && isPersistableOrdinal(slide.ordinal)) {
-      batch[slide.id] = slide.ordinal;
-    }
-  }
-  if (Object.keys(batch).length > 0) {
-    recordCourseModifiedOrdinalBatches(
-      state.modifiedOrdinals,
-      'slide',
-      new Map([[pennantKey, batch]]),
-    );
-  }
-};
 
-export const applyReOrderCoversSelection = (
-  state: CourseState,
-  { ids, direction, groupReorder }: CourseReOrderSelectionPayload
-): void => {
-  if (ids.length < 2) return;
-  const found = findSlideGroupForCoverId(state.content, ids[0]);
-  if (!found || !ids.every((id) => found.entries.some(([, v]) => v.id === id))) return;
-  const beforeOrdinals = new Map(found.entries.map(([, v]) => [v.id, v.ordinal]));
-  const coverItems = found.entries.map(([, v]) => v);
-  if (groupReorder) {
-    const idSet = new Set(ids);
-    const fullSorted = [...found.entries].sort(([, a], [, b]) => ordinalForReorder(a) - ordinalForReorder(b));
-    const range = findContiguousSortedRange(fullSorted, ([, v]) => idSet.has(v.id), idSet.size);
-    if (!range) return;
-    const segment = fullSorted.slice(range.lo, range.hi + 1);
-    const newSeg = altGroupRangeReorderSegment(segment, ([, v]) => !!v.isHighlighted);
-    if (!newSeg) return;
-    const newFull = [...fullSorted.slice(0, range.lo), ...newSeg, ...fullSorted.slice(range.hi + 1)];
-    assignDenseOrdinalsZeroBased(newFull.map(([, item]) => item));
-  } else {
-    applyOrdinalRangeReorder(coverItems, ids, direction, ordinalForReorder);
-  }
-  const sorted = [...found.entries].sort(([, a], [, b]) => a.ordinal - b.ordinal);
-  const thumbs = contiguousOrdinalThumbsPred(sorted);
-  const group = state.content[found.groupIndex];
-  const groupRecord = group;
-  for (const [key, item] of thumbs) {
-    if (key !== "slides") groupRecord[key] = item;
-  }
-  state.content[found.groupIndex] = sorterCourse(group);
-  state.couplings = getSlideIndeces(state.banners, state.content);
-  const batchesByBannerKey = new Map<number, Record<number, number>>();
-  for (const [, item] of thumbs) {
-    const prev = beforeOrdinals.get(item.id);
-    if (prev !== undefined && prev !== item.ordinal && isPersistableOrdinal(item.ordinal)) {
-      const bannerKey = item.bannerId ?? -1;
-      const batch = batchesByBannerKey.get(bannerKey) ?? {};
-      batch[item.id] = item.ordinal;
-      batchesByBannerKey.set(bannerKey, batch);
-    }
-  }
-  recordCourseModifiedOrdinalBatches(state.modifiedOrdinals, 'cover', batchesByBannerKey);
-};
 
-export const applyReOrderCourseSelection = (
-  state: CourseState,
-  { ids, direction, groupReorder }: CourseReOrderSelectionPayload
-): void => {
-  if (ids.length < 2) return;
-  const byId = new Map(state.banners.map((b) => [b.id, b]));
-  if (!ids.every((id) => byId.has(id))) return;
-  const beforeOrdinals = new Map(state.banners.map((b) => [b.id, b.ordinal]));
-  if (groupReorder) {
-    const idSet = new Set(ids);
-    const fullSorted = [...state.banners].sort((a, b) => ordinalForReorder(a) - ordinalForReorder(b));
-    const range = findContiguousSortedRange(fullSorted, (b) => idSet.has(b.id), idSet.size);
-    if (!range) return;
-    const segment = fullSorted.slice(range.lo, range.hi + 1);
-    const newSeg = altGroupRangeReorderSegment(segment, (b) => !!b.isHighlighted);
-    if (!newSeg) return;
-    const newFull = [...fullSorted.slice(0, range.lo), ...newSeg, ...fullSorted.slice(range.hi + 1)];
-    assignDenseOrdinalsZeroBased(newFull);
-  } else {
-    applyOrdinalRangeReorder(state.banners, ids, direction, ordinalForReorder);
-  }
-  state.banners = contiguousOrdinalBannersPred(sorter([...state.banners]));
-  state.couplings = getSlideIndeces(state.banners, state.content);
-  const batchesByBannerKey = new Map<number, Record<number, number>>();
-  for (const banner of state.banners) {
-    const prev = beforeOrdinals.get(banner.id);
-    if (prev !== undefined && prev !== banner.ordinal && isPersistableOrdinal(banner.ordinal)) {
-      const bannerKey = banner.bannerId ?? -1;
-      const batch = batchesByBannerKey.get(bannerKey) ?? {};
-      batch[banner.id] = banner.ordinal;
-      batchesByBannerKey.set(bannerKey, batch);
-    }
-  }
-  recordCourseModifiedOrdinalBatches(state.modifiedOrdinals, 'banner', batchesByBannerKey);
-};
 
-export const applyReOrderPennantSelection = (
-  state: CourseState,
-  { ids, direction, groupReorder }: CourseReOrderSelectionPayload
-): void => {
-  if (ids.length < 2) return;
-  const bannerIndex = state.banners.findIndex((b) => b.pennants?.some((p) => p.id === ids[0]));
-  if (bannerIndex === -1) return;
-  const pennants = state.banners[bannerIndex].pennants;
-  if (!ids.every((id) => pennants.some((p) => p.id === id))) return;
-  const beforeOrdinals = new Map(pennants.map((p) => [p.id, p.ordinal]));
-  if (groupReorder) {
-    const idSet = new Set(ids);
-    const fullSorted = [...pennants].sort((a, b) => ordinalForReorder(a) - ordinalForReorder(b));
-    const range = findContiguousSortedRange(fullSorted, (p) => idSet.has(p.id), idSet.size);
-    if (!range) return;
-    const segment = fullSorted.slice(range.lo, range.hi + 1);
-    const newSeg = altGroupRangeReorderSegment(segment, (p) => !!p.isHighlighted);
-    if (!newSeg) return;
-    const newFull = [...fullSorted.slice(0, range.lo), ...newSeg, ...fullSorted.slice(range.hi + 1)];
-    assignDenseOrdinalsZeroBased(newFull);
-  } else {
-    applyOrdinalRangeReorder(pennants, ids, direction, ordinalForReorder);
-  }
-  sorter(pennants);
-  state.banners[bannerIndex].pennants = contiguousOrdinalBannersPred([...pennants]) as Pennant[];
-  state.couplings = getSlideIndeces(state.banners, state.content);
-  const finalPennants = state.banners[bannerIndex].pennants;
-  const batchesByBannerKey = new Map<number, Record<number, number>>();
-  for (const pennant of finalPennants) {
-    const prev = beforeOrdinals.get(pennant.id);
-    if (prev !== undefined && prev !== pennant.ordinal && isPersistableOrdinal(pennant.ordinal)) {
-      const bannerKey = pennant.bannerId ?? -1;
-      const batch = batchesByBannerKey.get(bannerKey) ?? {};
-      batch[pennant.id] = pennant.ordinal;
-      batchesByBannerKey.set(bannerKey, batch);
-    }
-  }
-  recordCourseModifiedOrdinalBatches(state.modifiedOrdinals, 'pennant', batchesByBannerKey);
-};
-
-export const applyClearFetchedCourseState = (
-  state: CourseState,
-  isShow: boolean
-): void => {
-  const { selected } = state;
-  if (selected > -1) {
-    const { content, banners } = state;
-    const banner = banners[selected];
-    const predicate0 = (group: SlideGroup) => {
-      const { 0: { bannerId } } = group;
-      return bannerId === banner.id;
-    };
-    const { slides, ...visibleThumbs } = content.find(predicate0)! ?? {};
-    const predicate1 = (group: SlideGroup) => {
-      const { 0: { bannerId } } = group;
-      return bannerId !== banner.id;
-    };
-    const invisibleThumbs = content.filter(predicate1);
-
-    const unDismissed = Object.values(visibleThumbs)
-      .filter(item => item.isDismissed === !isShow);
-
-    if (unDismissed.length > 0) {
-      state.content = [{
-        ...banner,
-        slides
-      }, ...invisibleThumbs];
-    } else {
-      state.content = invisibleThumbs;
-    }
-  } else {
-    const { banners, content } = state;
-    const newBanners = banners.filter(
-      ({ isDismissed }) => isDismissed === !isShow
-    );
-    const predicate = (group: SlideGroup) => {
-      const { 0: { bannerId } } = group;
-      return newBanners.find(({ id }) => id === bannerId);
-    };
-    state.noCourses = true;
-    state.banners = newBanners;
-    state.content = content.filter(predicate);
-  }
-};
 
 /** Append skeleton banners/slides from fetch; caller updates couplings and noCourses. */
 export const mergeCourseFetchSkeletonsContent = (

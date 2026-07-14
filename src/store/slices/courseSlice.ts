@@ -30,7 +30,6 @@ import {
   applySetSlides,
   applyUpdateCoversMetadata,
   applyUpdateSteps,
-  createCourseStartIdInitial,
   mergeCourseFetchSkeletonsContent,
 } from '../../library/CourseUtils';
 
@@ -48,8 +47,6 @@ export {
 } from '../../library/CourseUtils';
 
 const initialState: CourseState = {
-  startId: createCourseStartIdInitial(),
-  modifiedOrdinals: {},
   noCourses: true,
   couplings: {},
   selected: -1,
