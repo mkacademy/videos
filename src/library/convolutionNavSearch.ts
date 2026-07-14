@@ -16,7 +16,7 @@ const selectFsq = (state: StickyFsqState) => state.settings.fsq;
 
 export const stickyFsqFromState = createSelector(
   [selectShouldHydrate, selectFsq],
-  (shouldHydrate, fsq): StickyFsqOptions => ({ shouldHydrate, fsq }),
+  (shouldHydrate, fsq): StickyFsqOptions => ({ shouldHydrate, fsq: fsq ?? 1 }),
 );
 
 export type ConvolutionNavigateTo = {

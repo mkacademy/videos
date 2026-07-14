@@ -6,7 +6,7 @@ import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { appendRowz } from '../store/slices/rowSlice';
 import { hydrateData, hydratedThenFetch } from './actions';
-import { getHydrationDefaultTake, normalizeQueryLimit } from '../utils';
+import { getHydrationDefaultTake } from '../utils';
 import { getPlural, convolutionDelay } from '../utils';
 import { prependError } from '../store/slices/errorSlice';
 import { viewRequestFetching, cpanelMessage } from '../store/slices/viewSlice';
@@ -645,8 +645,8 @@ export type HydrationSessionOptions = {
   maxQueriesPerLeg: number;
 };
 
-export const resolveHydrationSessionOptions = (getState: () => RootState): HydrationSessionOptions => ({
-  maxQueriesPerLeg: normalizeQueryLimit(getState().settings.queryLimit),
+export const resolveHydrationSessionOptions = (): HydrationSessionOptions => ({
+  maxQueriesPerLeg: 50,
 });
 
 export const estimateInitialLegCount = (
@@ -715,7 +715,7 @@ export const handleHydrationLogic = (
   if (hydrationQueries > 0 || isHydrationSessionBusy()) return next?.(prependError(errorMessage));
 
   const thunkDispatch = dispatch as ThunkDispatch<RootState, unknown, UnknownAction>;
-  const sessionOptions = resolveHydrationSessionOptions(getState);
+  const sessionOptions = resolveHydrationSessionOptions();
   const attemptedSeekIds = new Set<number>();
   const trackedDiscriminator = withAttemptedSeekExclusion(discriminator, attemptedSeekIds);
   const { deriveNextLeg } = createHydrationLegDeriver(
