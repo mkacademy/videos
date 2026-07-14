@@ -9,9 +9,6 @@ import { Banner as TutorialBanner, Content } from '../store/slices/tutorialSlice
 import { Quiz, Submition } from '../store/slices/quizSlice';
 import { SlideItem, Banner as CourseBanner, Pennant, SlideGroupItem } from '../store/slices/courseSlice';
 import { DataRow, Metadata } from '../components/Core/types';
-import { RestoreInteractionsPayload } from '../store/slices/interactionSlice';
-import { MergeInteractionsPayload } from '../store/slices/interactionSlice';
-import { InitInteractionsPayload } from '../store/slices/interactionSlice';
 import { StatsMiddlewareState } from '../store/types';
 import { Executedquery, FetchDataPayload } from './ThunksUtils';
 import { Handler } from '../store/slices/errorSlice';
@@ -576,9 +573,6 @@ export const UnzipAndHydrate = createAction('UnzipAndHydrate');
 // Content actions (third import)
 export const hydratedThenFetch = createAction<FetchDataPayload>('hydratedThenFetch');
 export const updateMetadataId = createAction<{ ids: string[]; entity: string }>('updateMetadataId');
-export const restoreInteractions = createAction<RestoreInteractionsPayload>('restoreInteractions');
-export const mergeInteractions = createAction<MergeInteractionsPayload>('mergeInteractions');
-export const initInteractions = createAction<InitInteractionsPayload>('initInteractions');
 
 // Settings middleware actions (second import statement)
 export const initSettings = createAction('initSettings');

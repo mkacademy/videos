@@ -4,7 +4,6 @@ import sessionReducer from './slices/sessionSlice';
 import commsReducer from './slices/commsSlice';
 import statsReducer from './slices/statsSlice';
 import errorReducer from './slices/errorSlice';
-import interactionReducer from './slices/interactionSlice';
 import courseReducer from './slices/courseSlice';
 import paginationReducer from './slices/paginationSlice';
 import quizReducer from './slices/quizSlice';
@@ -24,7 +23,6 @@ export const store = configureStore({
     comms: commsReducer,
     stats: statsReducer,
     error: errorReducer,
-    interaction: interactionReducer,
     course: courseReducer,
     pagination: paginationReducer,
     quiz: quizReducer,

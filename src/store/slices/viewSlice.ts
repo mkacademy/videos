@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { fetchingCompleted } from '../../library/actions';
 import { DataRow } from '../../components/Core/types';
 import { IconKey } from '../../Hooks/useIconsAssembler';
-import { InteractionState } from './interactionSlice';
 
 export interface ViewState {
   menus: number;
@@ -22,7 +21,6 @@ export interface ViewState {
   actionType: string | undefined;
   parentData: ParentData | undefined;
   fetchedData: DataRow[] | undefined;
-  interactions: InteractionState | undefined;
   requestIsProcessing: boolean;
   requestIsFetching: boolean;
   visibility: {
@@ -54,7 +52,6 @@ export interface ViewPayload {
   parentData?: ParentData;
   selectedMenu?: number;
   contentIds?: number[];
-  interactions?: InteractionState;
   fetchedData?: DataRow[];
   pages?: string[];
   yoinks?: string[];
@@ -94,7 +91,6 @@ const initialState: ViewState = {
   actionType: undefined,
   parentData: undefined,
   fetchedData: undefined,
-  interactions: undefined,
   requestIsFetching: false,
   requestIsProcessing: false,
   visibility: { searches: true, parents: true },
@@ -131,7 +127,6 @@ const viewSlice = createSlice({
       if (rest.keywords !== undefined) state.keywords = rest.keywords;
       if (rest.fetchedData !== undefined) state.fetchedData = rest.fetchedData;
       if (rest.selectedMenu !== undefined) state.selectedMenu = rest.selectedMenu;
-      if (rest.interactions !== undefined) state.interactions = rest.interactions;
       if (rest.parentIndeces !== undefined) state.parentIndeces = rest.parentIndeces;
       // Handle parentData specially
       if (parentData) {
@@ -154,7 +149,6 @@ const viewSlice = createSlice({
     clearEscrow: (state) => {
       console.log("cleared_view");
       state.fetchedData = undefined;
-      state.interactions = undefined;
     },
     viewPage: (state, action: PayloadAction<string>) => {
       state.pages = [...state.pages, action.payload];
