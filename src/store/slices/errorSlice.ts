@@ -1,4 +1,4 @@
-import { amendment, authenticate, registration, verification } from '../../library/Thunks';
+import { authenticate } from '../../library/Thunks';
 import {
   createCourses,
   createQuizzes,
@@ -12,7 +12,6 @@ import {
 import { createSlice, Draft, PayloadAction } from '@reduxjs/toolkit';
 import { tabledFetcher } from '../../library/Thunks';
 import { signedOut } from '../slices/sessionSlice';
-import { AccountResult } from './settingsSlice';
 
 
 export interface Handler {
@@ -188,26 +187,6 @@ export const errorSlice = createSlice({
       })
       .addCase(tabledFetcher.rejected, (state, action) => {
         return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
-      })
-      .addCase(registration.rejected, (state, action) => {
-        return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
-      })
-      .addCase(amendment.rejected, (state, action) => {
-        return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
-      })
-      .addCase(verification.rejected, (state, action) => {
-        return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
-      })
-      .addCase(verification.fulfilled, (state, action) => {
-        const { success } = action.payload as AccountResult;
-        const newAction = { ...action, payload: "Account Verification failed, please double check your code and try again." };
-        if (!success) return errorSlice.caseReducers.prependError(state, newAction);
-      })
-      .addCase(amendment.fulfilled, (state, action) => {
-        console.log("amendment.fulfilled", action);
-        const { success } = action.payload as AccountResult;
-        const newAction = { ...action, payload: "Account update failed, please try again later." };
-        if (!success) return errorSlice.caseReducers.prependError(state, newAction);
       })
   }
 });

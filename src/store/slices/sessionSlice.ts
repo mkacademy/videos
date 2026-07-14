@@ -5,8 +5,7 @@ import { Search } from '../../store/slices/searchSlice';
 import { clearEscrow } from './viewSlice';
 import { fetchingCompleted, hydrateData } from '../../library/actions';
 import { clearData } from './rowSlice';
-import useSettingsWait from '../../Hooks/useSettingsWait';
-import { authenticate, deHydratedRowsDataFetcher, registration } from '../../library/Thunks';
+import { authenticate, deHydratedRowsDataFetcher } from '../../library/Thunks';
 import { MutateEntityResponse } from '../../library/types';
 import { ParentData } from './viewSlice';
 import { DataRow } from '../../components/Core/types';
@@ -144,7 +143,6 @@ export interface InitializedLoadingPayload extends Partial<SessionState> {
 
 const updateCurRoutes = (curApp: number): { curRoutes: string[]; curApp: number } => {
   const curRoutes = getCurRoutes(getCurAppName(curApp));
-  useSettingsWait({ selectedRoutes: curRoutes })();
   return { curRoutes, curApp };
 }
 
@@ -208,7 +206,6 @@ const sessionSlice = createSlice({
         const [index, appname] = userApp;
         state.curApp = parseInt(index);
         const curRoutes = getCurRoutes(appname.toLowerCase());
-        useSettingsWait({ selectedRoutes: curRoutes })();
         state.curRoutes = curRoutes;
       }
       else console.log("unknown app ==>", action.payload);
@@ -338,10 +335,6 @@ const sessionSlice = createSlice({
       })
       .addCase(authenticate.fulfilled, (state, action) => {
         console.log("authenticate.fulfilled");
-        return sessionSlice.caseReducers.initializedLoading(state, action);
-      })
-      .addCase(registration.fulfilled, (state, action) => {
-        console.log("registration.fulfilled");
         return sessionSlice.caseReducers.initializedLoading(state, action);
       })
       .addCase(authenticate.rejected, (state) => {

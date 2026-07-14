@@ -5,23 +5,10 @@ import {
   type ReOrderRowsPayload,
 } from '../middleware/TabulatorOrderingUtils';
 import { BaseFormattedData, DataRow, BaseEntity } from '../../components/Core/types';
-import Boss from '../../components/Core/Boss';
-import Minion from '../../components/Core/Minion';
-import Sifter from '../../components/Core/Sifter';
-import Filter from '../../components/Core/Filter';
-import Underboss from '../../components/Core/Underboss';
-import Dashboard from '../../components/Core/Dashboard';
-import Instruction from '../../components/Core/Instruction';
+
 
 // Define a type mapping for entity names to their types
 export type EntityTypeMap = {
-  bosses: Boss;
-  minions: Minion;
-  sifters: Sifter;
-  filters: Filter;
-  underbosses: Underboss;
-  dashboards: Dashboard;
-  instructions: Instruction;
   foundation: BaseEntity;
 }
 

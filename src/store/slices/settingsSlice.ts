@@ -1,7 +1,7 @@
 import { signedOut } from './sessionSlice';
 import { userApps, memberApps, adminsApps } from '../../constants';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { amendment, fetchData, fetchSkeletons, verification } from '../../library/Thunks';
+import { fetchData } from '../../library/Thunks';
 import { getEntity, normalizeQueryLimit, orderedWebappRoutes, Tree as tree } from '../../utils';
 import { WebApps } from '../../components/Core/types';
 import { fileManager } from '../../library/FileManager';
@@ -751,29 +751,9 @@ export const settingsSlice = createSlice({
         if (action.payload.Trees && action.payload.TreesId)
           state.QuizTrees[action.payload.TreesId] = action.payload.Trees;
       })
-      .addCase(amendment.fulfilled, (state, action) => {
-        const { attempts, success } = action.payload as AccountResult;
-        if (success) state.amendAttempts = -1;
-        else state.amendAttempts = attempts;
-      })
-      .addCase(amendment.rejected, (state, _) => {
-        state.amendAttempts = state.amendAttempts + 1;
-      })
-      .addCase(verification.fulfilled, (state, action) => {
-        const { attempts, success } = action.payload as AccountResult;
-        if (success) state.verifyAttempts = -1;
-        else state.verifyAttempts = attempts;
-      })
-      .addCase(verification.rejected, (state, _) => {
-        state.verifyAttempts = state.verifyAttempts + 1;
-      })
       .addCase(fetchData.fulfilled, (state, _) => {
         if (state.isUnzipCourses || state.isUnzipTutorials || state.isUnzipQuizzes)
           state.isNotUnzipping = false;
-      })
-      .addCase(fetchSkeletons.fulfilled, (state, _) => {
-        if (state.isUnzipCourses || state.isUnzipTutorials || state.isUnzipQuizzes)
-          state.isNotSkeletons = false;
       })
   }
 });
