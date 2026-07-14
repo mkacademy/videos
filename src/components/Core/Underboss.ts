@@ -4,7 +4,6 @@ import {
   sumsFormatter,
   textFieldsExtractor,
 } from "../../utils";
-import underbossMenu from "../Menus/Underboss";
 import {
   BaseEntity, BaseFormattedData, BaseNonFormattedData,
   UserForm,
@@ -31,9 +30,9 @@ interface Underboss extends BaseEntity {
 
 const Underboss: Underboss = {
   name: "underbosses",
-  menu: underbossMenu(""),
-  lowermenu: underbossMenu("lower"),
-  highermenu: underbossMenu("higher"),
+  menu: [],
+  lowermenu: [],
+  highermenu: [],
   unlocked: [],
   webapps: {
     tutorial: [],

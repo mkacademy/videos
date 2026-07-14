@@ -1,8 +1,7 @@
-import { medias, getCurAppName, Tree as entities, getEncodeDataPartFromUrl } from "../utils";
+import { medias, getCurAppName, Tree as entities, getEncodeDataPartFromUrl, getValidParams } from "../utils";
 import { useCallback, useEffect } from "react";
 import { useMediaQuery } from "react-responsive";
 import { useLocation, useNavigationType } from "react-router-dom";
-import { getValidParams } from "../components/Pagination/TableViewPager";
 import { calcMenuIndex, InitNavigatorPayload } from "../store/middleware/NavigationTrackerEFG";
 import { ParentData, ViewPayload, viewPayload as escrowPayload, viewMenu } from "../store/slices/viewSlice";
 import { initNavigator, extractCsObject } from "../library/actions";

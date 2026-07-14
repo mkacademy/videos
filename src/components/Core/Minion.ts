@@ -4,7 +4,6 @@ import {
   textFieldsExtractor,
   states,
 } from "../../utils";
-import minionMenu from "../Menus/Minion";
 import {
   BaseEntity,
   BaseFormattedData,
@@ -30,7 +29,7 @@ interface Minion extends BaseEntity {
 
 const Minion: Minion = {
   name: "minions",
-  menu: minionMenu,
+  menu: [],
   unlocked: [],
   webapps: {
     tutorial: [],

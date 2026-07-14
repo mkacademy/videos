@@ -1,9 +1,8 @@
 import type { UnknownAction } from "@reduxjs/toolkit";
 import type { NavigateFunction } from "react-router-dom";
-import { clearFetched, clearSelected, fetchedClearers } from "./actions";
+import { clearSelected } from "./actions";
 import { getCommIdsByRoute, RouteType } from "./commsUtils";
 import { setCurPage } from "./Thunks";
-import type { AppDispatch } from "../store";
 import type { RootState } from "../store/types";
 import { setCleared, setClearedByApp } from "../store/slices/sessionSlice";
 import {
@@ -19,13 +18,8 @@ export const isMinimumFeatureMode = (state: RootState): boolean =>
   state.settings.isUnzipQuizzes ||
   state.settings.isUnzipTutorials;
 
-const matchFetchedClearerPath = (pathname: string): keyof typeof fetchedClearers | undefined =>
-  (Object.keys(fetchedClearers) as (keyof typeof fetchedClearers)[]).find(
-    (p) => pathname === p || pathname.endsWith(p),
-  );
-
 /** Strip the query string from the current URL (pathname and hash preserved). */
-export const clearContentUrlSearch = (navigate?: NavigateFunction): void => {
+const clearContentUrlSearch = (navigate?: NavigateFunction): void => {
   if (typeof window === "undefined") return;
   const { pathname, hash, search } = window.location;
   if (!search) return;
@@ -34,20 +28,6 @@ export const clearContentUrlSearch = (navigate?: NavigateFunction): void => {
     return;
   }
   window.history.replaceState(window.history.state, "", pathname + hash);
-};
-
-/** Full feature mode: same as FullAccount clear — `setCleared` then `clearFetched` via `fetchedClearers`. */
-export const dispatchConvolutionClearFetched = (
-  dispatch: AppDispatch,
-  getState: () => RootState,
-  navigate?: NavigateFunction,
-): void => {
-  const matched = matchFetchedClearerPath(window.location.pathname);
-  if (!matched) return;
-  const dismised = getState().session.dismissals[matched] ?? false;
-  dispatch(setCleared(true));
-  dispatch(clearFetched({ pathname: matched, payload: dismised }));
-  clearContentUrlSearch(navigate);
 };
 
 export const dispatchSettingsClearContent = (

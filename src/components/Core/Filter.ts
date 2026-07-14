@@ -4,7 +4,6 @@ import {
   textFieldsExtractor,
   states,
 } from "../../utils";
-import filterMenu from "../Menus/Filter";
 import {
   BaseEntity,
   BaseFormattedData,
@@ -30,7 +29,7 @@ interface Filter extends BaseEntity {
 
 const Filter: Filter = {
   name: "filters",
-  menu: filterMenu,
+  menu: [],
   unlocked: ["instructions"],
   webapps: {
     tutorial: ["instructions"],

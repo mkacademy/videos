@@ -113,7 +113,6 @@ import {
 } from "../utils";
 import { useSelector, useStore } from "react-redux";
 import { RootState } from "../store/types";
-import type { AppDispatch } from "../store";
 import {
     groupedTaggedCommentTokens,
     isGroupedTaggedClipboardPayload,
@@ -133,21 +132,9 @@ import {
 } from "../library/TemplatesManagerUtils";
 import { dispatchSettingsClearContent } from "../library/clearContentDispatch";
 import { dispatchGenerateLink } from "../library/generateLinkDispatch";
-import {
-    performEscrowStashShortcut,
-    performUnstashStashShortcut,
-    performDeleteStashGroupShortcut,
-    performStashInventoryNavigateShortcut,
-    performHandlesToStashShortcut,
-    performStashInventoryShortcut,
-    performConvertStashShortcut,
-    performCombineTreesShortcut,
-    performSeparateTreesShortcut,
-} from "../library/Shortcuts_b";
 import { viewRequest } from "../store/slices/viewSlice";
 import { buildSnapshotCoursesFromSelection } from "../library/courseSnapshotCaptureUtils";
 
-// Type definitions
 interface UseSettingsParams {
     dispatcher: (action: UnknownAction) => void;
     isParentSelection: boolean;
@@ -316,10 +303,6 @@ export default function useSettings({
             }
             case "editMode-btn": {
                 dispatcher(toggleEditMode());
-                break;
-            }
-            case "convert-stash-btn": {
-                performConvertStashShortcut(dispatcher as AppDispatch);
                 break;
             }
             case "create-tutorials-btn": {
@@ -495,34 +478,7 @@ export default function useSettings({
                 console.log("clear-comments-btn");
                 break;
             }
-            case "stash_btn": {
-                performEscrowStashShortcut(dispatcher as AppDispatch);
-                break;
-            }
-            case "unstash_btn": {
-                performUnstashStashShortcut(dispatcher as AppDispatch);
-                break;
-            }
-            case "delete-stash-group_btn": {
-                performDeleteStashGroupShortcut(dispatcher as AppDispatch);
-                break;
-            }
-            case "stash-inventory-prev_btn": {
-                performStashInventoryNavigateShortcut(dispatcher as AppDispatch, 'prev');
-                break;
-            }
-            case "stash-inventory-next_btn": {
-                performStashInventoryNavigateShortcut(dispatcher as AppDispatch, 'next');
-                break;
-            }
-            case "foundations-from-handles_btn": {
-                performHandlesToStashShortcut(dispatcher as AppDispatch);
-                break;
-            }
-            case "view-stash_btn": {
-                performStashInventoryShortcut(dispatcher as AppDispatch);
-                break;
-            }
+
             case "toggle-depth-selection_btn": {
                 dispatcher(toggleDepthSelection());
                 break;
@@ -531,14 +487,7 @@ export default function useSettings({
                 dispatcher(toggleBreathSelection());
                 break;
             }
-            case "separate-trees_btn": {
-                performSeparateTreesShortcut(dispatcher as AppDispatch);
-                break;
-            }
-            case "combine-trees_btn": {
-                performCombineTreesShortcut(dispatcher as AppDispatch);
-                break;
-            }
+
             case "capture-snapshots-btn": {
                 void (async () => {
                     const state = reduxStore.getState() as RootState;
@@ -850,7 +799,6 @@ export default function useSettings({
         }
     };
 
-    // handle datetime input
     const handleDatetimeInput = (e: React.ChangeEvent<HTMLInputElement>): void => {
         const target = e.target as HTMLInputElement;
         const id = target.id;
@@ -1031,11 +979,3 @@ export default function useSettings({
         isStartup,
     };
 }
-
-
-// tutorials=1&tutorial=1
-// tutorials=1&tutorial=1&courses=1&course=1
-// tutorials=1&tutorial=1&courses=1&course=1&quizzes=1&quiz=1
-// quizzes=1&quiz=1
-// courses=1&course=1
-// courses=1&course=1&quizzes=1&quiz=1

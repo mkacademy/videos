@@ -4,7 +4,6 @@ import {
   sumsFormatter,
   textFieldsExtractor,
 } from "../../utils";
-import sifterMenu from "../Menus/Sifter";
 import {
   BaseEntity,
   BaseFormattedData,
@@ -31,9 +30,9 @@ interface Sifter extends BaseEntity {
 
 const Sifter: Sifter = {
   name: "sifters",
-  menu: sifterMenu(""),
-  lowermenu: sifterMenu("lower"),
-  highermenu: sifterMenu("higher"),
+  menu: [],
+  lowermenu: [],
+  highermenu: [],
   unlocked: [],
   webapps: {
     tutors: [],

@@ -4,7 +4,6 @@ import {
   textFieldsExtractor,
   states,
 } from "../../utils";
-import dashboardMenu from "../Menus/Dashboard";
 import { BaseEntity, BaseFormattedData, BaseNonFormattedData, DataRow, MockedDataReturn, Metadata, BaseForm } from "../Core/types";
 import * as styles from "../../styles/ContraintsCss.module.css";
 import * as descendantsWrapper from "../../styles/descendantsWrapper.module.css";
@@ -26,7 +25,7 @@ interface Dashboard extends BaseEntity {
 
 const Dashboard: Dashboard = {
   name: "dashboards",
-  menu: dashboardMenu,
+  menu: [],
   unlocked: [],
   webapps: {
     tutorial: [],

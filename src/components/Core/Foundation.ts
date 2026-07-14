@@ -1,9 +1,8 @@
-import foundationMenu from "../Menus/Foundation";
 import { BaseEntity } from "../Core/types";
 
 const Foundation: BaseEntity = {
   name: "foundation",
-  menu: foundationMenu,
+  menu: [],
   unlocked: ["filters"],
   webapps: {
     outgoing: [],

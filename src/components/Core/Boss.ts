@@ -4,7 +4,6 @@ import {
   sumsFormatter,
   textFieldsExtractor,
 } from "../../utils";
-import bossMenu from "../Menus/Boss";
 import {
   BaseEntity,
   BaseFormattedData,
@@ -31,7 +30,7 @@ interface Boss extends BaseEntity {
 
 const Boss: Boss = {
   name: "bosses",
-  menu: bossMenu,
+  menu: [],
   unlocked: [],
   webapps: {
     tutorial: [],

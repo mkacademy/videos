@@ -4,7 +4,6 @@ import {
   textFieldsExtractor,
   states,
 } from "../../utils";
-import instructionMenu from "../Menus/Instruction";
 import {
   BaseEntity,
   BaseFormattedData,
@@ -30,7 +29,7 @@ interface Instruction extends BaseEntity {
 
 const Instruction: Instruction = {
   name: "instructions",
-  menu: instructionMenu,
+  menu: [],
   unlocked: [],
   webapps: {
     tutorial: [],

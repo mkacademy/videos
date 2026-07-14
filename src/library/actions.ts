@@ -15,7 +15,7 @@ import { OutgoingMessage, Tutor } from '../store/slices/commsSlice';
 import { Banner as TutorialBanner, Content } from '../store/slices/tutorialSlice';
 import { Quiz, Submition } from '../store/slices/quizSlice';
 import { SlideItem, Banner as CourseBanner, Pennant, SlideGroupItem } from '../store/slices/courseSlice';
-import { DataRow, MenuItem, Metadata } from '../components/Core/types';
+import { DataRow, Metadata } from '../components/Core/types';
 import { InitNavigatorPayload } from '../store/middleware/NavigationTrackerEFG';
 import { PayloadWithFromTo } from '../store/middleware/CrudsManager123';
 import { RestoreInteractionsPayload } from '../store/slices/interactionSlice';
@@ -26,7 +26,6 @@ import { Executedquery, FetchDataPayload } from './ThunksUtils';
 import { Handler } from '../store/slices/errorSlice';
 import { Search } from '../store/slices/searchSlice';
 import { ResultPayload } from '../store/slices/rowSlice';
-import { MutationDataAccumulator } from '../Hooks/useSaveMutations';
 
 /** Type prefix passed to createAsyncThunk for fetchSkeletons (Thunks.ts). Slices listen with FETCH_SKELETONS_FULFILLED. */
 export const FETCH_SKELETONS_THUNK_TYPE = 'fetchSkeletons' as const;
@@ -50,13 +49,6 @@ export interface InitLoadingPayload {
   handles?: Record<string, Handler[]>;
 }
 
-export interface InitReloadingPayload {
-  isAppend?: boolean;
-  isPrivate?: boolean;
-  isFetching?: boolean;
-  isIncognito?: boolean;
-}
-
 export interface MockPayload {
   owner: boolean;
   entity: string;
@@ -76,11 +68,6 @@ export interface MetadataPayload {
 export interface clearSelectedPayload {
   pathname: string;
   payload: erasePayload;
-}
-
-export interface clearFetchedPayload {
-  pathname: string;
-  payload: boolean;
 }
 
 export interface erasePayload {
@@ -187,16 +174,7 @@ export interface MetadataUpdate {
   ordinal: number;
   bannerId?: number;
 }
-export const fetchedClearers: Record<string, string> = {
-  "/convolution/quiz": "quiz/clearFetched",
-  "/convolution/tutors": "comms/clearTutors",
-  "/convolution/course": "course/clearFetched",
-  "/convolution/outgoing": "comms/clearOutgoing",
-  "/convolution/incoming": "comms/clearIncoming",
-  "/convolution/tutorial": "tutorial/clearFetched",
-};
-
-export const fetchedErasers: Record<string, string> = {
+const fetchedErasers: Record<string, string> = {
   "/convolution/quiz": "quiz/clearSelected",
   "/convolution/tutors": "comms/eraseTutors",
   "/convolution/course": "course/clearSelected",
@@ -204,11 +182,6 @@ export const fetchedErasers: Record<string, string> = {
   "/convolution/incoming": "comms/eraseIncoming",
   "/convolution/tutorial": "tutorial/clearSelected",
 };
-
-export const clearFetched = ({ pathname, payload }: clearFetchedPayload) => ({
-  type: fetchedClearers[pathname],
-  payload,
-});
 
 export const clearSelected = ({ pathname, payload }: clearSelectedPayload) => ({
   type: fetchedErasers[pathname],
@@ -495,53 +468,18 @@ export const mutateRows = createAction<MutateEntityResponse>('mutateRows');
 export const linkRows = createAction<MutateEntityResponse>('linkRows');
 export const extractCsObject = createAction('extractCsObject');
 export const urlGuidMismatch = createAction('urlGuidMismatch');
-export const matchKeyId = createAction<string>('matchKeyId');
 export const matchKeyword = createAction<string>('matchKeyword');
-export const unmatchKeyId = createAction<string>('unmatchKeyId');
 export const unmatchKeyword = createAction<string>('unmatchKeyword');
 export const accountMutation = createAction<FormData>('accountMutation');
 export const initNavigator = createAction<InitNavigatorPayload>('initNavigator');
 export const selectTraversal = createAction<InitLoadingPayload>('selectTraversal');
-export const appendTraversals = createAction<MenuItem[] | string>('appendTraversals');
-export const setFoundationRows = createAction<{ operation: string }>('setFoundationRows');
 export const hydrateRows = createAction<ResultPayload>('hydrateRows');
-export const exportTexts = createAction('exportTexts');
-export const importTexts = createAction('importTexts');
-export const importStash = createAction('importStash');
 export const hydrateData = createAction<number>('hydrateData');
-export const hierachyChanged = createAction('hierachyChanged');
-export const exportAlgorithm = createAction('exportAlgorithm');
-export const importAlgorithm = createAction('importAlgorithm');
-export const exportTraversals = createAction('exportTraversals');
-export const importTraversals = createAction('importTraversals');
-export const stashTutorials = createAction('stashTutorials');
-export const unstashTutorials = createAction('unstashTutorials');
-export const stashCourses = createAction('stashCourses');
-export const unstashCourses = createAction('unstashCourses');
-export const stashQuizzes = createAction('stashQuizzes');
-export const unstashQuizzes = createAction('unstashQuizzes');
-export const saveTutorialTrees = createAction('saveTutorialTrees');
-export const saveCourseTrees = createAction('saveCourseTrees');
-export const saveQuizTrees = createAction('saveQuizTrees');
-export const approveTutorialTrees = createAction('approveTutorialTrees');
-export const approveCourseTrees = createAction('approveCourseTrees');
-export const approveQuizTrees = createAction('approveQuizTrees');
 
-export interface FetchCommentsPayload {
-  commentsId: number;
-  parentIDs: number[];
-}
-
-/** Intercepted by commentsMiddleware to fetch comments. */
-export const fetchTutorialComments = createAction<FetchCommentsPayload>('comments/fetchTutorial');
-export const fetchCourseComments = createAction<FetchCommentsPayload>('comments/fetchCourse');
-export const fetchQuizComments = createAction<FetchCommentsPayload>('comments/fetchQuiz');
 export const saveTutorsEdits = createAction<saveTutorsEditsPayload>('saveTutorsEdits');
 export const saveIncomingEdits = createAction<mutateIncomingPayload>('saveIncomingEdits');
 export const saveOutgoingEdits = createAction<saveOutgoingEditsPayload>('saveOutgoingEdits');
 
-export const extractKeywords = createAction('extractKeywords');
-export const discardPayloads = createAction('discardPayloads');
 export const createMocks = createAction<string>('createMocks');
 export const showAlgorithm = createAction<string>('showAlgorithm');
 export const createOrdering = createAction<string>('createOrdering');
@@ -562,15 +500,6 @@ export interface RezipOutgoingPayload {
 }
 
 export const rezipOutgoing = createAction<RezipOutgoingPayload>('rezipOutgoing');
-
-// Settings apply actions
-export const mutateMyAbility = createAction('mutateMyAbility');
-export const contentVisibility = createAction('contentVisibility');
-export const mutateQuotas = createAction('mutateQuotas');
-export const mutateAbilities = createAction('mutateAbilities');
-export const mutateHierachies = createAction('mutateHierachies');
-export const deleteOrphans = createAction('deleteOrphans');
-export const aquireVoucher = createAction('aquireVoucher');
 
 export const extractToCpanel = createAction<ExtractToCpanelPayload>('extractToCpanel');
 export const finalizeUnjoin = createAction<FinalizeUnjoinPayload>('finalizeUnjoin');
@@ -602,8 +531,6 @@ export type saveEditsPayload =
 
 export const saveEdits = createAction<saveEditsPayload>('saveEdits');
 
-export const beginQueuedTabulatorSave = createAction<MutationDataAccumulator>('beginQueuedTabulatorSave');
-
 // Root tags middleware actions
 export const zipOverview = createAction<PayloadWithFromTo>('zipOverview');
 export const extractMocks = createAction<PayloadWithFromTo>('extractMocks');
@@ -620,13 +547,8 @@ export const simpleUnselector = createAction<PayloadWithFromTo>('simpleUnselecto
 export const initTotals = createAction('initTotals');
 export const initLoading = createAction<InitLoadingPayload>('initLoading');
 export const insertStats = createAction<InsertStatsPayload>('insertStats');
-export const initReloading = createAction<InitReloadingPayload>('initReloading');
 
 // View actions
-export const appendImports = createAction<{
-  data: DataRow[] | Record<string, DataRow[]>;
-  actionType: string;
-}>('appendImports');
 export const fetchingCompleted = createAction<{ dest?: string, orig?: string }>('fetchingCompleted');
 export const escrowConvolution = createAction<viewConvolutionPayload>('viewConvolution');
 export const escrowContents = createAction<string | undefined>('viewContents');
@@ -673,15 +595,12 @@ export const updatePennantsMetadata = createAction<MetadataUpdate[]>('updatePenn
 export const updateAnswersMetadata = createAction<MetadataUpdate[]>('updateAnswersMetadata');
 
 // Communication actions
-export const activateTutors = createAction('activateTutors');
 export const markIncoming = createAction('markIncoming');
-export const sendOutgoing = createAction('sendOutgoing');
 export const UnzipAndHydrate = createAction('UnzipAndHydrate');
 export const hydrateSkeletons = createAction('hydrateSkeletons');
 export const hydrateSkeletonRows = createAction('hydrateSkeletonRows');
 
 // Content actions (third import)
-export const cacheContent = createAction<string>('cacheContent');
 export const hydratedThenFetch = createAction<FetchDataPayload>('hydratedThenFetch');
 export const updateMetadataId = createAction<{ ids: string[]; entity: string }>('updateMetadataId');
 export const restoreInteractions = createAction<RestoreInteractionsPayload>('restoreInteractions');
@@ -697,9 +616,5 @@ export const setImageUrls = createAction<SetImageUrlsPayload>('setImageUrls');
 export const unzipRecords = createAction<ZipRecordsPayload>('unzipRecords');
 export const zipRecords = createAction<ZipRecordsPayload>('zipRecords');
 
-// Ownership save actions (no payload)
 export const enqueueCascadingUnstash = createAction<CascadingUnstashPayload>('cascadingUnstasher/enqueue');
 export const updateOwnerships = createAction<OwnershipPayload>('updateOwnerships');
-export const saveTutorialOwnership = createAction('saveTutorialOwnership');
-export const saveCourseOwnership = createAction('saveCourseOwnership');
-export const saveQuizOwnership = createAction('saveQuizOwnership');
