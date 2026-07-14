@@ -2,13 +2,6 @@ import { createAction } from '@reduxjs/toolkit';
 import { ParentData, ViewPayload } from '../store/slices/viewSlice';
 import { FormData, MutateEntityResponse } from './types';
 import { IncomingMessage, IncommingMessageStatus } from './commsUtils';
-import {
-  FinalizeDeletePayload,
-  FinalizeAddPayload,
-  ExtractToCpanelPayload,
-  FinalizejoinPayload,
-  FinalizeUnjoinPayload
-} from '../store/middleware/UiuxManager';
 import { AddedItem } from './DeletionManagerUtils';
 import { Status } from '../store/slices/actionSlice';
 import { OutgoingMessage, Tutor } from '../store/slices/commsSlice';
@@ -17,7 +10,6 @@ import { Quiz, Submition } from '../store/slices/quizSlice';
 import { SlideItem, Banner as CourseBanner, Pennant, SlideGroupItem } from '../store/slices/courseSlice';
 import { DataRow, Metadata } from '../components/Core/types';
 import { InitNavigatorPayload } from '../store/middleware/NavigationTrackerEFG';
-import { PayloadWithFromTo } from '../store/middleware/CrudsManager123';
 import { RestoreInteractionsPayload } from '../store/slices/interactionSlice';
 import { MergeInteractionsPayload } from '../store/slices/interactionSlice';
 import { InitInteractionsPayload } from '../store/slices/interactionSlice';
@@ -484,7 +476,6 @@ export const createMocks = createAction<string>('createMocks');
 export const showAlgorithm = createAction<string>('showAlgorithm');
 export const createOrdering = createAction<string>('createOrdering');
 export const reshowAlgorithm = createAction<ShowAlgorithmPayload>('reshowAlgorithm');
-export const draftOutgoing = createAction<PayloadWithFromTo>('draftOutgoing');
 export const deleteOverview = createAction<string>('deleteOverview');
 export const unjoinOverview = createAction<string>('unjoinOverview');
 export const joinOverview = createAction<string>('joinOverview');
@@ -501,11 +492,6 @@ export interface RezipOutgoingPayload {
 
 export const rezipOutgoing = createAction<RezipOutgoingPayload>('rezipOutgoing');
 
-export const extractToCpanel = createAction<ExtractToCpanelPayload>('extractToCpanel');
-export const finalizeUnjoin = createAction<FinalizeUnjoinPayload>('finalizeUnjoin');
-export const finalizeDelete = createAction<FinalizeDeletePayload>('finalizeDelete');
-export const finalizeAdd = createAction<FinalizeAddPayload>('finalizeAdd');
-export const finalizejoin = createAction<FinalizejoinPayload>('finalizejoin');
 export const unfinalizeDelete = createAction<string>('unfinalizeDelete');
 export const unfinalizeAdd = createAction<string>('unfinalizeAdd');
 
@@ -532,16 +518,7 @@ export type saveEditsPayload =
 export const saveEdits = createAction<saveEditsPayload>('saveEdits');
 
 // Root tags middleware actions
-export const zipOverview = createAction<PayloadWithFromTo>('zipOverview');
-export const extractMocks = createAction<PayloadWithFromTo>('extractMocks');
-export const cpanelJoiner = createAction<PayloadWithFromTo>('cpanelJoiner');
-export const shortcutJoiner = createAction<PayloadWithFromTo>('shortcutJoiner');
-export const simpleClearer = createAction<PayloadWithFromTo>('simpleClearer');
-export const simpleInverter = createAction<PayloadWithFromTo>('simpleInverter');
-export const simpleSelector = createAction<PayloadWithFromTo>('simpleSelector');
-export const cpanelUnjoiner = createAction<PayloadWithFromTo>('cpanelUnjoiner');
-export const destroyOverview = createAction<PayloadWithFromTo>('destroyOverview');
-export const simpleUnselector = createAction<PayloadWithFromTo>('simpleUnselector');
+
 
 // Initialize loading actions
 export const initTotals = createAction('initTotals');
