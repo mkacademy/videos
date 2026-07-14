@@ -10,7 +10,6 @@ import { CommsState } from './slices/commsSlice';
 import { TextState } from './slices/textSlice';
 import { RowState } from './slices/rowSlice';
 import { SettingsState } from './slices/settingsSlice';
-import { StatsState } from './slices/statsSlice';
 import { CommentsState } from './slices/commentsSlice';
 import { PlaybackState } from './slices/playbackSlice';
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
@@ -28,7 +27,6 @@ export interface RootState {
   text: TextState;
   row: RowState;
   settings: SettingsState;
-  stats: StatsState;
   comments: CommentsState;
   playback: PlaybackState;
 }
@@ -84,9 +82,6 @@ export interface CacheTotalsMiddlewareState {
   };
   search: {
     selectedRoute: SearchState['selectedRoute'];
-  };
-  stats: {
-    totals: StatsState['totals'];
   };
   pagination: {
     selectedRoutes: PaginationState['selectedRoutes'];

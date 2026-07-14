@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { getCurAppIndex, getSimplePageIndexFromSearch, signOut, userroles, timeout, getMoldsResolver, getConvSearch } from "../utils";
+import { getCurAppIndex, signOut, userroles, timeout, getMoldsResolver } from "../utils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { EntityTypeMap, ResultPayload } from "../store/slices/rowSlice";
 import { clearEscrow } from "../store/slices/viewSlice";
@@ -22,9 +22,8 @@ import {
 import { RootState } from "../store";
 import { anonymousFetch, authenticatedFetch, FetchDataPayload } from "./ThunksUtils";
 import { QueryParams } from "../store/types";
-import { Executedquery, validateThenDispatch, buildRecordStateProps, extractIDsAtRequest } from "./ThunksUtils";
+import { Executedquery, validateThenDispatch } from "./ThunksUtils";
 import { getAccountRecords, getAnonymousRecords } from "./ThunksUtils";
-import { clearIDsAtRequest, registerIDsAtRequest } from "../store/slices/statsSlice";
        
 
 
@@ -231,7 +230,6 @@ export const fetchData = createAsyncThunk<
     'fetchData',
     async (payload: FetchDataPayload, { rejectWithValue, getState, dispatch, requestId }) => {
         const state = getState() as RootState;
-        const { counts, executedQueries: inputsPayloads } = state.stats;
         const { convolution, search, webapp, fetchSequence } = payload;
         const {
             isUnzipCourses,
@@ -244,7 +242,6 @@ export const fetchData = createAsyncThunk<
         const {
             curApp,
             curToken,
-            isCleared,
             isPrivate,
             fetchRole,
             isIncognito,
@@ -265,9 +262,6 @@ export const fetchData = createAsyncThunk<
             search,
         };
         const [unzippedApp, unzippedAppName, unzippedAppConvolution] = getUnzippedApp(args);
-        const _inputsPayloads = setSkipOnExecutedQueries(args, defaultTake, inputsPayloads);
-        const recordStateProps = buildRecordStateProps(state, unzippedApp);
-        dispatch(registerIDsAtRequest({ requestId, ids: extractIDsAtRequest(recordStateProps) }));
         try {
             const isAccount = !isIncognito && curToken;
             const params = isAccount
@@ -278,12 +272,12 @@ export const fetchData = createAsyncThunk<
                     curToken,
                     isPrivate,
                     fetchRole,
+                    counts: {} ,
                     curApp: unzippedApp,
+                    executedQueries:  {} ,
                     requestTake: defaultTake,
                     convolution: unzippedAppName,
                     formatter: unzippedAppConvolution,
-                    counts: isCleared[unzippedApp] ? {} : counts,
-                    executedQueries: isCleared[unzippedApp] ? {} : _inputsPayloads,
                     path: ToolKit.authenticatedRecordsUrl,
                 }
                 : {
@@ -293,8 +287,8 @@ export const fetchData = createAsyncThunk<
                     requestTake: defaultTake,
                     convolution: unzippedAppName,
                     formatter: unzippedAppConvolution,
-                    counts: isCleared[unzippedApp] ? {} : counts,
-                    executedQueries: isCleared[unzippedApp] ? {} : _inputsPayloads,
+                    counts: {} ,
+                    executedQueries:  {} ,
                     path: ToolKit.anonymousRecordsUrl,
                 };
 
@@ -312,7 +306,6 @@ export const fetchData = createAsyncThunk<
                 state,
                 requestId,
             });
-            dispatch(clearIDsAtRequest(requestId));
             console.log(content);
             return query || {};
         } catch (error) {
@@ -322,12 +315,7 @@ export const fetchData = createAsyncThunk<
     }
 );
 
-/** Mirrors `getUnzippedApp` unzip branches: enabled + one of incoming/outgoing/both. */
-const isUnzipTypeActive = (isUnzip: boolean, unzipType: string): boolean =>
-    isUnzip &&
-    (unzipType === 'incoming_and_outgoing' ||
-        unzipType === 'incoming' ||
-        unzipType === 'outgoing');
+
 
 type UnzipFetchArgs = {
     curApp: number;
@@ -345,54 +333,7 @@ type UnzipFetchArgs = {
 
 let curskip = 0;
 export const getCurSkip = () => curskip;
-const setSkipOnExecutedQueries = (
-    args: UnzipFetchArgs,
-    defaultTake: number,
-    inputsPayloads: Record<string, Record<string, Executedquery>>
-): Record<string, Record<string, Executedquery>> => {
-    const { webapp, search, fetchSequence } = args;
-    const w = webapp.toLowerCase();
-    const applies =
-        (w === 'course' && isUnzipTypeActive(args.isUnzipCourses, args.unzipCoursesType)) ||
-        (w === 'tutorial' && isUnzipTypeActive(args.isUnzipTutorials, args.unzipTutorialsType)) ||
-        (w === 'quiz' && isUnzipTypeActive(args.isUnzipQuizzes, args.unzipQuizzesType));
-    if (fetchSequence || !applies) {
-        const searchRoutes = getConvSearch(search);
-        if (!searchRoutes || Object.keys(searchRoutes).length === 0)
-            return inputsPayloads;
 
-        const out: Record<string, Record<string, Executedquery>> = {};
-        for (const [outerKey, inner] of Object.entries(inputsPayloads)) {
-            out[outerKey] = {};
-            for (const [innerKey, q] of Object.entries(inner))
-                out[outerKey][innerKey] = { ...q };
-        }
-
-        for (const [route, csEntry] of Object.entries(searchRoutes)) {
-            if (!csEntry || typeof csEntry !== 'object' || !('skip' in csEntry)) continue;
-            const skip = (csEntry as { skip: number }).skip;
-            const queryKey = route + RECORDS;
-            for (const outerKey of Object.keys(out)) {
-                if (out[outerKey][queryKey])
-                    out[outerKey][queryKey] = { ...out[outerKey][queryKey], skip };
-            }
-        }
-        if (searchRoutes) console.log("conv_search", searchRoutes, out);
-        return out;
-    }
-    else {
-        curskip = getSimplePageIndexFromSearch(search);
-        const skip = curskip * defaultTake;
-        const out: Record<string, Record<string, Executedquery>> = {};
-        for (const [outerKey, inner] of Object.entries(inputsPayloads)) {
-            out[outerKey] = {};
-            for (const [innerKey, q] of Object.entries(inner))
-                out[outerKey][innerKey] = { ...q, skip };
-        }
-        if (curskip !== 0) console.log("simple_page", curskip, out);
-        return out;
-    }
-};
 
 let curPage = 0;
 export const setCurPage = (page: number) => (curPage = page);

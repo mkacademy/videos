@@ -6,7 +6,6 @@ import { Banner, setCourses, SlideGroup } from '../store/slices/courseSlice';
 import { IncomingMessage, OutgoingMessage, setIncomings, setOutgoings, setTutors, Tutor } from '../store/slices/commsSlice';
 import { ToolKit, RECORDS, getCurAppName, getSimplePageIndexFromSearch, orderedWebappRoutes, Tree, timeout, getCurAppIndex } from '../utils';
 import { appendRowz, ResultPayload } from '../store/slices/rowSlice';
-import { getCounts, getExecutedQueries } from '../store/slices/statsSlice';
 import { Quiz, setQuizzes } from '../store/slices/quizSlice';
 import { CpanelRow } from '../components/Core/types';
 import { QueryParams } from '../store/types';
@@ -17,7 +16,7 @@ import { RootState } from '../store';
 import { initTotals } from './actions';
 import { StatsMiddlewareState } from '../store/types';
 import { B, M, U } from '../library/commsUtils';
-import { buildRecordStateProps, type StatsPayload } from './requestIdsUtils';
+import { buildRecordStateProps} from './requestIdsUtils';   
 
 export {
     bannerPred,
@@ -73,55 +72,15 @@ interface RecordParams {
     path: string;
 }
 
-const getCachedCounts = (
-    counts: Record<string, Record<string, Record<string, number>>>, stateProps: StatsPayload) => {
-    const { webapp, selectedT, selectedC, selectedQ, quizzes, pennantz, pennants, banners, selecteds, selectedRoute, curMailer } = stateProps;
-    const app = getCurAppName(webapp);
-    return getCounts({
-        app,
-        webapp,
-        curMailer,
-        selectedT,
-        selectedC,
-        selectedQ,
-        quizzes,
-        pennantz,
-        pennants,
-        banners,
-        selecteds,
-        selectedRoute
-    }, counts)
-}
-const getCachedExecutedQueries = (
-    executedQueries: Record<string, Record<string, Executedquery>>, stateProps: StatsPayload) => {
-    const { webapp, selectedRoute, selectedT, selectedC, selectedQ, quizzes, pennantz, pennants, banners, selecteds, curMailer } = stateProps;
-    const app = getCurAppName(webapp);
-    return getExecutedQueries({
-        app,
-        webapp,
-        curMailer,
-        selectedT,
-        selectedC,
-        selectedQ,
-        quizzes,
-        pennantz,
-        pennants,
-        banners,
-        selecteds,
-        selectedRoute,
-    }, executedQueries);
-}
+
+
 const getAccountBody = async (params: RecordParams) => {
     const state = params.state;
-    const selectedRoute = state.search.selectedRoute;
     const stateProps = buildRecordStateProps(state, params.curApp);
-    const newStateProps = { ...stateProps, app: '', curMailer: params.mailer ?? -1, selectedRoute };
     const searchedRoutes = getSearchedRoutes(stateProps.webapp, state.search.routesRef.current);
-    const queries = getCachedExecutedQueries(params.executedQueries, newStateProps);
-    const counts = getCachedCounts(params.counts, newStateProps);
     const requestBody = {
-        counts,
-        queries,
+        counts: {},
+        queries: {},
         searchedRoutes,
         state: stateProps,
         mailer: params.mailer,
@@ -214,16 +173,12 @@ const getAnonymousSkeletons = async (params: RecordParams): Promise<string> => {
 }
 const getAnonymousBody = async (params: RecordParams) => {
     const state = params.state;
-    const selectedRoute = state.search.selectedRoute;
     const stateProps = buildRecordStateProps(state, params.curApp);
     stateProps.quizzes = stateProps.quizzes.map(({ id }) => ({ id }));
-    const newStateProps = { ...stateProps, app: '', curMailer: params.mailer ?? -1, selectedRoute };
     const searchedRoutes = getSearchedRoutes(stateProps.webapp, state.search.routesRef.current);
-    const queries = getCachedExecutedQueries(params.executedQueries, newStateProps);
-    const counts = getCachedCounts(params.counts, newStateProps);
     const requestBody = {
-        counts,
-        queries,
+        counts: {},
+        queries: {},
         searchedRoutes,
         state: stateProps,
         search: params.search,
