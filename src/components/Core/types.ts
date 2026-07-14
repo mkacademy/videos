@@ -150,7 +150,8 @@ export interface BaseNonFormattedData {
   checked: boolean;
   frozen: boolean;
 }
-
+/** Server-assigned IDs are positive; local IDs are zero or negative. */
+export const isServerId = (id: DataRow['id']): boolean => Number(id) > 0;
 
 export interface MenuItem {
   from: string;

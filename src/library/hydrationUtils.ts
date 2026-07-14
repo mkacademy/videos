@@ -19,7 +19,7 @@ import {
   takeFirstLegQueries,
 } from '../store/middleware/hydrationLegUtils';
 import type { IsDehydratedItem } from './controlPanelUtils';
-import { isServerId } from './ShortcutsUtils';
+import { isServerId } from '../components/Core/types';
 import {
   LOADING_DEEP_LINK_PAIRS,
   type LoadingDeepLinkPair,
