@@ -4,14 +4,9 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { EntityTypeMap, ResultPayload } from "../store/slices/rowSlice";
 import { clearEscrow } from "../store/slices/viewSlice";
 import { getGraphqlResolver, redirectUrl, ToolKit, RECORDS, Tree } from "../utils";
-import { appendRows, clearData as clearReducers } from "../store/slices/rowSlice";
+import { clearData as clearReducers } from "../store/slices/rowSlice";
 import { UpdateTextsPayload } from "../store/slices/textSlice";
 import { DataRow } from "../components/Core/types";
-import {
-    insertMetadata,
-} from "./actions";
-
-import { fetchedHandles } from "../store/slices/errorSlice";
 import { enqueueHydrationStoreUpdate } from "../store/middleware/hydrationPayloadBuffer";
 import { markHydrationAttemptedSeekIds } from "../store/middleware/hydrationQueue";
 import { SessionState } from "../store/slices/sessionSlice";
@@ -152,43 +147,6 @@ export const deHydratedRowsDataFetcher = createAsyncThunk<void, DehydratedRowsFe
     }
 );
 
-export type TabledFetcherArg = { query: QueryParams };
-
-export const tabledFetcher = createAsyncThunk<void, TabledFetcherArg, { rejectValue: string; state: RootState }>(
-    'row/tabledFetcher',
-    async ({ query }, { rejectWithValue, dispatch, getState }) => {
-        try {
-            const { isIncognito } = getState().session;
-            const { payload: data, parent: fromEntity, entity: toEntity, isAppend, keywords } = isIncognito
-                ? await anonymousFetch(query)
-                : await authenticatedFetch(query);
-            const { graphqlResolver, from, to } = getGraphqlResolver(fromEntity ?? '', toEntity ?? '');
-            const { from: moldsFrom, to: moldsTo } = getMoldsResolver(from, to);
-            const corData = data[RECORDS][graphqlResolver];
-            dispatch(appendRows({
-                entity: toEntity as keyof EntityTypeMap,
-                payload: corData[moldsTo.toLowerCase()],
-                parent: fromEntity,
-                keywords,
-                isAppend,
-            }));
-            setTimeout(() =>
-                dispatch(insertMetadata({
-                    dest: to,
-                    orig: from,
-                    data: corData[moldsFrom],
-                    interaction: true,
-                }))
-            );
-            if (corData[RECORDS])
-                setTimeout(() => dispatch(fetchedHandles(corData[RECORDS])));
-        } catch (error) {
-            if (error instanceof Error)
-                return rejectWithValue(error.message);
-            return rejectWithValue('An unknown error occurred');
-        }
-    }
-);
 
 export type BytesFetcherArg = { query: QueryParams };
 

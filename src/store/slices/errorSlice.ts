@@ -10,7 +10,6 @@ import {
   UpdatePayload,
 } from '../../library/actions';
 import { createSlice, Draft, PayloadAction } from '@reduxjs/toolkit';
-import { tabledFetcher } from '../../library/Thunks';
 import { signedOut } from '../slices/sessionSlice';
 
 
@@ -183,9 +182,6 @@ export const errorSlice = createSlice({
         updateInstructionHandleKeywords(state, action.payload);
       })
       .addCase(authenticate.rejected, (state, action) => {
-        return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
-      })
-      .addCase(tabledFetcher.rejected, (state, action) => {
         return errorSlice.caseReducers.prependError(state, { ...action, payload: action.payload as string });
       })
   }

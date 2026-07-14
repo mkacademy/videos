@@ -4,7 +4,6 @@ import { Banner as CourseBanner, SlideGroup, SlideItem, SlideGroupItem } from '.
 import { Quiz } from '../store/slices/quizSlice';
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
-import { appendRowz } from '../store/slices/rowSlice';
 import { hydrateData, hydratedThenFetch } from './actions';
 import { getHydrationDefaultTake } from '../utils';
 import { getPlural, convolutionDelay } from '../utils';
@@ -575,7 +574,7 @@ export const buildOrderedHydrationQueries = (
   } = state;
   const baseParams: QueryParams = {
     limit: { take: 10, skip: 0 },
-    type: appendRowz.type,
+    type: "row/appendRowz",
     isPrivateView: false,
     hasCounts: false,
     entity: '',

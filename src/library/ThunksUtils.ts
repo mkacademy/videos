@@ -6,7 +6,7 @@ import { Banner, SlideGroup } from './CourseUtils';
 import { setCourses } from '../store/slices/courseSlice';
 import { IncomingMessage, OutgoingMessage } from '../store/slices/commsSlice';
 import { ToolKit, RECORDS, getCurAppName, getSimplePageIndexFromSearch, orderedWebappRoutes, Tree, timeout, getCurAppIndex } from '../utils';
-import { appendRowz, ResultPayload } from '../store/slices/rowSlice';
+import { ResultPayload } from '../store/slices/rowSlice';
 import { Quiz, setQuizzes } from '../store/slices/quizSlice';
 import { CpanelRow } from '../components/Core/types';
 import { QueryParams } from '../store/types';
@@ -339,7 +339,7 @@ export const anonymousFetch = async (query: QueryParams): Promise<ResultPayload>
             payload: data,
             entity: query.entity || '',
             parent: query.parent || '',
-            isAppend: query.type === appendRowz.type
+            isAppend: query.type === "row/appendRowz"
         };
         return result;
     } catch (error) {
@@ -373,7 +373,7 @@ export const authenticatedFetch = async (query: QueryParams): Promise<ResultPayl
             payload: data,
             entity: query.entity || '',
             parent: query.parent || '',
-            isAppend: query.type === appendRowz.type
+            isAppend: query.type === "row/appendRowz"
         };
         return result;
     } catch (error) {
