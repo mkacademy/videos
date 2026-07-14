@@ -12,7 +12,6 @@ import quizReducer from './slices/quizSlice';
 import rowReducer from './slices/rowSlice';
 import searchReducer from './slices/searchSlice';
 import settingsReducer from './slices/settingsSlice';
-import stashReducer from './slices/stashSlice';
 import textReducer from './slices/textSlice';
 import tutorialReducer from './slices/tutorialSlice';
 import viewReducer from './slices/viewSlice';
@@ -34,7 +33,6 @@ export const store = configureStore({
     row: rowReducer,
     search: searchReducer,
     settings: settingsReducer,
-    stash: stashReducer,
     text: textReducer,
     tutorial: tutorialReducer,
     view: viewReducer,

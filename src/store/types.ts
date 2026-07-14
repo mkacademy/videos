@@ -12,7 +12,6 @@ import { RowState } from './slices/rowSlice';
 import { ContentState } from './slices/contentSlice';
 import { InteractionState } from './slices/interactionSlice';
 import { SettingsState } from './slices/settingsSlice';
-import { StashState } from './slices/stashSlice';
 import { StatsState } from './slices/statsSlice';
 import { CommentsState } from './slices/commentsSlice';
 import { PlaybackState } from './slices/playbackSlice';
@@ -33,7 +32,6 @@ export interface RootState {
   content: ContentState;
   interaction: InteractionState;
   settings: SettingsState;
-  stash: StashState;
   stats: StatsState;
   comments: CommentsState;
   playback: PlaybackState;
