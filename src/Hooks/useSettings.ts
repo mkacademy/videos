@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Action, UnknownAction } from "@reduxjs/toolkit";
-import { isOwnershipQueueActive } from "../store/middleware/ownershipSaveQueue";
 import {
     formatSelected,
     actionSelected,
@@ -70,7 +69,6 @@ import {
     toggleUnzipTutorials_,
     toggleUnzipCourses_,
     setStatus,
-    setAssertOwnership,
     createTutorialPresetSelected,
     createQuizPresetSelected,
     createCoursePresetSelected,
@@ -215,7 +213,6 @@ export default function useSettings({
     const urlState = useRef(location.state);
     const isStartup = urlState.current?.goBackUrl === undefined;
     const status = useSelector((state: RootState) => state.settings.status);
-    const assertOwnership = useSelector((state: RootState) => state.settings.assertOwnership);
     const createTutorialPreset = useSelector((state: RootState) => state.settings.createTutorialPreset);
     const createQuizPreset = useSelector((state: RootState) => state.settings.createQuizPreset);
     const createCoursePreset = useSelector((state: RootState) => state.settings.createCoursePreset);
@@ -266,18 +263,6 @@ export default function useSettings({
             case "toggle-assemble-texts_btn":
                 dispatcher(toggleAssembleTexts());
                 break;
-            case "assert-ownership-btn": {
-                if (isOwnershipQueueActive()) break;
-                if (assertOwnership !== true) dispatcher(setAssertOwnership(true));
-                else dispatcher(setAssertOwnership(undefined));
-                break;
-            }
-            case "unassert-ownership-btn": {
-                if (isOwnershipQueueActive()) break;
-                if (assertOwnership !== false) dispatcher(setAssertOwnership(false));
-                else dispatcher(setAssertOwnership(undefined));
-                break;
-            }
             case "pending_btn": {
                 if (status !== 0) dispatcher(setStatus(0));
                 else dispatcher(setStatus(undefined));
