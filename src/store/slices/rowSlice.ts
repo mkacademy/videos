@@ -84,7 +84,7 @@ export const appendRows = <T extends keyof EntityTypeMap>(
     dest: entity,
     orig: parent,
     content: contentFormatter?.(payload) ?? [],
-    data: dataFormatter?.(payload, links ?? []) ?? { rows: [], statuses: [], descendents: [], texts: [] },
+    data: dataFormatter?.(payload, links ?? []) ?? { rows: [], statuses: [],  texts: [] },
   };
   return isAppend ? appendRowz(formattedPayload) : prependRowz(formattedPayload);
 };

@@ -1,6 +1,5 @@
 import {
   incrementID,
-  sumsFormatter,
   textFieldsExtractor,
   states,
 } from "../../utils";
@@ -129,8 +128,7 @@ const Instruction: Instruction = {
       checked: instruction.checked ?? false,
       frozen: instruction.frozen ?? false,
     })),
-  formattedData: (instructions: DataRow[], connections: string[]) => ({
-    descendents: connections.map(sumsFormatter(instructions)),
+  formattedData: (instructions: DataRow[]) => ({
     statuses: instructions.map((instruction) => ({
       status: !instruction.status?.hasOwnProperty("initial")
         ? {

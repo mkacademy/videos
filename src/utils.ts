@@ -12,7 +12,6 @@ import {
 } from './components/Core/types';
 import { ParentData } from './store/slices/viewSlice';
 import { showInfos, tabluarPrefixes, userApps, memberApps, adminsApps } from './constants';
-import { DescendentItem } from './store/slices/decendentSlice';
 import { EntityTypeMap } from './store/slices/rowSlice';
 import { UserMockInput, BannerInput, PennantInput, StepInput, RootInput } from './library/RowMockingUtils';
 import { IncomingMessage, OutgoingMessage, Tutor } from './store/slices/commsSlice';
@@ -213,12 +212,6 @@ export function unCapitalizeFirstLetter(string: string | undefined): string {
 }
 
 
-
-export const sumsFormatter = (data: DataRow[]) => (entityName: string): DescendentItem => ({
-  sums: data.map((row) => row.descendentsSums?.[entityName] ?? 0),
-  ids: data.map((row) => row.id.toString()),
-  entity: entityName,
-});
 
 export type ConvSearch = {
   skip: number;

@@ -1,5 +1,4 @@
 import { PennantInput, BannerInput, RootInput, StepInput, UserMockInput } from "../../library/RowMockingUtils";
-import { DescendentItem } from "../../store/slices/decendentSlice";
 import { Row } from "../../store/slices/rowSlice";
 import { ParentData } from "../../store/slices/viewSlice";
 
@@ -91,7 +90,6 @@ export interface ActionItem {
 export interface BaseFormattedData<T = EntityTextProperties> {
   rows: Row[];
   statuses: ActionItem[];
-  descendents: DescendentItem[];
   texts: DataRow[] & Partial<T>;
 }
 
@@ -144,7 +142,6 @@ export type EntityTextProperties =
 export interface BaseFormattedData<T = EntityTextProperties> {
   rows: Row[];
   statuses: ActionItem[];
-  descendents: DescendentItem[];
   texts: DataRow[] & Partial<T>;
 }
 
