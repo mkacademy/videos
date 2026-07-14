@@ -2,7 +2,7 @@ import { DataRow, Metadata } from '../../components/Core/types';
 import { getSlideIndeces } from '../../library/sliceUtils';
 import { getCurAppName } from '../../utils';
 import { RootState } from '../types';
-import type { Banner, SlideGroup, SlideGroupItem, SlideItem } from '../slices/courseSlice';
+import type { Banner, SlideGroup, SlideGroupItem, SlideItem } from '../../library/CourseUtils';
 import type { QuizState } from '../slices/quizSlice';
 
 /** Matches {@link UiuxManager} `pred`: strip `checked`, set `checked: true` for stash rows. */

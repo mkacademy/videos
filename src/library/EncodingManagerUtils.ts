@@ -13,8 +13,8 @@ import {
   Pennant,
   CourseState,
   SlideItem,
-} from "../store/slices/courseSlice";
-import { Quiz, QuizState, Submition } from "../store/slices/quizSlice";
+} from "./CourseUtils";
+import { Quiz, QuizState, Submition } from "../library/QuizUtils";
 import { CourseTrees, getCourseTrees, getQuizTrees, getTutorialTrees, QuizTrees, TutorialTrees } from "./controlPanelUtils";
 import {
   removePositiveIdsFromTutorials,

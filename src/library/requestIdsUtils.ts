@@ -1,6 +1,6 @@
 import { getCurAppName } from '../utils';
 import { Banner as TutorialBanner } from '../store/slices/tutorialSlice';
-import { Banner, Pennant, SlideGroup, SlideGroupItem } from '../store/slices/courseSlice';
+import { Banner, Pennant, SlideGroup, SlideGroupItem } from './CourseUtils';
 import { Quiz } from '../store/slices/quizSlice';
 import { SelectedRoute } from '../store/slices/searchSlice';
 import { RootState } from '../store';

@@ -5,7 +5,7 @@ import type {
   SlideGroup,
   SlideGroupItem,
   SlideItem,
-} from '../store/slices/courseSlice';
+} from './CourseUtils';
 import type { CourseTrees } from './controlPanelUtils';
 import {
   findSlideRowForPennant,

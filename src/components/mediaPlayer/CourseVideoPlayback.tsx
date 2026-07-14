@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Badge, Button, Card, Spinner } from 'react-bootstrap';
 import { useDispatch } from 'react-redux';
-import type { Banner as CourseBanner, SlideGroup } from '../../store/slices/courseSlice';
+import type { Banner as CourseBanner, SlideGroup } from '../../library/CourseUtils';   
 import { getVideoAspectRatioFromInitPayload } from '../../library/mseVideoPlayback';
 import { isRenderableImageUrl } from '../../library/directoryTreeUtils';
 import {

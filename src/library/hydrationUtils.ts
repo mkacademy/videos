@@ -1,6 +1,6 @@
 import { QueryParams } from '../store/types';
 import { Banner as TutorialBanner, Content as TutorialContent } from '../store/slices/tutorialSlice';
-import { Banner as CourseBanner, SlideGroup, SlideItem, SlideGroupItem } from '../store/slices/courseSlice';
+import { Banner as CourseBanner, SlideGroup, SlideItem, SlideGroupItem } from './CourseUtils';
 import { Quiz } from '../store/slices/quizSlice';
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';

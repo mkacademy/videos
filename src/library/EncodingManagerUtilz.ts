@@ -6,7 +6,7 @@ import {
   Banner as CourseBanner,
   SlideGroup,
   SlideGroupItem,
-} from "../store/slices/courseSlice";
+} from "./CourseUtils";
 import { Quiz } from "../store/slices/quizSlice";
 
 // Helper function to check if an item should be kept based on the exception rule

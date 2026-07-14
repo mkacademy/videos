@@ -1,6 +1,6 @@
 import type { Metadata } from '../components/Core/types';
 import type { Content } from '../store/slices/tutorialSlice';
-import type { Banner as CourseBanner, Pennant, SlideGroup, SlideGroupItem } from '../store/slices/courseSlice';
+import type { Banner as CourseBanner, Pennant, SlideGroup, SlideGroupItem } from './CourseUtils';
 import { getSlideGroupItemForPennantChapterCoupling, isSlideGroupItem } from './CourseUtils';
 import {
   extractFmp4InitPayloadFromRows,

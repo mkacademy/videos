@@ -5,43 +5,19 @@ import type {
   SetQuizzesPayload,
 } from '../../library/QuizUtils';
 import {
-  applyClearFetched,
   applyCourseReducer,
   applyCreateCoursesQuizState,
-  applySetBanners,
-  applySetFollowupOptions,
   applySetQuizzes,
   applyPersistTutorialsQuizState,
-  recomputeFollowupCombinations,
   createQuizStartIdInitial,
-  applyUpdateOwnership,
 } from '../../library/QuizUtils';
 
 export type {
-  Attempt,
-  dismissAttemptPayload,
-  dismissFollowupOptionPayload,
-  dismissFollowupPayload,
-  dismissOptionPayload,
-  dismissQuestionPayload,
-  dismissQuizPayload,
-  dismissChoicePayload,
   Quiz,
   QuizState,
-  QuizStartId,
   SetQuizzesPayload,
-  Submition,
 } from '../../library/QuizUtils';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import {
-  Banner,
-  SlideItem,
-  highlightCoversBreathSelection,
-  highlightSlideBreathSelection,
-  highlightCourseBreathSelection,
-  highlightPennantBreathSelection,
-  clearSelected as clearCourseSelected,
-} from './courseSlice';
 import {
   finalizer,
   idsMerger,
@@ -65,7 +41,6 @@ import {
   updateCoversMetadata,
   updateStepsMetadata,
   updateAnswersMetadata,
-  updateOwnerships,
 } from '../../library/actions';
 const initialState: QuizState = {
   startId: createQuizStartIdInitial(),
@@ -89,63 +64,13 @@ const quizSlice = createSlice({
   name: 'quiz',
   initialState,
   reducers: {
-    toggleQuizDismissed: (state, action: PayloadAction<boolean>) => {
-      state.noQuizzes = action.payload;
-    },
-    toggleQuiz: (state, action: PayloadAction<{ selectedId?: number, canToggle?: boolean }>) => {
-      const { selectedId, canToggle = true } = action.payload;
-      const index = state.quizzes.findIndex(({ id }) => id === selectedId);
-      if (canToggle && state.selected === index) {
-        state.selected = -1;
-      } else state.selected = index;
-    },
-    setFollowupId: (state, action: PayloadAction<number | undefined>) => {
-      state.followupId = action.payload;
-      recomputeFollowupCombinations(state);
-    },
-    setRouteToggleMarks: (
-      state,
-      action: PayloadAction<{
-        greenIds: QuizState['routeToggleGreenIds'];
-        orangeMarks: QuizState['routeToggleOrangeMarks'];
-        primarySide: QuizState['routeTogglePrimarySide'];
-      }>,
-    ) => {
-      state.routeToggleGreenIds = action.payload.greenIds;
-      state.routeToggleOrangeMarks = action.payload.orangeMarks;
-      state.routeTogglePrimarySide = action.payload.primarySide;
-    },
-    clearRouteToggleMarks: (state) => {
-      state.routeToggleGreenIds = {};
-      state.routeToggleOrangeMarks = [];
-      state.routeTogglePrimarySide = null;
-    },
     setQuizzes: (state, action: PayloadAction<SetQuizzesPayload>) => {
       applySetQuizzes(state, action.payload);
-    },
-    setBanners: (state, action: PayloadAction<{ banners: Banner[] }>) => {
-      applySetBanners(state, action.payload.banners);
-    },
-    setFollowupOptions: (state, action: PayloadAction<{ content: SlideItem[][] }>) => {
-      applySetFollowupOptions(state, action.payload.content);
-    },
-
-
-
-    clearFetched: (state, action: PayloadAction<boolean>) => {
-      applyClearFetched(state, action.payload);
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(signedOut, () => initialState)
-      .addCase(clearCourseSelected, (state, action) => {
-        if (action.payload.route === "dashboardssifters") {
-          const { banners, content } = applyCourseReducer(state, action);
-          state.banners = banners || state.banners;
-          state.content = content || state.content;
-        }
-      })
       .addCase(updateQuizzes, (state, action) => {
         const { quizzes } = state;
         const nState = quizzes.map(quiz => ({
@@ -258,39 +183,12 @@ const quizSlice = createSlice({
         const { content } = applyCourseReducer(state, action);
         if (content) state.content = content;
       })
-      .addCase(highlightCourseBreathSelection, (state, action) => {
-        const { content } = applyCourseReducer(state, action);
-        if (content) state.content = content;
-      })
-      .addCase(highlightSlideBreathSelection, (state, action) => {
-        const { content } = applyCourseReducer(state, action);
-        if (content) state.content = content;
-      })
-      .addCase(highlightPennantBreathSelection, (state, action) => {
-        const { banners } = applyCourseReducer(state, action);
-        if (banners) state.banners = banners;
-      })
-      .addCase(highlightCoversBreathSelection, (state, action) => {
-        const { content } = applyCourseReducer(state, action);
-        if (content) state.content = content;
-      })
-      .addCase(updateOwnerships, (state, action) => {
-        applyUpdateOwnership(state, action.payload);
-      })
 
   },
 });
 
 export const {
-  toggleQuizDismissed,
-  toggleQuiz,
   setQuizzes,
-  clearFetched,
-  setBanners,
-  setFollowupOptions,
-  setFollowupId,
-  setRouteToggleMarks,
-  clearRouteToggleMarks,
 } = quizSlice.actions;
 
 export default quizSlice.reducer; 

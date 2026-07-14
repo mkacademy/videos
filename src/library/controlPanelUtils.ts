@@ -1,8 +1,7 @@
-
-import { SlideGroup, SlideGroupItem } from '../store/slices/courseSlice';
+import { SlideGroup, SlideGroupItem } from './CourseUtils';
 import type { Banner as TutorialBanner, Content as TutorialContent } from './TutorialUtils';
 import { Quiz } from '../store/slices/quizSlice';
-import { Banner as CourseBanner } from '../store/slices/courseSlice';
+import { Banner as CourseBanner } from './CourseUtils';
 
 
 export interface IsDehydratedItem {

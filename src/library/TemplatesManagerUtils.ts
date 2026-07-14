@@ -9,7 +9,7 @@ import {
   SlideGroup,
   SlideGroupItem,
   SlideItem,
-} from "../store/slices/courseSlice";
+} from "./CourseUtils";
 import { Quiz } from "../store/slices/quizSlice";
 import { CourseTrees, QuizTrees, TutorialTrees } from "./controlPanelUtils";
 import { flushCourseTrees, flushQuizTrees, flushTutorialTrees } from "./controlPanelUtilz";

@@ -3,7 +3,7 @@ import { jwtDecode } from 'jwt-decode';
 import { calcBytes, uniqueAliases } from '../utils';
 import { UpdatePayload, OrdinalUpdate, MetadataUpdate } from './actions';
 import type { Pennant, SlideItem, Banner as CourseBanner, SlideGroupItem, SlideGroup } from './CourseUtils';
-import { Quiz, Submition } from '../store/slices/quizSlice';
+import { Quiz, Submition } from './QuizUtils';
 import type { Banner, Content } from './TutorialUtils';
 
 // Type definitions

@@ -1,5 +1,5 @@
-import { QuizState, Quiz, Submition } from "../store/slices/quizSlice";
-import { CourseState, Banner as CourseBanner, Pennant, SlideItem, SlideGroup, SlideGroupItem } from "../store/slices/courseSlice";
+import { QuizState, Quiz, Submition } from "../library/QuizUtils";
+import { CourseState, Banner as CourseBanner, Pennant, SlideItem, SlideGroup, SlideGroupItem } from "./CourseUtils";
 import { TutorialState, Banner as TutorialBanner, Content as TutorialContent } from "../store/slices/tutorialSlice";
 import { CourseTrees, QuizTrees, TutorialTrees } from "../library/controlPanelUtils";
 

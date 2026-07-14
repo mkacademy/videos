@@ -1,4 +1,4 @@
-import type { Banner as CourseBanner, SlideGroup, SlideItem } from '../../store/slices/courseSlice';
+import type { Banner as CourseBanner, SlideGroup, SlideItem } from '../../library/CourseUtils';
 import type { Banner as TutorialBanner, Content as TutorialContent } from '../../store/slices/tutorialSlice';
 import type { Quiz } from '../../store/slices/quizSlice';
 import type { UpdatePayload } from '../../library/actions';
