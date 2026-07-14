@@ -302,17 +302,6 @@ export const settingsSlice = createSlice({
     randomizedTypeSelected: (state, action: PayloadAction<'both' | 'Imageurls' | 'details'>) => {
       state.randomizedType = action.payload;
     },
-    toggleRoutes: (state, action: PayloadAction<{ action: string; selecteds: string[] }>) => {
-      const { action: actionType, selecteds } = action.payload;
-      const { selectedRoutes: routes } = state;
-      if (actionType === 'row/clearData') {
-        const pred = (s: string) => selecteds.indexOf(s) === -1;
-        state.selectedRoutes = routes.filter(pred);
-      } else if (actionType === 'row/selectAll') {
-        const selectedRoutes = new Set([...routes, ...selecteds]);
-        state.selectedRoutes = [...selectedRoutes];
-      }
-    },
     toggleUnzipCourses: (state, action: PayloadAction<boolean | undefined>) => {
       if (action.payload !== undefined) state.isUnzipCourses = action.payload;
       else state.isUnzipCourses = !state.isUnzipCourses;
@@ -349,33 +338,10 @@ export const settingsSlice = createSlice({
     completedUnzipping: (state, action: PayloadAction<boolean>) => {
       state.isNotUnzipping = action.payload;
     },
-    completedSkeletons: (state, action: PayloadAction<boolean>) => {
-      state.isNotSkeletons = action.payload;
-    },
     addUnzippedTrees: (state, action: PayloadAction<unzippedTrees>) => {
       state.unzippedTrees.push(action.payload);
     },
-    clearTypeSelected: (state) => {
-      state.clearType = !state.clearType;
-    },
-    setAssertOwnership: (state, action: PayloadAction<boolean | undefined>) => {
-      state.assertOwnership = action.payload;
-    },
-    switchToMinimunFeature: (state) => {
-      state.isUnzipTutorials = state.isUnzipTutorials_;
-      state.isUnzipCourses = state.isUnzipCourses_;
-      state.isUnzipQuizzes = state.isUnzipQuizzes_;
-      state.editMode = false;
-    },
-    switchToMaximunFeature: (state) => {
-      state.isUnzipTutorials_ = state.isUnzipTutorials;
-      state.isUnzipCourses_ = state.isUnzipCourses;
-      state.isUnzipQuizzes_ = state.isUnzipQuizzes;
-      state.isUnzipTutorials = false;
-      state.isUnzipCourses = false;
-      state.isUnzipQuizzes = false;
-      state.editMode = false;
-    },
+
   },
   extraReducers: (builder) => {
     builder
@@ -425,17 +391,12 @@ export const {
   unzipCoursesTypeSelected,
   unzipTutorialsTypeSelected,
   unzipQuizzesTypeSelected,
-  clearTypeSelected,
   completedUnzipping,
-  completedSkeletons,
   clearContentTypeSelected,
   addUnzippedTrees,
-  switchToMinimunFeature,
-  switchToMaximunFeature,
   toggleUnzipCourses_,
   toggleUnzipTutorials_,
   toggleUnzipQuizzes_,
-  setAssertOwnership,
   toggleShouldHydrate,
   randomizedTypeSelected,
 } = settingsSlice.actions;
