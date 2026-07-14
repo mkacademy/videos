@@ -1,15 +1,11 @@
 import { Middleware, UnknownAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import {
-  initializedLoading,
-} from "../slices/sessionSlice";
-import { hydrateData, hydratedThenFetch } from '../../library/actions';
-import { appendRowz } from "../slices/rowSlice";
-import { EntityTypeMap } from '../slices/rowSlice';
+  hydrateData, hydratedThenFetch } from '../../library/actions';
 import { viewPayload, viewRequest } from '../slices/viewSlice';
-import { Tree as entities, ADD_ROWS, getInteractionIDs, getCurAppName, getPlural } from "../../utils";
+import { getCurAppName, getPlural } from "../../utils";
 import { abortIfHydrationDisabled, handleHydrationLogic } from '../../library/hydrationUtils';
-import { BaseFormattedData, DataRow } from '../../components/Core/types';
+import { DataRow } from '../../components/Core/types';
 import { setTutorials } from '../slices/tutorialSlice';
 import { setCourses } from '../slices/courseSlice';
 import { setQuizzes } from '../slices/quizSlice';
@@ -32,7 +28,7 @@ import { prependError } from '../slices/errorSlice';
 
 
 let queue: QueueItem[] = [];
-export interface QueueItem { item: NodeJS.Timeout | DataRow[], curApp: number }
+export interface QueueItem { item: ReturnType<typeof setTimeout> | DataRow[], curApp: number }
 export const setQueue = (item: QueueItem) => {
   queue.push(item);
 };
@@ -50,52 +46,6 @@ const getCpanelMessage = (webapp: string, remaining: number): string =>
   getHydrationCpanelMessage(webapp, remaining, getHydrationLegProgress());
 
 const controlPanel: Middleware<{}, RootState> = ({ dispatch, getState }) => (next) => (action) => {
-  if (initializedLoading.match(action)) {
-    const { payload } = action;
-
-    const {
-      parent,
-      entity,
-      urlData,
-      rootIDS,
-      operation,
-      insertedRows,
-      ...initializeData
-    } = payload;
-
-    if (urlData && insertedRows && insertedRows.length > 0) {
-      const { parentID, childID } = getInteractionIDs(parent!, entity!);
-      const fetchedData = insertedRows.map((row: DataRow, i: number) => ({
-        ...row,
-        metadata: {
-          ordinal: i,
-          [childID as string]: row.id,
-          [parentID as string]: operation === ADD_ROWS ? [] : rootIDS,
-          owner: false,
-        },
-      }));
-      const links = entities.getProperty(entity!, "connections") as string[];
-      dispatch(appendRowz({
-        operation,
-        orig: parent,
-        keywords: [],
-        GUID: urlData,
-        dest: entity ?? '',
-        content: entities.getProperty(entity!, "nonFormattedData")?.(fetchedData) as DataRow[],
-        data: entities.getProperty(entity!, "formattedData")?.(fetchedData, links) as BaseFormattedData<EntityTypeMap[keyof EntityTypeMap]>,
-      }));
-    }
-
-    if (parent && entity) {
-      return next(initializedLoading({ ...initializeData, entity, parent }));
-    } else if (entity) {
-      return next(initializedLoading({ ...initializeData, entity }));
-    } else if (parent) {
-      return next(initializedLoading({ ...initializeData, parent }));
-    } else {
-      return next(initializedLoading(initializeData));
-    }
-  }
   if (setTutorials.match(action)) {
     const { Trees, content, banners, TreesId } = action.payload;
     const { content: flushedContent, banners: flushedBanners } = flushTutorialTrees(Trees);

@@ -12,7 +12,6 @@ import {
   toggleUnzipCourses,
   toggleUnzipQuizzes,
   toggleUnzipTutorials,
-  toggleShouldHydrate,
   unzipCoursesTypeSelected,
   unzipTutorialsTypeSelected,
   unzipQuizzesTypeSelected,
@@ -122,7 +121,6 @@ const LoadingAnimation: React.FC = () => {
 
     if (fetchJustCompleted && !hasTriggeredUnzip.current) {
       hasTriggeredUnzip.current = true;
-      dispatch(toggleShouldHydrate());
       setTimeout(() => dispatch(UnzipAndHydrate()));
     }
   }, [isNotUnzipping, foundPairs, hasTreeParams, dispatch]);

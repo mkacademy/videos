@@ -81,7 +81,7 @@ const initialSettings: SettingsState = {
   clearContentType: "tutorial",
   isNotUnzipping: true,
   includeBase64: false,
-  shouldHydrate: false,
+  shouldHydrate: true,
   randomizedType: 'both',
 };
 

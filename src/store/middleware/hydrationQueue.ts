@@ -5,7 +5,6 @@ import { deHydratedRowsDataFetcher } from '../../library/Thunks';
 import { QueryParams } from '../types';
 import { RootState, store } from '../index';
 import { hydrateData } from '../../library/actions';
-import { resetHydrationQueries } from '../slices/sessionSlice';
 import { cpanelMessage } from '../slices/viewSlice';
 import {
   flushHydrationStoreBuffer,
@@ -112,21 +111,6 @@ const resetHydrationQueueState = (): void => {
   resetHydrationStoreBuffer();
   clearActiveWebapp();
   bindHydrationAttemptScope(null);
-};
-
-export const clearHydrationQueue = (): void => {
-  resetCurrentLegQueueState();
-  hydrationQueue = [];
-  hydrationQueueActive = false;
-  hydrationCancelled = true;
-  resetLegSessionState();
-  flushHydrationStoreBuffer();
-  store.dispatch(resetHydrationQueries());
-  bindHydrationAttemptScope(null);
-  if (batchInFlight === 0) {
-    hydrationCancelled = false;
-    clearActiveWebapp();
-  }
 };
 
 const dispatchBatch = (

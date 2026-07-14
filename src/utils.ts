@@ -406,12 +406,11 @@ export const incrementID = (): number => globalVars.globallyUniqueIDs--;
 export const redirectUrl = (ingredients: CookIngredientsProps | undefined): void => {
   globalVars.ingredients = ingredients;
 };
-export const signOut = (value: boolean): string => {
+export const signOut = (): string => {
   globalVars.ingredients = undefined;
   globalVars.globallyUniqueIDs = -1;
   take = 10;
   deleteShowInfos();
-  resetVistedRoutes(value);
   return "session/signedOut";
 };
 

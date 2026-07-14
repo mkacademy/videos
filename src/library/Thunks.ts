@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { getCurAppIndex, signOut, userroles, timeout, getMoldsResolver } from "../utils";
+import { getCurAppIndex, userroles, timeout, getMoldsResolver } from "../utils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { EntityTypeMap, ResultPayload } from "../store/slices/rowSlice";
 import { clearEscrow } from "../store/slices/viewSlice";
@@ -14,7 +14,7 @@ import {
 import { fetchedHandles } from "../store/slices/errorSlice";
 import { enqueueHydrationStoreUpdate } from "../store/middleware/hydrationPayloadBuffer";
 import { markHydrationAttemptedSeekIds } from "../store/middleware/hydrationQueue";
-import { InitializedLoadingPayload } from "../store/slices/sessionSlice";
+import { SessionState } from "../store/slices/sessionSlice";
 import {
     CustomJwtPayload,
     AuthPayload,
@@ -27,11 +27,9 @@ import { getAccountRecords, getAnonymousRecords } from "./ThunksUtils";
        
 
 
-export const authenticate = createAsyncThunk<InitializedLoadingPayload, AuthPayload, { rejectValue: string }>(
+export const authenticate = createAsyncThunk<Partial<SessionState>, AuthPayload, { rejectValue: string }>(
     'authenticate',
-    async (payload: AuthPayload, { rejectWithValue, dispatch, getState }) => {
-        const state = getState() as RootState;
-        const { pauseFetchers } = state.session;
+    async (payload: AuthPayload, { rejectWithValue, dispatch }) => {
         const {
             email,
             password,
@@ -70,7 +68,6 @@ export const authenticate = createAsyncThunk<InitializedLoadingPayload, AuthPayl
                 console.log("authenticate_roles", roles);
                 dispatch(clearReducers());
                 dispatch(clearEscrow());
-                dispatch({ type: signOut(pauseFetchers) });
                 redirectUrl(ingredients);
                 const session = {
                     quota,

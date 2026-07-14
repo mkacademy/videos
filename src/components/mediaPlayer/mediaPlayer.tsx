@@ -64,7 +64,6 @@ const MediaPlayerAccountButton: React.FC = () => {
   const dispatch = useDispatch();
   const { pathname, search } = useLocation();
   const authenticated = useSelector((state: RootState) => state.session.authenticated);
-  const pauseFetchers = useSelector((state: RootState) => state.session.pauseFetchers);
   const loginSearch = createSearchParams({ redirectUrl: pathname + search }).toString();
 
   const handleAccountClick = (e: React.MouseEvent) => {
@@ -72,7 +71,7 @@ const MediaPlayerAccountButton: React.FC = () => {
     e.preventDefault();
     dispatch(clearReducers());
     dispatch(clearEscrow());
-    dispatch({ type: signOut(pauseFetchers) });
+    dispatch({ type: signOut() });
   };
 
   return (
