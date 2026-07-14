@@ -9,7 +9,6 @@ import { Banner as TutorialBanner, Content } from '../store/slices/tutorialSlice
 import { Quiz, Submition } from '../store/slices/quizSlice';
 import { SlideItem, Banner as CourseBanner, Pennant, SlideGroupItem } from '../store/slices/courseSlice';
 import { DataRow, Metadata } from '../components/Core/types';
-import { InitNavigatorPayload } from '../store/middleware/NavigationTrackerEFG';
 import { RestoreInteractionsPayload } from '../store/slices/interactionSlice';
 import { MergeInteractionsPayload } from '../store/slices/interactionSlice';
 import { InitInteractionsPayload } from '../store/slices/interactionSlice';
@@ -463,7 +462,6 @@ export const urlGuidMismatch = createAction('urlGuidMismatch');
 export const matchKeyword = createAction<string>('matchKeyword');
 export const unmatchKeyword = createAction<string>('unmatchKeyword');
 export const accountMutation = createAction<FormData>('accountMutation');
-export const initNavigator = createAction<InitNavigatorPayload>('initNavigator');
 export const selectTraversal = createAction<InitLoadingPayload>('selectTraversal');
 export const hydrateRows = createAction<ResultPayload>('hydrateRows');
 export const hydrateData = createAction<number>('hydrateData');
