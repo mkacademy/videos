@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 import sessionReducer from './slices/sessionSlice';
 import commsReducer from './slices/commsSlice';
-import contentReducer from './slices/contentSlice';
 import statsReducer from './slices/statsSlice';
 import errorReducer from './slices/errorSlice';
 import interactionReducer from './slices/interactionSlice';
@@ -23,7 +22,6 @@ export const store = configureStore({
   reducer: {
     session: sessionReducer,
     comms: commsReducer,
-    content: contentReducer,
     stats: statsReducer,
     error: errorReducer,
     interaction: interactionReducer,

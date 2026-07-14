@@ -9,7 +9,6 @@ import { TutorialState } from './slices/tutorialSlice';
 import { CommsState } from './slices/commsSlice';
 import { TextState } from './slices/textSlice';
 import { RowState } from './slices/rowSlice';
-import { ContentState } from './slices/contentSlice';
 import { InteractionState } from './slices/interactionSlice';
 import { SettingsState } from './slices/settingsSlice';
 import { StatsState } from './slices/statsSlice';
@@ -29,7 +28,6 @@ export interface RootState {
   search: SearchState;
   text: TextState;
   row: RowState;
-  content: ContentState;
   interaction: InteractionState;
   settings: SettingsState;
   stats: StatsState;
