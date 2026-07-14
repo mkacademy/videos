@@ -101,31 +101,6 @@ export const rowSlice = createSlice({
   name: 'row',
   initialState,
   reducers: {
-    toggleRow: (state, action: PayloadAction<string>) => {
-      return state.map((row) => ({
-        ...row,
-        checked: action.payload === row.id ? !row.checked : row.checked,
-      }));
-    },
-    selectRows: (state, action: PayloadAction<Partial<Row>[]>) => {
-      if (action.payload.length === 0) return state;
-      const patchById = new Map(
-        action.payload.filter((p): p is Partial<Row> & { id: string } => p.id != null).map((p) => [p.id, p])
-      );
-      return state.map((row) => {
-        const patch = patchById.get(row.id);
-        return patch ? { ...row, ...patch } : row;
-      });
-    },
-    unselectAll: (state) => {
-      return state.map((r) => ({
-        ...r,
-        checked: r.frozen ? r.checked : false,
-      }));
-    },
-    selectAll: (state) => {
-      return state.map((row) => ({ ...row, checked: true }));
-    },
     prependRowz: (state, action: PayloadAction<FormattedRowsPayload>) => {
       const affirm = (r: Row) => (R: Row) => R.id === r.id;
       if (!action.payload?.data?.rows) return state;
@@ -158,20 +133,6 @@ export const rowSlice = createSlice({
         .concat(invisibles.filter((r) => !appendedIds.has(r.id)))
         .sort((a, b) => a.order - b.order);
     },
-    removeRows: (state, action: PayloadAction<string[]>) => {
-      const removeIds = new Set(action.payload);
-      const rouws = state.filter((r) => !removeIds.has(r.id));
-      return rouws.map((row, i) => ({ ...row, index: i }));
-    },
-    updateIds: (state, action: PayloadAction<string[]>) => {
-      const ids = action.payload;
-      return state.map((row) => {
-        const i = ids.findIndex((id: string) => id === row.id);
-        return i !== -1 && i % 2 === 0
-          ? { ...row, ...{ id: ids[i + 1] } }
-          : { ...row };
-      });
-    },
     clearData: () => {
       console.log("cleared_rows");
       return [];
@@ -180,14 +141,8 @@ export const rowSlice = createSlice({
 });
 
 export const {
-  toggleRow,
-  selectRows,
-  unselectAll,
-  selectAll,
   prependRowz,
   appendRowz,
-  removeRows,
-  updateIds,
   clearData,
 } = rowSlice.actions;
 

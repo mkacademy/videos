@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { clearData, updateIds, removeRows } from './rowSlice';
+import { clearData } from './rowSlice';
 
 import { calcBytes } from '../../utils';
 import { DataRow, DatabaseTableProps, Metadata, TabulatorProps } from '../../components/Core/types';
@@ -59,27 +59,6 @@ export const textSlice = createSlice({
       .addCase(clearData, () => {
         console.log("cleared_texts");
         return [];
-      })
-      // Handle updateIds from rowSlice
-      .addCase(updateIds, (state, action) => {
-        const ids = action.payload;
-        return state.map((row) => {
-          const i = ids.findIndex((id: string) => id === row.id);
-          return i !== -1 && i % 2 === 0
-            ? {
-                ...row,
-                id: ids[i + 1],
-                modified: false,
-                sizeInBytes: calcBytes(row),
-              }
-            : { ...row };
-        });
-      })
-      // Handle removeRows from rowSlice
-      .addCase(removeRows, (state, action) => {
-        const ids = action.payload;
-        const pred = (r: DataRow) => (ID: string) => ID === r.id;
-        return state.filter((t) => ids.findIndex(pred(t)) === -1);
       })
   },
 });

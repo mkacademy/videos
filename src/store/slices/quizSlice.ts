@@ -1,14 +1,11 @@
 import { signedOut } from './sessionSlice';
 import type {
-  Quiz,
   QuizState,
   SetQuizzesPayload,
 } from '../../library/QuizUtils';
 import {
   applyCourseReducer,
-  applyCreateCoursesQuizState,
   applySetQuizzes,
-  applyPersistTutorialsQuizState,
   createQuizStartIdInitial,
 } from '../../library/QuizUtils';
 
@@ -19,22 +16,13 @@ export type {
 } from '../../library/QuizUtils';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
-  finalizer,
-  idsMerger,
   textsMerger,
 } from '../../library/sliceUtils';
 import {
-  createSteps,
-  createCourses,
-  persistQuizzes,
-  persistTutorials,
-  createTutorials,
-  persistSteps,
   updateQuizzes,
   updateCourses,
   updateTutorials,
   updateSteps,
-  createQuizzes,
   updateQuestionsMetadata,
   updateQuizMetadata,
   updatePennantsMetadata,
@@ -99,52 +87,6 @@ const quizSlice = createSlice({
         state.banners = banners || state.banners;
       })
       .addCase(updateSteps, (state, action) => {
-        const { content } = applyCourseReducer(state, action);
-        state.content = content || state.content;
-      })
-      .addCase(createSteps, (state, action) => {
-        const { content } = applyCourseReducer(state, action);
-        state.content = content || state.content;
-      })
-      .addCase(createTutorials, (state, action) => {
-        // Update quizzes (quiz-specific logic)
-        const { quizzes } = state;
-        const nState = quizzes.map(({ pennants, ...fields }) => ({
-          pennants: pennants.map(pennant => idsMerger(action.payload, "id")(pennant)),
-          ...fields,
-        }));
-        state.quizzes = nState;
-        // Update banners and content using courseReducer
-        const { banners, content } = applyCourseReducer(state, action);
-        state.banners = banners || state.banners;
-        state.content = content || state.content;
-      })
-      .addCase(createCourses, (state, action) => {
-        applyCreateCoursesQuizState(state, action);
-      })
-      .addCase(createQuizzes, (state, action) => {
-        const { quizzes } = state;
-        const nState = quizzes.map(quiz => idsMerger(action.payload, "id")(quiz));
-        const nState0 = nState.map(quiz => idsMerger(action.payload, "dashboardId")(quiz));
-        const nState1 = nState0.map(item => {
-          const { pennants, ...fields } = item;
-          return {
-            ...fields,
-            pennants: pennants.map(pennant => idsMerger(action.payload, "bannerId")(pennant))
-          } as Quiz;
-        });
-        state.quizzes = nState1;
-      })
-      .addCase(persistQuizzes, (state, action) => {
-        const { quizzes } = state;
-        const finalized = action.payload.map(({ id, modified }) => ({ id: parseInt(id), modified })).map(finalizer);
-        const nState = quizzes.map(textsMerger(finalized));
-        state.quizzes = nState;
-      })
-      .addCase(persistTutorials, (state, action) => {
-        applyPersistTutorialsQuizState(state, action);
-      })
-      .addCase(persistSteps, (state, action) => {
         const { content } = applyCourseReducer(state, action);
         state.content = content || state.content;
       })
