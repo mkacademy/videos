@@ -1,9 +1,7 @@
 import { Middleware, ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
-import { enqueueCascadingUnstash, updateSteps } from '../../library/actions';
+import {  updateSteps } from '../../library/actions';
 import { bytesFetcher } from '../../library/Thunks';
 import { AppDispatch, RootState } from '../types';
-import { prependError as insertError } from '../slices/errorSlice';
-import { getStashCellRows } from '../slices/stashSlice';
 import {
   updateChunkBuffer,
   setChunkFetchInFlight,
@@ -13,17 +11,8 @@ import {
   findNextChunkBufferEntryToFetch,
   resolvePlaybackWebapp,
   resumeChunkBufferFetchIfNeeded,
-  chains,
-  ChainState,
-  createChainId,
-  dispatchHighlightForFreight,
-  dispatchCascadingUnstash,
-  expectedFulfilledType,
-  startCascadingLeg,
 } from './cascadingUnstasherUtils';
 import { UpdateTextsPayload } from '../slices/textSlice';
-
-export { dispatchCascadingUnstash };
 
 const cascadingUnstasher: Middleware<{}, RootState> =
   ({ dispatch, getState }) =>
@@ -68,43 +57,8 @@ const cascadingUnstasher: Middleware<{}, RootState> =
           resumeChunkBufferFetchIfNeeded(dispatch as AppDispatch, getState);
           return result;
         }
-        if (enqueueCascadingUnstash.match(action)) {
-          const { freights, restoreFormatter, postUnstashHydration } = action.payload;
-          if (freights.length === 0) return next(action);
-          const stash = getState().stash;
-          const missing = freights.find(
-            ({ approute, timestamp }) => !getStashCellRows(stash[approute]?.[timestamp]).length
-          );
-          if (missing) {
-            const errorMsg = `missing stash segment for ${missing.approute} @ ${missing.timestamp}`;
-            return next(insertError(errorMsg));
-          }
-          const chainId = createChainId();
-          const chain: ChainState = { freights, index: 0, restoreFormatter, postUnstashHydration };
-          chains.set(chainId, chain);
-          startCascadingLeg(dispatch as AppDispatch, getState, chainId, chain);
-          return next(action);
-        }
 
-        let afterCommit: (() => void) | undefined;
-        if (typeof action === 'object' && action !== null && 'type' in action) {
-          const fulfilledType = (action as UnknownAction).type;
-          for (const [chainId, chain] of chains.entries()) {
-            const current = chain.freights[chain.index];
-            if (!current) continue;
-            const expected = expectedFulfilledType(current);
-            if (expected !== fulfilledType) continue;
-            const completing = current;
-            chain.index += 1;
-            afterCommit = () => {
-              dispatchHighlightForFreight(dispatch as AppDispatch, getState, completing);
-              startCascadingLeg(dispatch as AppDispatch, getState, chainId, chain);
-            };
-            break;
-          }
-        }
         const result = next(action);
-        if (afterCommit) afterCommit();
         return result;
       };
 

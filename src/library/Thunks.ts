@@ -1064,7 +1064,7 @@ export const fetchData = createAsyncThunk<
                     path: ToolKit.anonymousRecordsUrl,
                 };
 
-            console.log("recordsHook_fired", params);
+            console.log("recordsHook_fired");
             const content = isAccount
                 ? await getAccountRecords(params)
                 : await getAnonymousRecords(params);
