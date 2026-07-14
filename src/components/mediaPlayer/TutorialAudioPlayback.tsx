@@ -16,6 +16,7 @@ import { clearChunkBuffer, updateChunkBuffer } from '../../store/slices/playback
 import AudioWaveformPlayer from './AudioWaveformPlayer';
 import { useAudioChunkPlayer } from './useAudioChunkPlayer';
 import Comments from '../views/Comments';
+import MediaScreenSwitcher from '../MediaScreenSwitcher';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 type TutorialAudioPlaybackProps = {
@@ -26,7 +27,6 @@ type TutorialAudioPlaybackProps = {
   selectedTutorialGroup: TutorialVideoBannerEntry[];
   autoPlay: boolean;
   onChangeMedia: () => void;
-  onExit: () => void;
   tabs: React.ReactNode;
 };
 
@@ -38,7 +38,6 @@ const TutorialAudioPlayback: React.FC<TutorialAudioPlaybackProps> = ({
   selectedTutorialGroup,
   autoPlay,
   onChangeMedia,
-  onExit,
   tabs,
 }) => {
   const dispatch = useDispatch();
@@ -163,9 +162,7 @@ const TutorialAudioPlayback: React.FC<TutorialAudioPlaybackProps> = ({
           </p>
         </div>
         <div className={styles['headerActions']}>
-          <Button variant="outline-secondary" onClick={onExit}>
-            Exit
-          </Button>
+          <MediaScreenSwitcher />
           <Button variant="link" className={styles['changeMediaLink']} onClick={onChangeMedia}>
             Change audio
           </Button>

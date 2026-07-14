@@ -18,6 +18,7 @@ import {
 import { clearChunkBuffer, updateChunkBuffer } from '../../store/slices/playbackSlice';
 import { useVideoChunkPlayer } from './useVideoChunkPlayer';
 import Comments from '../views/Comments';
+import MediaScreenSwitcher from '../MediaScreenSwitcher';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 type CourseVideoPlaybackProps = {
@@ -29,7 +30,6 @@ type CourseVideoPlaybackProps = {
   selectedCourseSlideGroup: SlideGroup;
   autoPlay: boolean;
   onChangeMedia: () => void;
-  onExit: () => void;
   onPlaylistFinished: () => void;
   tabs: React.ReactNode;
 };
@@ -43,7 +43,6 @@ const CourseVideoPlayback: React.FC<CourseVideoPlaybackProps> = ({
   selectedCourseSlideGroup,
   autoPlay,
   onChangeMedia,
-  onExit,
   onPlaylistFinished,
   tabs,
 }) => {
@@ -280,9 +279,7 @@ const CourseVideoPlayback: React.FC<CourseVideoPlaybackProps> = ({
           </p>
         </div>
         <div className={styles['headerActions']}>
-          <Button variant="outline-secondary" onClick={onExit}>
-            Exit
-          </Button>
+          <MediaScreenSwitcher />
           <Button variant="link" className={styles['changeMediaLink']} onClick={onChangeMedia}>
             Change video
           </Button>

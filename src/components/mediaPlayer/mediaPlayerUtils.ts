@@ -271,14 +271,3 @@ export function exportCourseVideoBanner(
     [...contentGroups],
   );
 }
-
-export function getConvolutionExitPath(tab: MediaPlayerTab): string {
-  switch (tab) {
-    case 'tutorial':
-      return '/convolution/tutorial';
-    case 'quiz':
-      return '/convolution/quiz';
-    default:
-      return '/convolution/course';
-  }
-}

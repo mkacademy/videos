@@ -1,14 +1,13 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, Button, Card, Container, Form, ListGroup, Nav, ProgressBar, Spinner } from 'react-bootstrap';
 import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { RootState } from '../../store';
 import {
-  getConvolutionExitPath,
   resolveMediaPlayerTab,
   type MediaPlayerTab,
 } from '../mediaPlayer/mediaPlayerUtils';
-import { navigateConvolutionOrWarn, stickyFsqFromState } from '../../library/convolutionNavSearch';
+import MediaScreenSwitcher from '../MediaScreenSwitcher';
 import { estimateProcessing, formatFileSize, formatTimestamp } from './estimateProcessing';
 import { analyzeFormat } from './formatUtils';
 import { analyzeAudioFormat, isValidAudioFile } from './audioFormatUtils';
@@ -146,10 +145,8 @@ const MediaPrepperTabs: React.FC<{
 
 const MediaPrepper: React.FC = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const curApp = useSelector((state: RootState) => state.session.curApp);
-  const stickyFsq = useSelector((state: RootState) => stickyFsqFromState(state));
   const quizQuizzes = useSelector((state: RootState) => state.quiz.quizzes);
   const quizBanners = useSelector((state: RootState) => state.quiz.banners);
   const tabParam = searchParams.get('tab');
@@ -985,11 +982,6 @@ const MediaPrepper: React.FC = () => {
 
   const isBusy = uiState === 'probing' || uiState === 'loading-ffmpeg' || uiState === 'processing' || uiState === 'importing';
 
-  const handleExit = () => {
-    previewVideoRef.current?.pause();
-    navigateConvolutionOrWarn(dispatch, navigate, getConvolutionExitPath(activeTab), undefined, stickyFsq);
-  };
-
   const tabSubtitle = activeTab === 'tutorial'
     ? 'Pick an audio file, trim it, and import it into tutorials as MP3 chunks.'
     : activeTab === 'course'
@@ -1013,9 +1005,9 @@ const MediaPrepper: React.FC = () => {
           <h1 className={styles['title']}>Media Prepper</h1>
           <p className={styles['subtitle']}>{tabSubtitle}</p>
         </div>
-        <Button variant="outline-secondary" onClick={handleExit}>
-          Exit
-        </Button>
+        <div className={styles['headerActions']}>
+          <MediaScreenSwitcher />
+        </div>
       </div>
 
       {tabs}
@@ -1363,9 +1355,6 @@ const MediaPrepper: React.FC = () => {
           <div className={styles['footerActions']}>
             <Button variant="secondary" onClick={resetToIdle}>
               Process another {mediaKind}
-            </Button>
-            <Button variant="outline-secondary" onClick={handleExit}>
-              Exit
             </Button>
           </div>
         </div>

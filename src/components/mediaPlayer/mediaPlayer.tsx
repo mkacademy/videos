@@ -25,7 +25,6 @@ import {
   buildQuizVideoLibrary,
   buildTutorialVideoLibrary,
   exportCourseVideoBanner,
-  getConvolutionExitPath,
   getNextCourseVideoInLibrary,
   resolveMediaPlayerTab,
   type MediaPlayerTab,
@@ -35,7 +34,7 @@ import { isDirectoryExportSupported, pickWritableDirectoryHandle } from '../../l
 import { prependError, prependWarning } from '../../store/slices/errorSlice';
 import { clearEscrow, viewRequest } from '../../store/slices/viewSlice';
 import { FaDownload, FaTrash } from 'react-icons/fa';
-import { navigateConvolutionOrWarn, stickyFsqFromState } from '../../library/convolutionNavSearch';
+import MediaScreenSwitcher from '../MediaScreenSwitcher';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 const accountIconSrc = new URL('../../Images/user.png', import.meta.url).href;
@@ -126,7 +125,6 @@ const MediaPlayer: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const curApp = useSelector((state: RootState) => state.session.curApp);
-  const stickyFsq = useSelector((state: RootState) => stickyFsqFromState(state));
   const tabParam = searchParams.get('tab');
   const activeTab = resolveMediaPlayerTab(tabParam, curApp);
   const ldr = searchParams.get('ldr');
@@ -359,10 +357,6 @@ const MediaPlayer: React.FC = () => {
     navigate(buildLibraryUrl('tutorial', { audioId: id, ldr }));
   }, [ldr, navigate]);
 
-  const handleExit = useCallback(() => {
-    navigateConvolutionOrWarn(dispatch, navigate, getConvolutionExitPath(activeTab), undefined, stickyFsq);
-  }, [activeTab, dispatch, navigate, stickyFsq]);
-
   const handlePlaylistFinished = useCallback(() => {
     if (quizId === null || activeTab !== 'course' || videoId === null) return;
 
@@ -402,9 +396,9 @@ const MediaPlayer: React.FC = () => {
             <h1 className={styles['title']}>Media Player</h1>
             <p className={styles['subtitle']}>{librarySubtitle}</p>
           </div>
-          <Button variant="outline-secondary" onClick={handleExit}>
-            Exit
-          </Button>
+          <div className={styles['headerActions']}>
+            <MediaScreenSwitcher />
+          </div>
         </div>
 
         {tabs}
@@ -537,9 +531,9 @@ const MediaPlayer: React.FC = () => {
       <div className={styles['container']}>
         <div className={styles['headerRow']}>
           <h1 className={styles['title']}>Media Player</h1>
-          <Button variant="outline-secondary" onClick={handleExit}>
-            Exit
-          </Button>
+          <div className={styles['headerActions']}>
+            <MediaScreenSwitcher />
+          </div>
         </div>
         {tabs}
         <Alert variant="warning">
@@ -560,7 +554,6 @@ const MediaPlayer: React.FC = () => {
         selectedTutorialGroup={selectedTutorialGroup}
         autoPlay={audioId !== null}
         onChangeMedia={handleChangeTutorialMedia}
-        onExit={handleExit}
         tabs={tabs}
       />
     );
@@ -577,7 +570,6 @@ const MediaPlayer: React.FC = () => {
         selectedCourseSlideGroup={selectedCourseSlideGroup}
         autoPlay={videoId !== null}
         onChangeMedia={handleChangeCourseMedia}
-        onExit={handleExit}
         onPlaylistFinished={handlePlaylistFinished}
         tabs={tabs}
       />
@@ -588,9 +580,9 @@ const MediaPlayer: React.FC = () => {
     <div className={styles['container']}>
       <div className={styles['headerRow']}>
         <h1 className={styles['title']}>Media Player</h1>
-        <Button variant="outline-secondary" onClick={handleExit}>
-          Exit
-        </Button>
+        <div className={styles['headerActions']}>
+          <MediaScreenSwitcher />
+        </div>
       </div>
       {tabs}
       <Alert variant="warning">
