@@ -102,7 +102,6 @@ export interface sendPackagePayload {
     curToken: string,
     curMailer: number,
     mutateRole: string,
-    unlocked: string[],
     resolvers: string[],
     formatter?: string,
     foundations: Record<string, Record<string, Record<string, number[]>>>,

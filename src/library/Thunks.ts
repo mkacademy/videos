@@ -157,11 +157,10 @@ export const bytesFetcher = createAsyncThunk<UpdateTextsPayload[], BytesFetcherA
             const { to: moldsTo } = getMoldsResolver(from, to);
             const corData = data[RECORDS][graphqlResolver];
             const entity = toEntity as keyof EntityTypeMap;
-            const links = Tree.getProperty(entity, "connections") as string[];
             const dataFormatter = Tree.getProperty(entity, "formattedData") as
-                | ((payload: DataRow[], links: string[]) => { texts?: UpdateTextsPayload[] })
+                | ((payload: DataRow[]) => { texts?: UpdateTextsPayload[] })
                 | undefined;
-            return dataFormatter?.(corData[moldsTo.toLowerCase()], links ?? [])?.texts ?? [];
+            return dataFormatter?.(corData[moldsTo.toLowerCase()])?.texts ?? [];
         } catch (error) {
             if (error instanceof Error)
                 return rejectWithValue(error.message);

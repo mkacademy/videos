@@ -1,28 +1,16 @@
 import { Buffer } from 'buffer';
 import {
-  BaseEntity,
-  WebApps,
   DataRow,
-  MockedDataReturn,
   BaseFormattedData,
-  Metadata,
 } from './components/Core/types';
 import { showInfos,  userApps, memberApps, adminsApps } from './constants';
 import { EntityTypeMap } from './store/slices/rowSlice';
-import { UserMockInput, BannerInput, PennantInput, StepInput, RootInput } from './library/RowMockingUtils';
+import Instruction from './components/Core/Instruction';
 
 
 export interface EntityPropertyMap {
   name?: string;
-  unlocked?: string[];
-  webapps?: WebApps;
-  public?: Array<Record<string, string>>;
-  CSS?: () => string;
-  connections?: string[];
-  descendents?: null | string;
-  nonFormattedData?: (data: DataRow[]) => DataRow[]; // simply adding more fields to the data row
   formattedData?: (payload: DataRow[], links: string[]) => BaseFormattedData<EntityTypeMap[keyof EntityTypeMap]> | undefined;
-  mockedData?: (metadatas: UserMockInput[] | BannerInput[] | PennantInput[] | StepInput[] | RootInput[] | Metadata[], connections: string[]) => MockedDataReturn;
 }
 
 export const RECORDS = "records";
@@ -449,7 +437,7 @@ export const timeOptions: TimeOptions = {
 
 export const Tree = {
   query: undefined as string | undefined,
-  entities: [] as BaseEntity[],
+  entities: [] as Instruction[],
   prefixedMenu: "",
   isEntity(entity: string): boolean {
     this.query = entity?.toLowerCase();
@@ -475,7 +463,7 @@ export const Tree = {
       return undefined;
     } else return undefined;
   },
-  setEntities(entities: BaseEntity[]): void {
+  setEntities(entities: Instruction[]): void {
     if (this.entities) {
       if (entities && this.entities.length && entities.length) {
         this.entities = this.entities.map((entity) => {
@@ -491,163 +479,6 @@ export const Tree = {
     console.log(`${entities?.length}:entities updated`);
   },
 };
-
-/**
- * Plain `parentName + childName` route keys for one webapp, ordered root → leaf (BFS over `webapps[app]`).
- */
-export function orderedWebappRoutes(entities: BaseEntity[], app: string): string[] {
-  const entityByName = new Map(entities.map((e) => [e.name, e]));
-
-  const childNames = new Set<string>();
-  for (const e of entities) {
-    for (const c of e.webapps[app] ?? []) {
-      childNames.add(c);
-    }
-  }
-
-  const ordered: string[] = [];
-  const processed = new Set<string>();
-  const queue: string[] = [];
-
-  for (const e of entities) {
-    if ((e.webapps[app]?.length ?? 0) > 0 && !childNames.has(e.name)) {
-      queue.push(e.name);
-    }
-  }
-
-  if (queue.length === 0) {
-    const seed = entities.find((e) => (e.webapps[app]?.length ?? 0) > 0);
-    if (seed) queue.push(seed.name);
-  }
-
-  while (queue.length) {
-    const name = queue.shift()!;
-    if (processed.has(name)) continue;
-    processed.add(name);
-    const entity = entityByName.get(name);
-    if (!entity) continue;
-    for (const child of entity.webapps[app] ?? []) {
-      ordered.push(entity.name + child);
-      const childEnt = entityByName.get(child);
-      if (childEnt && (childEnt.webapps[app]?.length ?? 0) > 0) {
-        queue.push(child);
-      }
-    }
-  }
-
-  const seen = new Set(ordered);
-  for (const e of entities) {
-    for (const child of e.webapps[app] ?? []) {
-      const route = e.name + child;
-      if (!seen.has(route)) {
-        ordered.push(route);
-        seen.add(route);
-      }
-    }
-  }
-
-  return ordered;
-}
-
-/**
- * Reorder entities BFS root → leaf using `webapps[app]` (all reachable nodes, including leaves); unreachable last in `entities` order.
- */
-export function orderEntitiesRootToLeafForWebapp<T extends BaseEntity>(entities: T[], app: string): T[] {
-  const entityByName = new Map(entities.map((e) => [e.name, e]));
-
-  const childNames = new Set<string>();
-  for (const e of entities) {
-    for (const c of e.webapps[app] ?? []) {
-      childNames.add(c);
-    }
-  }
-
-  const orderedNames: string[] = [];
-  const seen = new Set<string>();
-  const queue: string[] = [];
-
-  for (const e of entities) {
-    if ((e.webapps[app]?.length ?? 0) > 0 && !childNames.has(e.name)) {
-      queue.push(e.name);
-    }
-  }
-
-  if (queue.length === 0) {
-    const seed = entities.find((e) => (e.webapps[app]?.length ?? 0) > 0);
-    if (seed) queue.push(seed.name);
-  }
-
-  while (queue.length) {
-    const name = queue.shift()!;
-    if (seen.has(name)) continue;
-    seen.add(name);
-    orderedNames.push(name);
-    const entity = entityByName.get(name);
-    if (!entity) continue;
-    for (const child of entity.webapps[app] ?? []) {
-      if (entityByName.has(child) && !seen.has(child)) {
-        queue.push(child);
-      }
-    }
-  }
-
-  for (const e of entities) {
-    if (!seen.has(e.name)) {
-      seen.add(e.name);
-      orderedNames.push(e.name);
-    }
-  }
-
-  const byName = new Map(entities.map((e) => [e.name, e]));
-  return orderedNames.map((n) => byName.get(n)).filter((e): e is T => e !== undefined);
-}
-
-/** Longest `entities` name prefix on `route` (plain, `lower`, or `higher` prefix). */
-export function longestEntityRoutePrefix(
-  entities: BaseEntity[],
-  route: string
-): { entity: BaseEntity; prefixLen: number } | undefined {
-  let best: { entity: BaseEntity; prefixLen: number } | undefined;
-  for (const e of entities) {
-    for (const p of ["higher" + e.name, "lower" + e.name, e.name] as const) {
-      if (route.startsWith(p) && (!best || p.length > best.prefixLen)) {
-        best = { entity: e, prefixLen: p.length };
-      }
-    }
-  }
-  return best;
-}
-
-/**
- * Names in `allowedNames` ordered by walking `selectedRoutes`, then any leftovers in `allEntities` order.
- */
-export function entityNamesOrderedBySelectedRoutes(
-  allEntities: BaseEntity[],
-  selectedRoutes: string[],
-  allowedNames: Set<string>
-): string[] {
-  const ordered: string[] = [];
-  const seen = new Set<string>();
-  const push = (name: string) => {
-    if (allowedNames.has(name) && !seen.has(name)) {
-      seen.add(name);
-      ordered.push(name);
-    }
-  };
-  for (const route of selectedRoutes) {
-    const hit = longestEntityRoutePrefix(allEntities, route);
-    if (!hit) continue;
-    push(hit.entity.name);
-    push(route.slice(hit.prefixLen));
-  }
-  for (const e of allEntities) {
-    if (allowedNames.has(e.name) && !seen.has(e.name)) {
-      seen.add(e.name);
-      ordered.push(e.name);
-    }
-  }
-  return ordered;
-}
 
 export const maxIndexOfApps = 4;
 export const maxIndexOfUserApps = 6;

@@ -1,16 +1,4 @@
-import { PennantInput, BannerInput, RootInput, StepInput, UserMockInput } from "../../library/RowMockingUtils";
-import { Row } from "../../store/slices/rowSlice";
 
-export interface WebApps {
-  tutorial: string[];
-  outgoing: string[];
-  incoming: string[];
-  course: string[];
-  tutors: string[];
-  quiz: string[];
-  cpanel: string[];
-  [key: string]: string[];
-}
 
 export interface FormInput {
   name: string;
@@ -40,17 +28,8 @@ export interface InstructionForm extends BaseForm {
   fileInputs: FormInput[];
 }
 
-export interface BaseEntity {
-  name: string;
-  unlocked: string[];
-  webapps: WebApps;
-  fields: string[];
-  descendents: null;
-  connections: string[];
-}
-
 export interface BaseEntityData {
-  metadata: UserMockInput | BannerInput | PennantInput | StepInput | RootInput | Metadata;
+  metadata: Metadata;
   status: number;
   id: string;
   sizeInBytes: number;
@@ -67,8 +46,6 @@ export interface ActionItem {
   modified?: boolean;
 }
 export interface BaseFormattedData<T = EntityTextProperties> {
-  rows: Row[];
-  statuses: ActionItem[];
   texts: DataRow[] & Partial<T>;
 }
 
@@ -119,8 +96,6 @@ export type EntityTextProperties =
 
 // Improved BaseFormattedData that can handle entity-specific text properties
 export interface BaseFormattedData<T = EntityTextProperties> {
-  rows: Row[];
-  statuses: ActionItem[];
   texts: DataRow[] & Partial<T>;
 }
 

@@ -1,8 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { BaseFormattedData, DataRow, BaseEntity } from '../../components/Core/types';
+import { BaseFormattedData, DataRow } from '../../components/Core/types';
+import Instruction from '../../components/Core/Instruction';
 // Define a type mapping for entity names to their types
 export type EntityTypeMap = {
-  foundation: BaseEntity;
+  instruction: Instruction;
 }
 export interface ResultPayload {
   entity: string;
