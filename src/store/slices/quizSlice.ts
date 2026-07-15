@@ -31,7 +31,6 @@ import {
 } from '../../library/actions';
 import { clearData } from './rowSlice';
 const initialState: QuizState = {
-  followupId: undefined,
   noQuizzes: true,
   selected: -1,
   content: [],

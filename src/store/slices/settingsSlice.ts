@@ -53,7 +53,6 @@ export interface SettingsState {
   clearContentType: string;
   includeBase64: boolean;
   shouldHydrate: boolean;
-  randomizedType: 'Imageurls' | 'details' | 'both';
 }
 
 export interface AccountResult {
@@ -81,7 +80,6 @@ const initialSettings: SettingsState = {
   isNotUnzipping: true,
   includeBase64: false,
   shouldHydrate: true,
-  randomizedType: 'both',
 };
 
 
@@ -103,9 +101,6 @@ export const settingsSlice = createSlice({
     toggleShouldHydrate: (state, action: PayloadAction<boolean | undefined>) => {
       if (action.payload !== undefined) state.shouldHydrate = action.payload;
       else state.shouldHydrate = !state.shouldHydrate;
-    },
-    randomizedTypeSelected: (state, action: PayloadAction<'both' | 'Imageurls' | 'details'>) => {
-      state.randomizedType = action.payload;
     },
     toggleUnzipCourses: (state, action: PayloadAction<boolean | undefined>) => {
       if (action.payload !== undefined) state.isUnzipCourses = action.payload;
@@ -204,7 +199,6 @@ export const {
   toggleUnzipTutorials_,
   toggleUnzipQuizzes_,
   toggleShouldHydrate,
-  randomizedTypeSelected,
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer; 

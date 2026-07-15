@@ -15,7 +15,6 @@ import {
   unzipCoursesTypeSelected,
   unzipTutorialsTypeSelected,
   unzipQuizzesTypeSelected,
-  randomizedTypeSelected,
 } from "../../store/slices/settingsSlice";
 import { setCurPage } from "../../library/Thunks";
 import {
@@ -26,7 +25,6 @@ import {
   type LoadingDeepLinkPair,
 } from "../../loadingRouteUtils";
 import { parseUnzipQueryParam } from "../../library/unzipQuery";
-import { parseRandomizedQueryParam } from "../../library/randomizedQuery";
 
 const MIN_LOADING_DELAY_MS = 2_000;
 const MAX_LOADING_WAIT_MS = 30_000;
@@ -91,8 +89,6 @@ const LoadingAnimation: React.FC = () => {
     if (unzipTypes.tutorial) dispatch(unzipTutorialsTypeSelected(unzipTypes.tutorial));
     if (unzipTypes.course) dispatch(unzipCoursesTypeSelected(unzipTypes.course));
     if (unzipTypes.quiz) dispatch(unzipQuizzesTypeSelected(unzipTypes.quiz));
-    const randomizedType = parseRandomizedQueryParam(resolvedSearch);
-    if (randomizedType) dispatch(randomizedTypeSelected(randomizedType));
     dispatch(completedUnzipping(true));
     setCurPage(0);
     dispatch(fetchData(buildFetchDataPayload(

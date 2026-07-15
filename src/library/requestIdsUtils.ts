@@ -202,9 +202,7 @@ const buildQuizQuestionFallback = (
     quizId: number,
 ) => {
     if (hasHighlightedQuizQuestion(quiz.banners, quizId)) return undefined;
-
-    if (quiz.followupId === undefined) return undefined;
-    return { followupQuestionId: quiz.followupId };
+    return undefined;
 };
 
 const resolveQuizBannersForRequest = (
