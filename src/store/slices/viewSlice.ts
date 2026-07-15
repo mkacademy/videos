@@ -1,71 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { fetchingCompleted } from '../../library/actions';
-import { DataRow } from '../../components/Core/types';
-import { IconKey } from '../../Hooks/useIconsAssembler';
 
 export interface ViewState {
-  menus: number;
-  pages: string[];
-  yoinks: string[];
-  keyids: number[];
-  keywords: string[];
-  selectedMenu: number;
-  params: UrlParamsPayload; 
-  icons: Record<IconKey, string> | undefined;
-  parentIndeces: number[];
-  parent: string | undefined;
-  entity: string | undefined;
   isFetching: boolean;
   message: string | undefined;
-  toggleLayout: boolean;
-  actionType: string | undefined;
-  parentData: ParentData | undefined;
-  fetchedData: DataRow[] | undefined;
   requestIsProcessing: boolean;
   requestIsFetching: boolean;
-  visibility: {
-    searches: boolean;
-    parents: boolean;
-  };
-}
-
-export interface ParentData {
-  parent?: string;
-  curApp: number;
-  IDs: string[];
-}
-
-export interface ExportedData {
-  actionType: string;
-}
-
-
-
-export interface ViewPayload {
-  type?: string;
-  seek?: string;
-  keyids?: number[];
-  keywords?: string[];
-  isMutating?: boolean;
-  parentIndeces?: number[];
-  icons?: Record<IconKey, string>;
-  parentData?: ParentData;
-  selectedMenu?: number;
-  contentIds?: number[];
-  fetchedData?: DataRow[];
-  pages?: string[];
-  yoinks?: string[];
-  entity?: string;
-  dest?: string;
-  orig?: string;
-  take?: number;
-  skip?: number;
-  curApp?: number;
-}
-
-export interface UrlParamsPayload {
-  encodedData?: string;
-  target?: string;
 }
 
 export interface RequestPayload {
@@ -74,26 +14,10 @@ export interface RequestPayload {
 }
 
 const initialState: ViewState = {
-  menus: 1,
-  pages: [],
-  yoinks: [],
-  params: {},
-  keyids: [],
-  keywords: [],
-  selectedMenu: 0,
-  icons: undefined,
-  parentIndeces: [],
-  parent: undefined,
-  entity: undefined,
   isFetching: false,
   message: undefined,
-  toggleLayout: true,
-  actionType: undefined,
-  parentData: undefined,
-  fetchedData: undefined,
   requestIsFetching: false,
   requestIsProcessing: false,
-  visibility: { searches: true, parents: true },
 };
 export const COMPLETED_MESSAGE = "completed requested actions";
 const viewSlice = createSlice({

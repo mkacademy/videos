@@ -5,7 +5,7 @@ import { authenticate } from '../../library/Thunks';
 import { resolveLoginLoadingRedirectUrl } from '../../library/hydrationUtils';
 import { initializedLoading } from '../../store/slices/sessionSlice';
 import { AppDispatch, RootState } from '../../store';
-import { convolutionDelay, convolutionTake, globalVars, sessionSizes } from '../../utils';
+import { convolutionDelay, convolutionTake, sessionSizes } from '../../utils';
 import * as styles from '../../styles/course.module.css';
 import * as registrationStyles from '../../styles/registration.module.css';
 import { CourseGlobal } from '../views/wrappers/courseGlobal';
@@ -39,7 +39,6 @@ const Login: React.FC = () => {
         password,
         seconds: Number(seconds),
         selectedRole,
-        ingredients: {},
       }));
       if (authenticate.fulfilled.match(resultAction)) {
         dispatch(initializedLoading(resultAction.payload));
@@ -67,7 +66,6 @@ const Login: React.FC = () => {
         roleIndex: -1,
         curToken: null,
         isPrivate: false,
-        parentData: undefined,
         defaultTake: convolutionTake(),
       }));
     }
@@ -162,9 +160,7 @@ const Login: React.FC = () => {
                   onClick={handleIncognito}
                 >
                   {authenticated
-                    ? globalVars.ingredients
-                      ? 'redirecting...'
-                      : 'resume session'
+                    ? 'resume session'
                     : 'continue incognito'}
                 </Link>
               </div>

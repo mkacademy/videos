@@ -1,26 +1,20 @@
 import {
   incrementID,
   textFieldsExtractor,
-  states,
 } from "../../utils";
 import {
   BaseEntity,
   BaseFormattedData,
   BaseNonFormattedData,
   DataRow,
-  InstructionForm,
   InstructionTextProperties,
   MockedDataReturn,
   Metadata,
 } from "../Core/types";
-import * as styles from "../../styles/ContraintsCss.module.css";
-import * as descendantsWrapper from "../../styles/descendantsWrapper.module.css";
-import * as orderAndActions from "../../styles/orderAndActions.module.css";
 import { StepInput } from "../../library/RowMockingUtils";
 import { Status } from "./types";
 
 interface Instruction extends BaseEntity {
-  form: InstructionForm;
   nonFormattedData: (instructions: DataRow[]) => Array<BaseNonFormattedData>;
   mockedData: (metadatas: StepInput[] | Metadata[], connections: string[]) => MockedDataReturn;
   formattedData: (instructions: DataRow[], connections: string[]) => BaseFormattedData<InstructionTextProperties>;
@@ -28,7 +22,6 @@ interface Instruction extends BaseEntity {
 
 const Instruction: Instruction = {
   name: "instructions",
-  menu: [],
   unlocked: [],
   webapps: {
     tutorial: [],
@@ -47,57 +40,7 @@ const Instruction: Instruction = {
     ],
   },
   fields: ["instruction", "details", "imageurl"],
-  form: {
-    textInputs: [
-      {
-        maxlength: 50,
-        name: "instruction",
-        label: "Title",
-      },
-    ],
-    textAreas: [
-      {
-        name: "details",
-        label: "Details",
-      },
-    ],
-    fileInputs: [
-      {
-        name: "imageurl",
-        label: "ImageUrl",
-      },
-    ],
-    dropDowns: [
-      {
-        name: "modified",
-        label: "actions",
-        options: states.map((key: string, i: number) => ({
-          text: key,
-          value: i,
-        })),
-      },
-    ],
-  },
-  ordinals: {
-    filtersunderbosses: ["filters", "underbosses"],
-    dashboardsbosses: ["dashboards", "bosses"],
-    siftersminions: ["sifters", "minions"],
-  },
-  columns: [
-    { filtersunderbosses: `${descendantsWrapper["ProgramsCourses"]} ${descendantsWrapper["Qaurtet"]}` },
-    { dashboardsbosses: `${descendantsWrapper["TutorialsInstructions"]} ${descendantsWrapper["Qaurtet"]}` },
-    { siftersminions: `${descendantsWrapper["TutorialsInstructions"]} ${descendantsWrapper["Qaurtet"]}` },
-  ],
-  private: [
-    { siftersminions: `${descendantsWrapper["SnapshotsNotes"]}` },
-    { FlexTable: `${orderAndActions["FlexTablePlusActions"]} Compact` },
-    { entityName: "Instruction" },
-  ],
-  anonymous: [{ entityName: "Instruction" }],
-  prefixLen: { private: 2, public: 2, anonymous: 1 },
-  public: [{ Actions: "Options" }, { entityName: "Instruction" }],
-  constraints: { At1920: 3, At1536: 3, At1440: 3, At992: 2 },
-  CSS: () => styles["instruction"],
+
   descendents: null,
   connections: [
     "bosses",

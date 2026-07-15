@@ -1,6 +1,5 @@
 import { PennantInput, BannerInput, RootInput, StepInput, UserMockInput } from "../../library/RowMockingUtils";
 import { Row } from "../../store/slices/rowSlice";
-import { ParentData } from "../../store/slices/viewSlice";
 
 export interface WebApps {
   tutorial: string[];
@@ -41,31 +40,11 @@ export interface InstructionForm extends BaseForm {
   fileInputs: FormInput[];
 }
 
-export interface Constraints {
-  At1920: number;
-  At1536: number;
-  At1440: number;
-  At992: number;
-}
-
 export interface BaseEntity {
   name: string;
-  menu: MenuItem[];
   unlocked: string[];
   webapps: WebApps;
   fields: string[];
-  ordinals: Record<string, string[]>;
-  columns: Array<Record<string, string>>;
-  private: Array<Record<string, string>>;
-  anonymous: Array<Record<string, string>>;
-  prefixLen: {
-    private: number;
-    public: number;
-    anonymous: number;
-  };
-  public: Array<Record<string, string>>;
-  constraints: Constraints;
-  CSS: () => string;
   descendents: null;
   connections: string[];
 }
@@ -152,17 +131,6 @@ export interface BaseNonFormattedData {
 }
 /** Server-assigned IDs are positive; local IDs are zero or negative. */
 export const isServerId = (id: DataRow['id']): boolean => Number(id) > 0;
-
-export interface MenuItem {
-  from: string;
-  to: string;
-  search?: string;
-  prefix?: string;
-  parentData: ParentData;
-  encodedData: string;
-  fromIMG: string;
-  toIMG: string;
-}
 
 export interface Metadata {
   owner: boolean;

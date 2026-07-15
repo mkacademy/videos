@@ -1,46 +1,25 @@
 import { Buffer } from 'buffer';
 import {
-  BaseEntity, MenuItem,
-  WebApps, Constraints,
+  BaseEntity,
+  WebApps,
   DataRow,
   MockedDataReturn,
   BaseFormattedData,
   Metadata,
-  BaseForm,
-  InstructionForm,
-  UserForm,
 } from './components/Core/types';
-import { ParentData } from './store/slices/viewSlice';
-import { showInfos, tabluarPrefixes, userApps, memberApps, adminsApps } from './constants';
+import { showInfos,  userApps, memberApps, adminsApps } from './constants';
 import { EntityTypeMap } from './store/slices/rowSlice';
 import { UserMockInput, BannerInput, PennantInput, StepInput, RootInput } from './library/RowMockingUtils';
-import { IncomingMessage, OutgoingMessage } from './store/slices/commsSlice';
 
-export type FormKeys = BaseForm | InstructionForm | UserForm;
-// Comprehensive interface for all possible BaseEntity properties
+
 export interface EntityPropertyMap {
   name?: string;
-  menu?: MenuItem[];
-  lowermenu?: MenuItem[];
-  highermenu?: MenuItem[];
   unlocked?: string[];
   webapps?: WebApps;
-  fields?: string[];
-  ordinals?: Record<string, string[]>;
-  columns?: Array<Record<string, string>>;
-  private?: Array<Record<string, string>>;
-  anonymous?: Array<Record<string, string>>;
-  prefixLen?: {
-    private: number;
-    public: number;
-    anonymous: number;
-  };
   public?: Array<Record<string, string>>;
-  constraints?: Constraints;
   CSS?: () => string;
   connections?: string[];
   descendents?: null | string;
-  form?: FormKeys;
   nonFormattedData?: (data: DataRow[]) => DataRow[]; // simply adding more fields to the data row
   formattedData?: (payload: DataRow[], links: string[]) => BaseFormattedData<EntityTypeMap[keyof EntityTypeMap]> | undefined;
   mockedData?: (metadatas: UserMockInput[] | BannerInput[] | PennantInput[] | StepInput[] | RootInput[] | Metadata[], connections: string[]) => MockedDataReturn;
@@ -94,7 +73,6 @@ export interface MediaQueries {
 
 export interface GlobalVars {
   globallyUniqueIDs: number;
-  ingredients?: CookIngredientsProps | undefined;
 }
 
 export interface ToolKit {
@@ -401,13 +379,9 @@ export const hydrationDelay = 100;
 export const convolutionDelay = 1000;
 export const convolutionTake = (): number => take;
 export const setTake = (curtake: string | number): number => (take = parseInt(curtake as string));
-export const globalVars: GlobalVars = { globallyUniqueIDs: -1, ingredients: undefined };
+export const globalVars: GlobalVars = { globallyUniqueIDs: -1 };
 export const incrementID = (): number => globalVars.globallyUniqueIDs--;
-export const redirectUrl = (ingredients: CookIngredientsProps | undefined): void => {
-  globalVars.ingredients = ingredients;
-};
 export const signOut = (): string => {
-  globalVars.ingredients = undefined;
   globalVars.globallyUniqueIDs = -1;
   take = 10;
   deleteShowInfos();
@@ -492,10 +466,8 @@ export const Tree = {
     this.query = entity?.toLowerCase();
     if (this.query?.startsWith("lower")) {
       this.query = this.query.replace("lower", "");
-      this.prefixedMenu = propertyName === "menu" ? "lower" : "";
     } else if (this.query?.startsWith("higher")) {
       this.query = this.query.replace("higher", "");
-      this.prefixedMenu = propertyName === "menu" ? "higher" : "";
     }
     if (this.entities && this.entities.length) {
       const parent = this.entities.find((e) => e.name === this.query);
@@ -1223,17 +1195,7 @@ export const setUrlParts = (parts: SetUrlPartsParams): void => {
   urlParts.index = index ?? urlParts.index;
 };
 
-let request = 0;
 
-export interface CookIngredientsProps {
-  entity?: string;
-  search?: string;
-  prefix?: string;
-  toggle?: boolean;
-  defaultTake?: number;
-  contentIds?: number[];
-  parentData?: ParentData;
-}
 
 export interface CookIngredientsResult {
   pfx: string;
@@ -1242,39 +1204,9 @@ export interface CookIngredientsResult {
   search: string;
 }
 
-export const cookIngredients = (props: CookIngredientsProps): CookIngredientsResult | undefined => {
-  const {
-    entity,
-    search,
-    toggle,
-    prefix,
-    parentData,
-    defaultTake: take,
-  } = props;
-  if (parentData && entity) {
-    const query = search ? search : `?skip=0&take=${take}&req=${request++}`;
-    if (prefix) {
-      urlParts.affix = prefix;
-      urlParts.index = tabluarPrefixes.indexOf(prefix);
-      urlParts.index = urlParts.index > -1 ? urlParts.index : 0;
-    }
-    const curPrefix = toggle ? getPrefix() : urlParts.affix;
-    if (toggle === undefined && urlParts.index > 0)
-      urlParts.affix = tabluarPrefixes[(urlParts.index = 0)];
-    const suffix = jsonToBase64(parentData) + query;
-    const url = curPrefix + entity + "/" + suffix;
-    return { pfx: curPrefix, url, affix: urlParts.affix, search: query };
-  }
-};
 
-const getPrefix = (): string => {
-  const url = window.location.pathname.toLowerCase();
-  const index = tabluarPrefixes.findIndex((p) => url.startsWith(p));
-  const prefix = (urlParts.affix =
-    index === -1 ? tabluarPrefixes[urlParts.index] : "/app/");
-  if (index > -1) urlParts.index = index;
-  return prefix;
-};
+
+
 
 const stripLowerHigherAndId = (s: string, prefix: "lower" | "higher") =>
   s.replace(new RegExp(prefix, "gi"), "").replace(/Id$/i, "");
@@ -1309,43 +1241,7 @@ export const getGraphqlResolver = (fromEntity: string, toEntity: string) => {
     };
 };
 
-interface Selection {
-  selectedChild: string;
-  selectedParent: string;
-}
-
-interface ValidatedCombinationResult {
-  selectedChild: string;
-  selectedParent: string;
-  isValid: boolean;
-}
-
-export const validatedCombination = (
-  selection: Selection,
-  notReturnAliases: boolean,
-  webapp: string,
-  log?: boolean
-): ValidatedCombinationResult => {
-  const entity = getEntity(selection.selectedChild);
-  const parent = getEntity(selection.selectedParent);
-  const webapps = Tree.getProperty(parent, "webapps");
-  const unlocked = Tree.getProperty(parent, "unlocked");
-  const permitted = webapps?.[webapp as keyof WebApps] ?? unlocked;
-  const isValid =
-    (unlocked?.indexOf(entity) ?? -1) > -1 && (permitted?.indexOf(entity) ?? -1) > -1;
-  if (!isValid && log) console.log("valid_routes", parent, unlocked);
-  if (notReturnAliases)
-    return { selectedChild: entity, selectedParent: parent, isValid };
-  else return { ...selection, isValid };
-};
-
 export const uniqueAliases = ["text", "quote", "content", "title", "imageurl", 'email'];
-
-export const calcBytes = (r: Partial<DataRow> | OutgoingMessage | IncomingMessage, to: string | string[] = getEntityFromUrl()) => {
-  const isString = typeof to === "string";
-  const fields = isString ? Tree.getProperty(to, "fields") : to;
-  return (fields ?? []).reduce((t: number, k: string) => t + Buffer.byteLength(String(r[k as keyof DataRow] ?? ""), "utf8"), 0);
-};
 
 export const textEllipsis = (
   str: string,

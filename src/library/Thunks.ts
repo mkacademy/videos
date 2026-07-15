@@ -2,7 +2,7 @@ import { jwtDecode } from "jwt-decode";
 import { getCurAppIndex, userroles, timeout, getMoldsResolver } from "../utils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { EntityTypeMap, ResultPayload } from "../store/slices/rowSlice";
-import { getGraphqlResolver, redirectUrl, ToolKit, RECORDS, Tree } from "../utils";
+import { getGraphqlResolver, ToolKit, RECORDS, Tree } from "../utils";
 import { clearData as clearReducers } from "../store/slices/rowSlice";
 import { UpdateTextsPayload } from "../store/slices/textSlice";
 import { DataRow } from "../components/Core/types";
@@ -28,7 +28,6 @@ export const authenticate = createAsyncThunk<Partial<SessionState>, AuthPayload,
             email,
             password,
             seconds = 0,
-            ingredients,
             selectedRole,
         } = payload;
         const variables = { password, username: email, seconds };
@@ -61,7 +60,6 @@ export const authenticate = createAsyncThunk<Partial<SessionState>, AuthPayload,
                 const roleIndex = roles.findIndex((r: string) => r === userroles[baseRoleIndex]);
                 console.log("authenticate_roles", roles);
                 dispatch(clearReducers());
-                redirectUrl(ingredients);
                 const session = {
                     quota,
                     roles,

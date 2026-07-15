@@ -1,5 +1,4 @@
 import { UPDATE_ROWS } from "../utils";
-import { CookIngredientsProps } from "../utils";
 export interface CustomJwtPayload {
     sub: string;
     quota: number;
@@ -13,7 +12,6 @@ export interface AuthPayload {
     seconds: number;
     password: string;
     selectedRole: string;
-    ingredients: CookIngredientsProps;
 }
 
 export interface FormData {
