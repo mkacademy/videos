@@ -6,6 +6,35 @@ import * as styles from '../../styles/audioWaveformPlayer.module.css';
 
 const BAR_COUNT = 48;
 
+type AudioGraph = {
+  context: AudioContext;
+  analyser: AnalyserNode;
+  source: MediaElementAudioSourceNode;
+};
+
+// A media element can only ever have a single MediaElementAudioSourceNode. Cache
+// the graph per element so React StrictMode remounts (and any future remounts)
+// reuse it instead of throwing on a second createMediaElementSource() call, which
+// would leave the element permanently routed to a dead context and freeze playback.
+const audioGraphs = new WeakMap<HTMLMediaElement, AudioGraph>();
+
+function getAudioGraph(audio: HTMLMediaElement): AudioGraph {
+  const existing = audioGraphs.get(audio);
+  if (existing) return existing;
+
+  const context = new AudioContext();
+  const analyser = context.createAnalyser();
+  analyser.fftSize = 128;
+  analyser.smoothingTimeConstant = 0.8;
+  const source = context.createMediaElementSource(audio);
+  source.connect(analyser);
+  analyser.connect(context.destination);
+
+  const graph: AudioGraph = { context, analyser, source };
+  audioGraphs.set(audio, graph);
+  return graph;
+}
+
 function seededBarHeight(seed: number): number {
   const value = Math.abs(Math.sin(seed * 12.9898) * 43758.5453);
   return 0.2 + (value % 1) * 0.8;
@@ -41,8 +70,8 @@ const AudioWaveformPlayer: React.FC<AudioWaveformPlayerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceConnectedRef = useRef(false);
+  const isPlayingRef = useRef(isPlaying);
+  const progressRef = useRef(0);
 
   const idleHeights = useMemo(
     () => Array.from({ length: BAR_COUNT }, (_, index) => seededBarHeight(index + 1)),
@@ -50,11 +79,12 @@ const AudioWaveformPlayer: React.FC<AudioWaveformPlayerProps> = ({
   );
 
   const progress = totalDurationMs > 0 ? globalPlaybackMs / totalDurationMs : 0;
+  isPlayingRef.current = isPlaying;
+  progressRef.current = progress;
 
   useEffect(() => {
-    const audio = audioRef.current;
     const canvas = canvasRef.current;
-    if (!audio || !canvas) return undefined;
+    if (!canvas) return undefined;
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return undefined;
@@ -70,23 +100,6 @@ const AudioWaveformPlayer: React.FC<AudioWaveformPlayerProps> = ({
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    const ensureAnalyser = () => {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new AudioContext();
-      }
-      if (!analyserRef.current) {
-        analyserRef.current = audioContextRef.current.createAnalyser();
-        analyserRef.current.fftSize = 128;
-        analyserRef.current.smoothingTimeConstant = 0.8;
-      }
-      if (!sourceConnectedRef.current) {
-        const source = audioContextRef.current.createMediaElementSource(audio);
-        source.connect(analyserRef.current);
-        analyserRef.current.connect(audioContextRef.current.destination);
-        sourceConnectedRef.current = true;
-      }
-    };
-
     const drawBars = (heights: number[]) => {
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
@@ -98,16 +111,17 @@ const AudioWaveformPlayer: React.FC<AudioWaveformPlayerProps> = ({
         const barH = Math.max(4, barHeight * height);
         const x = index * (barWidth + gap);
         const y = (height - barH) / 2;
-        const played = index / BAR_COUNT <= progress;
+        const played = index / BAR_COUNT <= progressRef.current;
         ctx.fillStyle = played ? '#111' : '#d0d0d0';
         ctx.fillRect(x, y, barWidth, barH);
       });
     };
 
     const draw = () => {
-      if (isPlaying && analyserRef.current) {
-        const data = new Uint8Array(analyserRef.current.frequencyBinCount);
-        analyserRef.current.getByteFrequencyData(data);
+      const analyser = analyserRef.current;
+      if (isPlayingRef.current && analyser) {
+        const data = new Uint8Array(analyser.frequencyBinCount);
+        analyser.getByteFrequencyData(data);
         const step = Math.floor(data.length / BAR_COUNT);
         const heights = Array.from({ length: BAR_COUNT }, (_, index) => {
           const slice = data.slice(index * step, (index + 1) * step);
@@ -121,12 +135,6 @@ const AudioWaveformPlayer: React.FC<AudioWaveformPlayerProps> = ({
       animationRef.current = requestAnimationFrame(draw);
     };
 
-    try {
-      ensureAnalyser();
-    } catch {
-      // MediaElementSource may already be connected in strict mode remounts.
-    }
-
     animationRef.current = requestAnimationFrame(draw);
 
     return () => {
@@ -135,14 +143,27 @@ const AudioWaveformPlayer: React.FC<AudioWaveformPlayerProps> = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [audioRef, idleHeights, isPlaying, progress]);
+  }, [idleHeights]);
 
-  useEffect(() => () => {
-    void audioContextRef.current?.close();
-    audioContextRef.current = null;
-    analyserRef.current = null;
-    sourceConnectedRef.current = false;
-  }, []);
+  // Lazily wire the Web Audio graph on the first play (a user gesture) and keep
+  // the context running while playback is active. Without resuming, routing the
+  // element through a suspended AudioContext freezes currentTime and mutes audio.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !isPlaying) return;
+
+    let graph: AudioGraph;
+    try {
+      graph = getAudioGraph(audio);
+    } catch {
+      return;
+    }
+
+    analyserRef.current = graph.analyser;
+    if (graph.context.state === 'suspended') {
+      void graph.context.resume();
+    }
+  }, [audioRef, isPlaying]);
 
   const handleSeekChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextProgress = Number(event.target.value) / 1000;

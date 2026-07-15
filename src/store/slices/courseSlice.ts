@@ -14,7 +14,6 @@ import {
   updatePennantsMetadata,
   updateCoversMetadata,
   updateStepsMetadata,
-  FETCH_SKELETONS_FULFILLED,
 } from '../../library/actions';
 
 import type {
@@ -30,7 +29,6 @@ import {
   applySetSlides,
   applyUpdateCoversMetadata,
   applyUpdateSteps,
-  mergeCourseFetchSkeletonsContent,
 } from '../../library/CourseUtils';
 
 export type {
@@ -121,19 +119,6 @@ const courseSlice = createSlice({
         })) as SlideGroup[];
         state.content = nState;
       })
-      .addMatcher(
-        (action): action is PayloadAction<{ screen: string; response: { banners?: Banner[]; content?: SlideGroup[] } }> =>
-          action.type === FETCH_SKELETONS_FULFILLED,
-        (state, action) => {
-          if (action.payload.screen !== 'course') return;
-          mergeCourseFetchSkeletonsContent(state, action.payload.response);
-          state.couplings = getSlideIndeces(state.banners, state.content);
-          if (state.banners.length > 0) {
-            const visibles = state.banners.filter(({ isDismissed }) => !isDismissed);
-            state.noCourses = visibles.length === 0;
-          }
-        }
-      );
   },
 });
 
