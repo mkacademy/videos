@@ -1,6 +1,5 @@
 import { jwtDecode } from 'jwt-decode';
 import { createSelector, Dispatch } from '@reduxjs/toolkit';
-import { fetchedHandles, Handler } from '../store/slices/errorSlice';
 import { Content, setTutorials, Banner as TutorialBanner } from '../store/slices/tutorialSlice';
 import { Banner, SlideGroup } from './CourseUtils';
 import { setCourses } from '../store/slices/courseSlice';
@@ -11,7 +10,6 @@ import { Quiz, setQuizzes } from '../store/slices/quizSlice';
 import { CpanelRow } from '../components/Core/types';
 import { QueryParams } from '../store/types';
 import { insertStats } from './actions';
-import { withReciepients } from '../Hooks/useCommunications/useCommunications';
 import { RootState } from '../store';
 import { initTotals } from './actions';
 import { StatsMiddlewareState } from '../store/types';
@@ -387,7 +385,6 @@ export const authenticatedFetch = async (query: QueryParams): Promise<ResultPayl
 export interface FetchedData {
     quizzes?: Quiz[];
     totals?: Record<string, number>;
-    handlers?: Record<string, Handler[]>;
     banners?: Banner[] | TutorialBanner[];
     counts: Record<string, Record<string, number>>;
     executedQueries?: Record<string, Executedquery>;
@@ -396,7 +393,6 @@ export interface FetchedData {
 
 export interface QuizResponse {
     counts: Record<string, Record<string, number>>;
-    handlers: Record<string, Handler[]>;
     totals: Record<string, number>;
     content: SlideGroup[];
     banners: Banner[];
@@ -407,7 +403,6 @@ export interface CourseResponse {
     banners: Banner[];
     content: SlideGroup[];
     totals: Record<string, number>;
-    handlers: Record<string, Handler[]>;
     counts: Record<string, Record<string, number>>;
 }
 
@@ -415,12 +410,10 @@ export interface TutorialResponse {
     content: Content[][];
     banners: TutorialBanner[];
     totals: Record<string, number>;
-    handlers: Record<string, Handler[]>;
     counts: Record<string, Record<string, number>>;
 }
 
 const emptyTotals = {} as Record<string, number>;
-const emptyHandlers = {} as Record<string, Handler[]>;
 
 export interface validatedSkeletonsResponse {
     response: FetchedData;
@@ -480,7 +473,7 @@ export const validateThenDispatch = ({
         quiz: { selected: quizSelected, banners: quizBanners, quizzes },
         tutorial: { selected: tutorialSelected, banners: tutorialBanners },
     }
-    const { content, counts, totals, handlers } = response;
+    const { content, counts, totals } = response;
     const routeReasons: string[] = [];
 
     if (isQuizResponse(response)) {
@@ -488,7 +481,6 @@ export const validateThenDispatch = ({
         const [app, _] = getCurAppIndex('quiz');
         if (!app) throw new Error('Invalid app index');
         dispatch(setQuizzes(response));
-        dispatch(fetchedHandles(response.handlers ?? emptyHandlers));
         dispatch(insertStats({ screen: 'quiz', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
 
     }
@@ -497,7 +489,6 @@ export const validateThenDispatch = ({
         const [app, _] = getCurAppIndex('course');
         if (!app) throw new Error('Invalid app index');
         dispatch(setCourses(response));
-        dispatch(fetchedHandles(response.handlers ?? emptyHandlers));
         dispatch(insertStats({ screen: 'course', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
     }
     else if (isTutorialResponse(response)) {
@@ -505,7 +496,6 @@ export const validateThenDispatch = ({
         const [app, _] = getCurAppIndex('tutorial');
         if (!app) throw new Error('Invalid app index');
         dispatch(setTutorials(response));
-        dispatch(fetchedHandles(response.handlers ?? emptyHandlers));
         dispatch(insertStats({ screen: 'tutorial', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
     }
     else if (isCountsResponse(response)) {
@@ -516,8 +506,7 @@ export const validateThenDispatch = ({
 
          if (isArrayOfType(content, isOutgoingMessage)) {
                 console.log("is_outgoing_response");
-                dispatch(fetchedHandles(handlers ?? emptyHandlers));
-                dispatch(setOutgoings(withReciepients({ response: content, handlers: handlers ?? emptyHandlers })));
+                dispatch(setOutgoings(content));
                 dispatch(insertStats({ screen: 'outgoing', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
             }
             else if (isArrayOfType(content, isIncomingMessage)) {

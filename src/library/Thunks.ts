@@ -127,7 +127,6 @@ export const deHydratedRowsDataFetcher = createAsyncThunk<void, DehydratedRowsFe
                     data: corData[from],
                     interaction: true,
                 },
-                handles: corData[RECORDS],
             });
         }
         catch (error) {

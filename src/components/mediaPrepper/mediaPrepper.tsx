@@ -35,7 +35,7 @@ import {
   buildTutorialTreesFromPreparedVideo,
 } from '../../library/TemplatesManagerUtils';
 import type { VideoSegmentImportStage } from '../../library/videoSegmentImport';
-import { fetchedHandles, prependError, prependWarning } from '../../store/slices/errorSlice';
+import { prependError, prependWarning } from '../../store/slices/errorSlice';
 import { setCourses } from '../../store/slices/courseSlice';
 import { setTutorials } from '../../store/slices/tutorialSlice';
 import { setQuizzes } from '../../store/slices/quizSlice';
@@ -569,7 +569,6 @@ const MediaPrepper: React.FC = () => {
 
       built.errors.forEach((msg) => dispatch(prependError(msg)));
       built.skipped.forEach((msg) => dispatch(prependWarning(msg)));
-      dispatch(fetchedHandles(built.handles));
       dispatch(setTutorials({ banners: built.banners, content: built.content }));
 
       const chunkCount = built.content[0]?.length ?? 0;
@@ -619,7 +618,6 @@ const MediaPrepper: React.FC = () => {
 
       built.errors.forEach((msg) => dispatch(prependError(msg)));
       built.skipped.forEach((msg) => dispatch(prependWarning(msg)));
-      dispatch(fetchedHandles(built.handles));
       dispatch(setCourses({ banners: built.banners, content: built.content }));
 
       const chunkCount = built.banners[0]?.pennants?.length ?? 0;

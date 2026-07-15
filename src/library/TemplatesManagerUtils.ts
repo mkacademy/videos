@@ -14,7 +14,6 @@ import { Quiz } from "../store/slices/quizSlice";
 import { CourseTrees, QuizTrees, TutorialTrees } from "./controlPanelUtils";
 import { flushCourseTrees, flushQuizTrees, flushTutorialTrees } from "./controlPanelUtilz";
 import { Metadata } from "../components/Core/types";
-import type { Handler } from "../store/slices/errorSlice";
 import {
   dataUrlByteLength,
   dataUrlToBlob,
@@ -67,36 +66,6 @@ import {
   validateTutorialVideoChunkBanners,
 } from "./videoChunkPlayback";
 import { withTruncatedSaveTitle } from "./DeletionManagerUtils";
-
-const handleFromTitle = ({ id, title }: { id: number; title: string }): Handler => ({
-  id,
-  keyword: title,
-});
-
-/** Mirrors {@link CpanelFormatter} tutorial `handlesFilters`. */
-export const buildTutorialHandles = (
-  banners: TutorialBanner[],
-): Record<string, Handler[]> => ({
-  handlesFilters: banners.map(handleFromTitle),
-});
-
-/** Mirrors {@link CpanelFormatter} course `handlesSifters` / `handlesFilters`. */
-export const buildCourseHandles = (
-  banners: CourseBanner[],
-): Record<string, Handler[]> => ({
-  handlesSifters: banners.map(handleFromTitle),
-  handlesFilters: banners.flatMap((banner) => (banner.pennants ?? []).map(handleFromTitle)),
-});
-
-/** Mirrors {@link CpanelFormatter} quiz `handlesDashboards` / `handlesSifters` / `handlesFilters`. */
-export const buildQuizHandles = (
-  quizzes: Quiz[],
-  banners: CourseBanner[],
-): Record<string, Handler[]> => ({
-  handlesDashboards: quizzes.map(handleFromTitle),
-  handlesSifters: banners.map(handleFromTitle),
-  handlesFilters: banners.flatMap((banner) => (banner.pennants ?? []).map(handleFromTitle)),
-});
 
 /** Mirrors `tutorialPresetOptions` in ColFourteen.tsx */
 const TUTORIAL_PRESET: Record<string, { count: number; steps: number }> = {
@@ -265,7 +234,6 @@ export type TutorialTreesFromDirectoryResult = {
   Trees: TutorialTrees;
   banners: TutorialBanner[];
   content: TutorialContent[][];
-  handles: Record<string, Handler[]>;
   errors: string[];
   skipped: string[];
 };
@@ -375,7 +343,6 @@ export const buildTutorialTreesFromDirectory = async (
     Trees,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildTutorialHandles(stripped.banners),
     errors,
     skipped,
   };
@@ -577,7 +544,6 @@ export const buildTutorialTreesFromTextFolder = async (
     Trees,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildTutorialHandles(stripped.banners),
     errors,
     skipped,
   };
@@ -777,7 +743,7 @@ export const buildTutorialTreesFromPreparedVideo = async (
       probe = await probeVideoFileForImport(file);
     } catch (error) {
       errors.push(`Failed to probe "${name}": ${error}`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     let segments;
@@ -785,13 +751,13 @@ export const buildTutorialTreesFromPreparedVideo = async (
       segments = await importer.segmentFile(file, probe.durationSeconds, signal, onProgress);
     } catch (error) {
       errors.push(`Failed to segment "${name}": ${error}`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     const built = buildTutorialBannersFromVideoSegments(name, segments, 0);
     if (built.banners.length === 0) {
       errors.push(`No tutorial banners produced for "${name}"`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     Object.assign(Trees, built.trees);
@@ -803,7 +769,6 @@ export const buildTutorialTreesFromPreparedVideo = async (
       Trees,
       banners: stripped.banners,
       content: stripped.content,
-      handles: buildTutorialHandles(stripped.banners),
       errors,
       skipped,
     };
@@ -837,7 +802,7 @@ export const buildTutorialTreesFromPreparedAudio = async (
       probe = await probeAudioFileForImport(file);
     } catch (error) {
       errors.push(`Failed to probe "${name}": ${error}`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     let segments;
@@ -845,13 +810,13 @@ export const buildTutorialTreesFromPreparedAudio = async (
       segments = await importer.segmentFile(file, probe.durationSeconds, signal, onProgress);
     } catch (error) {
       errors.push(`Failed to segment "${name}": ${error}`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     const built = buildTutorialBannersFromVideoSegments(name, segments, 0);
     if (built.banners.length === 0) {
       errors.push(`No tutorial banners produced for "${name}"`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     Object.assign(Trees, built.trees);
@@ -863,7 +828,6 @@ export const buildTutorialTreesFromPreparedAudio = async (
       Trees,
       banners: stripped.banners,
       content: stripped.content,
-      handles: buildTutorialHandles(stripped.banners),
       errors,
       skipped,
     };
@@ -970,7 +934,6 @@ export const buildTutorialTreesFromVideoFolder = async (
     Trees,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildTutorialHandles(stripped.banners),
     errors,
     skipped,
   };
@@ -1164,7 +1127,6 @@ export const buildTutorialTreesFromAudioFolder = async (
     Trees,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildTutorialHandles(stripped.banners),
     errors,
     skipped,
   };
@@ -1291,7 +1253,6 @@ export type CourseTreesFromMediaResult = {
   Trees: CourseTrees;
   banners: CourseBanner[];
   content: SlideGroup[];
-  handles: Record<string, Handler[]>;
   errors: string[];
   skipped: string[];
 };
@@ -1544,7 +1505,6 @@ export type QuizTreesFromMediaResult = {
   quizzes: Quiz[];
   banners: CourseBanner[];
   content: SlideGroup[];
-  handles: Record<string, Handler[]>;
   errors: string[];
   skipped: string[];
 };
@@ -1711,7 +1671,6 @@ export const buildQuizTreesFromVideoFolder = async (
       quizzes,
       banners,
       content,
-      handles: {},
       errors: ['No MP4 files found in the selected folder'],
       skipped,
     };
@@ -1784,7 +1743,6 @@ export const buildQuizTreesFromVideoFolder = async (
     quizzes: stripped.quizzes,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildQuizHandles(stripped.quizzes, stripped.banners),
     errors,
     skipped,
   };
@@ -1814,7 +1772,6 @@ export const buildQuizTreesFromPreparedVideos = async (
       quizzes,
       banners,
       content,
-      handles: {},
       errors: ['No prepared videos to import'],
       skipped,
     };
@@ -1879,7 +1836,6 @@ export const buildQuizTreesFromPreparedVideos = async (
       quizzes,
       banners,
       content,
-      handles: {},
       errors: errors.length > 0 ? errors : ['No course banners could be created from prepared videos'],
       skipped,
     };
@@ -1893,7 +1849,6 @@ export const buildQuizTreesFromPreparedVideos = async (
     quizzes: stripped.quizzes,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildQuizHandles(stripped.quizzes, stripped.banners),
     errors,
     skipped,
   };
@@ -1929,7 +1884,6 @@ export const buildQuizTreesFromAudioFolder = async (
       quizzes,
       banners,
       content,
-      handles: {},
       errors: ['No MP3 files found in the selected folder'],
       skipped,
     };
@@ -1996,7 +1950,6 @@ export const buildQuizTreesFromAudioFolder = async (
     quizzes: stripped.quizzes,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildQuizHandles(stripped.quizzes, stripped.banners),
     errors,
     skipped,
   };
@@ -2141,7 +2094,7 @@ export const buildCourseTreesFromPreparedVideo = async (
       probe = await probeVideoFileForImport(file);
     } catch (error) {
       errors.push(`Failed to probe "${name}": ${error}`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     let segments;
@@ -2149,12 +2102,12 @@ export const buildCourseTreesFromPreparedVideo = async (
       segments = await importer.segmentFile(file, probe.durationSeconds, signal, onProgress);
     } catch (error) {
       errors.push(`Failed to segment "${name}": ${error}`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     if (segments.length === 0) {
       errors.push(`No segments produced for "${name}"`);
-      return { Trees, banners, content, handles: {}, errors, skipped };
+      return { Trees, banners, content, errors, skipped };
     }
 
     const bannerId = incrementID();
@@ -2185,7 +2138,6 @@ export const buildCourseTreesFromPreparedVideo = async (
       Trees,
       banners: stripped.banners,
       content: stripped.content,
-      handles: buildCourseHandles(stripped.banners),
       errors,
       skipped,
     };
@@ -2310,7 +2262,6 @@ export const buildCourseTreesFromVideoFolder = async (
     Trees,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildCourseHandles(stripped.banners),
     errors,
     skipped,
   };
@@ -2442,7 +2393,6 @@ export const buildCourseTreesFromAudioFolder = async (
     Trees,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildCourseHandles(stripped.banners),
     errors,
     skipped,
   };
@@ -2615,7 +2565,7 @@ export const exportCourseTreesToAudioFolder = async (
 
 export const buildTutorialTreesFromPreset = (
   preset: string
-): { Trees: TutorialTrees; banners: TutorialBanner[]; content: TutorialContent[][]; handles: Record<string, Handler[]> } | null => {
+): { Trees: TutorialTrees; banners: TutorialBanner[]; content: TutorialContent[][] } | null => {
   const parsed = parseTutorialPreset(preset);
   if (!parsed) return null;
   const { count, steps } = parsed;
@@ -2630,7 +2580,6 @@ export const buildTutorialTreesFromPreset = (
     Trees,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildTutorialHandles(stripped.banners),
   };
 };
 
@@ -2640,7 +2589,7 @@ export const buildTutorialTreesFromPreset = (
  */
 export const buildCourseTreesFromPreset = (
   preset: string
-): { Trees: CourseTrees; banners: CourseBanner[]; content: SlideGroup[]; handles: Record<string, Handler[]> } | null => {
+): { Trees: CourseTrees; banners: CourseBanner[]; content: SlideGroup[] } | null => {
   const parsed = parseCoursePreset(preset);
   if (!parsed) return null;
   const { count, covers, slidesPerCover } = parsed;
@@ -2663,7 +2612,6 @@ export const buildCourseTreesFromPreset = (
     Trees,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildCourseHandles(stripped.banners),
   };
 };
 
@@ -2674,7 +2622,7 @@ export const buildCourseTreesFromPreset = (
  */
 export const buildQuizTreesFromPreset = (
   preset: string
-): { Trees: QuizTrees; quizzes: Quiz[]; banners: CourseBanner[]; content: SlideGroup[]; handles: Record<string, Handler[]> } | null => {
+): { Trees: QuizTrees; quizzes: Quiz[]; banners: CourseBanner[]; content: SlideGroup[] } | null => {
   const parsed = parseQuizPreset(preset);
   if (!parsed) return null;
   const { count, questions, options, reports } = parsed;
@@ -2705,6 +2653,5 @@ export const buildQuizTreesFromPreset = (
     quizzes: stripped.quizzes,
     banners: stripped.banners,
     content: stripped.content,
-    handles: buildQuizHandles(stripped.quizzes, stripped.banners),
   };
 };
