@@ -10,7 +10,6 @@ import { OutgoingMessage, IncomingMessage } from "../slices/commsSlice";
 import { CourseState, setCourses } from "../slices/courseSlice";
 import { mutateCurApp } from "../slices/sessionSlice";
 import { abortIfHydrationDisabled } from "../../library/hydrationUtils";
-import { isFetchSequenceRunning } from "../../library/ThunksUtils";
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { CourseTrees, QuizTrees, TutorialTrees } from "../../library/controlPanelUtils";
 
@@ -30,13 +29,7 @@ export interface ItemWithQuizTrees {
 const scheduleCompletedUnzippingWhenIdle = (
     dispatch: ThunkDispatch<RootState, unknown, UnknownAction>,
 ) => {
-    const attempt = () => {
-        if (isFetchSequenceRunning()) {
-            setTimeout(attempt, UNZIP_COMPLETE_POLL_MS);
-            return;
-        }
-        dispatch(completedUnzipping(true));
-    };
+    const attempt = () => dispatch(completedUnzipping(true));
     setTimeout(attempt, UNZIP_COMPLETE_POLL_MS);
 };
 
