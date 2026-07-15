@@ -4,7 +4,6 @@ import { hydrateData, UnzipAndHydrate } from "../../library/actions";
 import { addUnzippedTrees, completedUnzipping, MappedCourseTrees, MappedQuizTrees, MappedTutorialTrees } from "../slices/settingsSlice";
 import { FS, FF, FD, sifterTypes, filterTypes, dashboardTypes } from "../../library/commsUtils";
 import { setTutorials, TutorialState } from "../slices/tutorialSlice";
-import { ItemWithCourseTrees, ItemWithQuizTrees, ItemWithTutorialTrees } from "./EncodingManagerGHI";
 import { QuizState, setQuizzes } from "../slices/quizSlice";
 import { parse, unSignMZip, unSignTZip, unSignQZip } from "../../library/EncodingManagerUtils";
 import { OutgoingMessage, IncomingMessage } from "../slices/commsSlice";
@@ -13,9 +12,21 @@ import { mutateCurApp } from "../slices/sessionSlice";
 import { abortIfHydrationDisabled } from "../../library/hydrationUtils";
 import { isFetchSequenceRunning } from "../../library/ThunksUtils";
 import type { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
+import { CourseTrees, QuizTrees, TutorialTrees } from "../../library/controlPanelUtils";
 
 const UNZIP_COMPLETE_POLL_MS = 2000;
-
+export interface ItemWithTutorialTrees {
+    Trees: TutorialTrees;
+    TreesId: number;
+}
+export interface ItemWithCourseTrees {
+    Trees: CourseTrees;
+    TreesId: number;
+}
+export interface ItemWithQuizTrees {
+    Trees: QuizTrees;
+    TreesId: number;
+}
 const scheduleCompletedUnzippingWhenIdle = (
     dispatch: ThunkDispatch<RootState, unknown, UnknownAction>,
 ) => {

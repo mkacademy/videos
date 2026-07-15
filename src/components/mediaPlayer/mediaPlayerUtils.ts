@@ -194,27 +194,6 @@ export function findSlideRowForPennant(
   return null;
 }
 
-export function validateCoursePennantExportable(
-  slideGroup: SlideGroup,
-  pennantId: number,
-): { valid: true } | { valid: false; error: string } {
-  const slideRow = findSlideRowForPennant(slideGroup, pennantId);
-  if (!slideRow || slideRow.length === 0) {
-    return { valid: false, error: 'missing slide items' };
-  }
-  const slideValidation = validatePennantSlideItems(slideRow);
-  if (!slideValidation.valid) {
-    return slideValidation;
-  }
-  if (!isChunkPayloadStoredLocally(slideRow)) {
-    return { valid: false, error: 'chunk payload not stored locally' };
-  }
-  if (!slideRowInitPayloadStored(slideRow)) {
-    return { valid: false, error: 'missing fMP4 init segment' };
-  }
-  return { valid: true };
-}
-
 /** True when every split part (and fMP4 init row, if present) has full base64 — not mime-only placeholders. */
 export function courseVideoHasExportablePayload(
   banner: CourseBanner,
