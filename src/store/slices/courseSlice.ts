@@ -21,12 +21,10 @@ import type {
   SetCoursesPayload,
   SlideGroup,
   SlideItem,
-  CourseSetSlidesPayload,
   CourseState,
 } from '../../library/CourseUtils';
 import {
   applySetCourses,
-  applySetSlides,
   applyUpdateCoversMetadata,
   applyUpdateSteps,
 } from '../../library/CourseUtils';
@@ -35,14 +33,6 @@ import { clearData } from './rowSlice';
 export type {
   CourseState,
   SetCoursesPayload,
-  CourseSetSlidesPayload,
-} from '../../library/CourseUtils';
-
-export {
-  isSlideGroupItem,
-  getBannerChaptersCouplings,
-  resolveChaptersForSlideInSelectedCourse,
-  resolveSlidesForChapterInSelectedCourse,
 } from '../../library/CourseUtils';
 
 const initialState: CourseState = {
@@ -60,9 +50,6 @@ const courseSlice = createSlice({
   reducers: {
     setCourses: (state, action: PayloadAction<SetCoursesPayload>) => {
       applySetCourses(state, action.payload);
-    },
-    setSlides: (state, action: PayloadAction<CourseSetSlidesPayload>) => {
-      applySetSlides(state, action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -126,7 +113,6 @@ const courseSlice = createSlice({
 
 export const {
   setCourses,
-  setSlides,
 } = courseSlice.actions;
 
 export default courseSlice.reducer;
