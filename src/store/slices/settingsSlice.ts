@@ -1,7 +1,6 @@
 import { signedOut } from './sessionSlice';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { fetchData } from '../../library/Thunks';
-import { fileManager } from '../../library/FileManager';
 import { CourseTrees, QuizTrees, TutorialTrees } from '../../library/controlPanelUtils';
 import { setQuizzes } from './quizSlice';
 import { setTutorials } from './tutorialSlice';
@@ -160,7 +159,6 @@ export const settingsSlice = createSlice({
         const isUnzipCourses = state.isUnzipCourses;
         const isUnzipQuizzes = state.isUnzipQuizzes;
         const voucher = state.voucher;
-        fileManager.clearFiles();
         return {
           ...initialSettings,
           isUnzipTutorials_,
