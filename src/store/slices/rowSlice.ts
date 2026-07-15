@@ -1,16 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { BaseFormattedData, DataRow, BaseEntity } from '../../components/Core/types';
-
-
 // Define a type mapping for entity names to their types
 export type EntityTypeMap = {
   foundation: BaseEntity;
 }
-
-
-
-
-
 export interface ResultPayload {
   entity: string;
   payload: DataRow[];
@@ -18,7 +11,6 @@ export interface ResultPayload {
   keywords?: string[];
   parent: string | undefined;
 }
-
 export interface FormattedRowsPayload {
   data: BaseFormattedData<EntityTypeMap[keyof EntityTypeMap]>;
   keywords?: string[];

@@ -30,6 +30,7 @@ import {
   applyUpdateCoversMetadata,
   applyUpdateSteps,
 } from '../../library/CourseUtils';
+import { clearData } from './rowSlice';
 
 export type {
   CourseState,
@@ -119,6 +120,7 @@ const courseSlice = createSlice({
         })) as SlideGroup[];
         state.content = nState;
       })
+      .addCase(clearData, () => initialState);
   },
 });
 

@@ -8,6 +8,7 @@ import {
   CommsState,
 } from '../../library/commsUtils';
 import { signedOut } from './sessionSlice';
+import { clearData } from './rowSlice';
 
 export type {
   IncomingMessage,
@@ -50,6 +51,7 @@ const commsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(signedOut, () => initialState);
+    builder.addCase(clearData, () => initialState);
   },
 });
 

@@ -17,6 +17,7 @@ import {
   applySetTutorials,
   assignTutorialContentContiguousOrdinals,
 } from '../../library/TutorialUtils';
+import { clearData } from './rowSlice';
 
 export type {
   TutorialState,
@@ -59,6 +60,7 @@ const tutorialSlice = createSlice({
       .addCase(updateRootsMetadata, (state, action) => {
         state.banners = state.banners.map(metadataUpdator(action.payload, false)).sort(orderPredicate);
       })
+      .addCase(clearData, () => initialState);
   },
 });
 

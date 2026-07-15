@@ -29,6 +29,7 @@ import {
   updateStepsMetadata,
   updateAnswersMetadata,
 } from '../../library/actions';
+import { clearData } from './rowSlice';
 const initialState: QuizState = {
   followupId: undefined,
   noQuizzes: true,
@@ -115,7 +116,9 @@ const quizSlice = createSlice({
         const { content } = applyCourseReducer(state, action);
         if (content) state.content = content;
       })
-
+      .addCase(clearData, () => {
+        return initialState;
+      })
   },
 });
 

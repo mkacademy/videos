@@ -5,6 +5,7 @@ import {
 } from '../../types/comments';
 import { fetchMessageComments } from '../thunks/fetchMessageComments';
 import { signedOut } from './sessionSlice';
+import { clearData } from './rowSlice';
 
 export type CommentsFor = 'course' | 'quiz' | 'tutorial';
 
@@ -81,6 +82,7 @@ const commentsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(signedOut, () => initialState);
+    builder.addCase(clearData, () => initialState);
     builder.addCase(fetchMessageComments.fulfilled, (state, action) => {
       const { _for, commentsId, comments, parentIDs, hasMore } = action.payload;
       const area = state[_for];
