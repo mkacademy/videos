@@ -32,7 +32,7 @@ import {
 import { updateSteps } from '../../library/actions';
 import { isDirectoryExportSupported, pickWritableDirectoryHandle } from '../../library/directoryTreeUtils';
 import { prependError, prependWarning } from '../../store/slices/errorSlice';
-import { clearEscrow, viewRequest } from '../../store/slices/viewSlice';
+import { viewRequest } from '../../store/slices/viewSlice';
 import { FaDownload, FaTrash } from 'react-icons/fa';
 import MediaScreenSwitcher from '../MediaScreenSwitcher';
 import * as styles from '../../styles/mediaPlayer.module.css';
@@ -70,7 +70,6 @@ const MediaPlayerAccountButton: React.FC = () => {
     if (!authenticated) return;
     e.preventDefault();
     dispatch(clearReducers());
-    dispatch(clearEscrow());
     dispatch({ type: signOut() });
   };
 

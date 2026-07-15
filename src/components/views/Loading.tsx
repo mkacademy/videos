@@ -46,6 +46,24 @@ const LoadingAnimation: React.FC = () => {
   const loadStartedAt = useRef(Date.now());
   const hydrateEnabledAt = useRef<number | null>(null);
 
+  const quizzes = useSelector((state: RootState) => state.quiz);
+  const tutorials = useSelector((state: RootState) => state.tutorial);
+  const courses = useSelector((state: RootState) => state.course);
+  const view = useSelector((state: RootState) => state.view);
+  const settings = useSelector((state: RootState) => state.settings);
+  const session = useSelector((state: RootState) => state.session);
+  const error = useSelector((state: RootState) => state.error);
+  const comms = useSelector((state: RootState) => state.comms);
+  console.log("quizzes", quizzes);
+  console.log("tutorials", tutorials);
+  console.log("courses", courses);
+  console.log("view", view);
+  console.log("settings", settings);
+  console.log("session", session);
+  console.log("error", error);
+  console.log("comms", comms);
+  console.log("loading");
+
   const { foundPairs, hasTutorial, hasCourse, hasQuiz, hasTreeParams, resolvedSearch } = useMemo(() => {
     const resolvedSearch = resolveEditorDeepLinkSearch(location.search);
     const searchParams = new URLSearchParams(

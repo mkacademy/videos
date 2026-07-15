@@ -105,53 +105,13 @@ const viewSlice = createSlice({
         || (state.message?.startsWith("hydrating") && !action.payload.startsWith("hydrating"));
       state.message = !iswaiting ? action.payload : state.message;
     },
-    viewLoading: (state) => {
-      state.isFetching = true;
-    },
     viewRequestFetching: (state, action: PayloadAction<boolean>) => {
       state.requestIsFetching = action.payload;
-    },
-
-    initFileManager: (state, action: PayloadAction<string>) => {
-      state.actionType = action.payload;
-    },
-    viewPayload: (state, action: PayloadAction<ViewPayload>) => {
-      const { parentData, ...rest } = action.payload;
-      // Update all other properties (only if they are defined)
-      if (rest.pages !== undefined) state.pages = rest.pages;
-      if (rest.icons !== undefined) state.icons = rest.icons;
-      if (rest.type !== undefined) state.actionType = rest.type;
-      if (rest.yoinks !== undefined) state.yoinks = rest.yoinks;
-      if (rest.entity !== undefined) state.entity = rest.entity;
-      if (rest.keyids !== undefined) state.keyids = rest.keyids;
-      if (rest.keywords !== undefined) state.keywords = rest.keywords;
-      if (rest.fetchedData !== undefined) state.fetchedData = rest.fetchedData;
-      if (rest.selectedMenu !== undefined) state.selectedMenu = rest.selectedMenu;
-      if (rest.parentIndeces !== undefined) state.parentIndeces = rest.parentIndeces;
-      // Handle parentData specially
-      if (parentData) {
-        state.parentData = {
-          parent: parentData.parent,
-          IDs: parentData.IDs || [],
-          curApp: parentData.curApp || 0
-        };
-        state.parent = parentData.parent;
-      }
-    },
-    viewMenu: (state, action: PayloadAction<number>) => {
-      state.selectedMenu = action.payload;
     },
     viewRequest: (state, action: PayloadAction<RequestPayload>) => {
       const { message, completed } = action.payload;
       state.requestIsProcessing = !completed;
       state.message = message ?? COMPLETED_MESSAGE;
-    },
-    clearEscrow: (state) => {
-      console.log("cleared_view");
-      state.fetchedData = undefined;
-    },
-    viewPage: (state, action: PayloadAction<string>) => {
-      state.pages = [...state.pages, action.payload];
     },
   },
   extraReducers: (builder) => {
@@ -164,14 +124,8 @@ const viewSlice = createSlice({
 
 export const {
   cpanelMessage,
-  viewLoading,
   viewRequestFetching,
-  initFileManager,
-  viewPayload,
-  viewMenu,
   viewRequest,
-  clearEscrow,
-  viewPage,
 } = viewSlice.actions;
 
 export default viewSlice.reducer; 

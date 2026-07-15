@@ -2,7 +2,7 @@ import { Middleware, UnknownAction } from '@reduxjs/toolkit';
 import { RootState } from '../index';
 import {
   hydrateData, hydratedThenFetch } from '../../library/actions';
-import { viewPayload, viewRequest } from '../slices/viewSlice';
+import { viewRequest } from '../slices/viewSlice';
 import { getCurAppName, getPlural } from "../../utils";
 import { abortIfHydrationDisabled, handleHydrationLogic } from '../../library/hydrationUtils';
 import { DataRow } from '../../components/Core/types';
@@ -32,16 +32,7 @@ export interface QueueItem { item: ReturnType<typeof setTimeout> | DataRow[], cu
 export const setQueue = (item: QueueItem) => {
   queue.push(item);
 };
-const replaceQueueItem = (item: DataRow[], index: number) => {
-  const { curApp } = queue[index];
-  queue[index] = { item, curApp };
-};
-const isTimeout = (curApp: number | undefined): (queueItem: QueueItem) => boolean => {
-  return (queueItem: QueueItem) => curApp !== undefined && queueItem.curApp === curApp && typeof queueItem.item === 'number';
-};
-const isNotTimeout = (queueItem: QueueItem): boolean => {
-  return typeof queueItem.item !== 'number';
-};
+
 const getCpanelMessage = (webapp: string, remaining: number): string =>
   getHydrationCpanelMessage(webapp, remaining, getHydrationLegProgress());
 
@@ -68,22 +59,6 @@ const controlPanel: Middleware<{}, RootState> = ({ dispatch, getState }) => (nex
     const newContent = [...(flushedContent || []), ...(content || [])];
     return next(setQuizzes({ quizzes: newQuizzes, content: newContent, banners: newBanners, Trees, TreesId }));
   }
-  if (viewPayload.match(action)) {
-    const { payload: { curApp, ...rest } } = action;
-    const { fetchedData } = rest;
-    const timeoutIndex = queue.findIndex(isTimeout(curApp));
-    if (fetchedData && timeoutIndex !== -1) {
-      next(viewPayload({}));
-      replaceQueueItem(fetchedData, timeoutIndex);
-      const predicate = (queueItem: QueueItem) => isNotTimeout(queueItem);
-      const queueItems: QueueItem[] = queue.filter(predicate);
-      if (queueItems.length === queue.length) {
-        queue.length = 0;
-      }
-    }
-    else next(viewPayload(rest));
-  }
-
 
   if (hydrateData.match(action) || hydratedThenFetch.match(action)) {
     if (!isBypassShouldHydrateSession() && abortIfHydrationDisabled(getState)) {

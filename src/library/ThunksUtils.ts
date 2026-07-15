@@ -10,7 +10,6 @@ import { ResultPayload } from '../store/slices/rowSlice';
 import { Quiz, setQuizzes } from '../store/slices/quizSlice';
 import { CpanelRow } from '../components/Core/types';
 import { QueryParams } from '../store/types';
-import { viewRequestFetching } from '../store/slices/viewSlice';
 import { insertStats } from './actions';
 import { withReciepients } from '../Hooks/useCommunications/useCommunications';
 import { RootState } from '../store';
@@ -229,7 +228,6 @@ export interface Executedquery {
 }
 
 export interface FetchDataPayload {
-    fetchSequence?: { index: number; total: number };
     isMinimumFeatureMode?: boolean;
     convolution: string;
     webapp: string;
@@ -450,7 +448,6 @@ export const validateSkeletonsThenDispatch = (response: FetchedData): validatedS
 
 interface validateThenDispatchPayload {
     query: Record<string, Record<string, Executedquery>>;
-    fetchSequence?: FetchDataPayload['fetchSequence'];
     response: FetchedData;
     dispatch: Dispatch;
     state: RootState;
@@ -464,7 +461,6 @@ export const validateThenDispatch = ({
     dispatch,
     curApp,
     state,
-    fetchSequence,
     requestId
 }: validateThenDispatchPayload): void => {
     const {
@@ -486,42 +482,34 @@ export const validateThenDispatch = ({
     }
     const { content, counts, totals, handlers } = response;
     const routeReasons: string[] = [];
-    let abortRemainingFetchSequence = false;
 
     if (isQuizResponse(response)) {
         console.log("is_quiz_response");
         const [app, _] = getCurAppIndex('quiz');
         if (!app) throw new Error('Invalid app index');
-        const pageroute = selectedRoutes[app];
         dispatch(setQuizzes(response));
         dispatch(fetchedHandles(response.handlers ?? emptyHandlers));
         dispatch(insertStats({ screen: 'quiz', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
-        if (fetchSequence && !hasRouteSliceData(response, pageroute, 'quiz', routeReasons)) abortRemainingFetchSequence = true;
 
     }
     else if (isCourseResponse(response)) {
         console.log("is_course_response");
         const [app, _] = getCurAppIndex('course');
         if (!app) throw new Error('Invalid app index');
-        const pageroute = selectedRoutes[app];
         dispatch(setCourses(response));
         dispatch(fetchedHandles(response.handlers ?? emptyHandlers));
         dispatch(insertStats({ screen: 'course', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
-        if (fetchSequence && !hasRouteSliceData(response, pageroute, 'course', routeReasons)) abortRemainingFetchSequence = true;
     }
     else if (isTutorialResponse(response)) {
         console.log("is_tutorial_response");
         const [app, _] = getCurAppIndex('tutorial');
         if (!app) throw new Error('Invalid app index');
-        const pageroute = selectedRoutes[app];
         dispatch(setTutorials(response));
         dispatch(fetchedHandles(response.handlers ?? emptyHandlers));
         dispatch(insertStats({ screen: 'tutorial', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
-        if (fetchSequence && !hasRouteSliceData(response, pageroute, 'tutorial', routeReasons)) abortRemainingFetchSequence = true;
     }
     else if (isCountsResponse(response)) {
         console.log("is_counts_response");
-        if (fetchSequence) abortRemainingFetchSequence = true;
     }
     else {
         if (content && Array.isArray(content) && content.length > 0) {
@@ -542,15 +530,9 @@ export const validateThenDispatch = ({
             console.log("is_empty_response");
             if (routeReasons.length > 0) logGuardInvalidReasons(`has_route_slice_data_${getCurAppName(curApp)}`, routeReasons, response);
             dispatch(insertStats({ screen: getCurAppName(curApp), query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
-            if (fetchSequence && routeReasons.length > 0) abortRemainingFetchSequence = true;
         }
     }
     setTimeout(() => dispatch(initTotals()), 100);
-    if (abortRemainingFetchSequence) abortFetchSequence();
-
-    const isLastFetchInSequence =
-        !fetchSequence || fetchSequence.index >= fetchSequence.total - 1;
-    if (isLastFetchInSequence || abortRemainingFetchSequence) dispatch(viewRequestFetching(false));
 
 }
 
@@ -587,27 +569,6 @@ const logGuardInvalidReasons = (guardName: string, reasons: string[], response: 
             ? Object.keys(response as Record<string, unknown>).slice(0, 20)
             : [];
     console.log(`${guardName}: invalid`, { reasons, keys });
-};
-
-const hasQuizzes = (response: FetchedData, reasons?: string[]): boolean => {
-    if (typeof response !== 'object' || response === null) {
-        reasons?.push('response is null or not an object');
-        return false;
-    }
-    const o = response as unknown as Record<string, unknown>;
-    if (!('quizzes' in o)) {
-        reasons?.push("missing key 'quizzes'");
-        return false;
-    }
-    if (!Array.isArray(o.quizzes)) {
-        reasons?.push("'quizzes' is not an array");
-        return false;
-    }
-    if (o.quizzes.length <= 0) {
-        reasons?.push("'quizzes' array is empty");
-        return false;
-    }
-    return true;
 };
 
 const hasCourseBanners = (response: FetchedData, reasons?: string[]): boolean => {
@@ -734,124 +695,6 @@ const hasTutorialContent = (response: FetchedData, reasons?: string[], requireNo
         return false;
     }
     return true;
-};
-
-const hasNonEmptyContent = (response: FetchedData, reasons?: string[]): boolean => {
-    if (typeof response !== 'object' || response === null) {
-        reasons?.push('response is null or not an object');
-        return false;
-    }
-    const o = response as unknown as Record<string, unknown>;
-    if (!('content' in o)) {
-        reasons?.push("missing key 'content'");
-        return false;
-    }
-    if (!Array.isArray(o.content)) {
-        reasons?.push("'content' is not an array");
-        return false;
-    }
-    if (o.content.length <= 0) {
-        reasons?.push("'content' array is empty");
-        return false;
-    }
-    return true;
-};
-
-const hasBannersWithNonEmptyPennants = (response: FetchedData, reasons?: string[]): boolean => {
-    if (!hasCourseBanners(response, reasons)) return false;
-    const banners = (response as unknown as Record<string, unknown>).banners as unknown[];
-    const hasPennants = banners.some((banner) => {
-        if (typeof banner !== 'object' || banner === null) return false;
-        const pennants = (banner as Record<string, unknown>).pennants;
-        return Array.isArray(pennants) && pennants.length > 0;
-    });
-    if (!hasPennants) reasons?.push('no banner has non-empty pennants');
-    return hasPennants;
-};
-
-const hasContentSlidesNonEmpty = (response: FetchedData, reasons?: string[]): boolean => {
-    if (!hasNonEmptyContent(response, reasons)) return false;
-    const content = (response as unknown as Record<string, unknown>).content as unknown[];
-    const hasSlides = content.some((group) => {
-        if (typeof group !== 'object' || group === null || Array.isArray(group)) return false;
-        const slides = (group as Record<string, unknown>).slides;
-        return Array.isArray(slides) && slides.length > 0;
-    });
-    if (!hasSlides) reasons?.push('no content group has non-empty slides');
-    return hasSlides;
-};
-
-const hasQuizSubmissions = (response: FetchedData, reasons?: string[]): boolean => {
-    if (typeof response !== 'object' || response === null) {
-        reasons?.push('response is null or not an object');
-        return false;
-    }
-    const o = response as unknown as Record<string, unknown>;
-    if (!('quizzes' in o) || !Array.isArray(o.quizzes)) {
-        reasons?.push("missing or invalid 'quizzes' for submissions check");
-        return false;
-    }
-    const hasSubmissions = o.quizzes.some((quiz) => {
-        if (typeof quiz !== 'object' || quiz === null) return false;
-        const pennants = (quiz as Record<string, unknown>).pennants;
-        return Array.isArray(pennants) && pennants.length > 0;
-    });
-    if (!hasSubmissions) reasons?.push('no quiz has non-empty pennants (submissions)');
-    return hasSubmissions;
-};
-
-/** Deep per-route slice check — used to decide if we should abort the fetch sequence. */
-const hasRouteSliceData = (
-    response: FetchedData,
-    route: string | undefined,
-    app: string,
-    reasons?: string[],
-): boolean => {
-    if (!route) return true;
-
-    switch (app) {
-        case 'tutorial':
-            switch (route) {
-                case 'foundationfilters':
-                    return hasTutorialBanners(response, reasons);
-                case 'filtersinstructions':
-                    return hasTutorialContent(response, reasons, true);
-                default:
-                    return true;
-            }
-        case 'course':
-            switch (route) {
-                case 'foundationsifters':
-                    return hasCourseBanners(response, reasons);
-                case 'siftersfilters':
-                    return hasBannersWithNonEmptyPennants(response, reasons);
-                case 'siftersinstructions':
-                    return hasNonEmptyContent(response, reasons);
-                case 'filtersinstructions':
-                    return hasContentSlidesNonEmpty(response, reasons);
-                default:
-                    return true;
-            }
-        case 'quiz':
-            switch (route) {
-                case 'foundationdashboards':
-                    return hasQuizzes(response, reasons);
-                case 'dashboardssifters':
-                    return hasCourseBanners(response, reasons);
-                case 'dashboardsfilters':
-                    return hasQuizSubmissions(response, reasons);
-                case 'siftersfilters':
-                    return hasBannersWithNonEmptyPennants(response, reasons);
-                case 'siftersinstructions':
-                    return hasNonEmptyContent(response, reasons);
-                case 'filtersinstructions':
-                    return hasContentSlidesNonEmpty(response, reasons);
-                default:
-                    return true;
-            }
-        default:
-            return true;
-    }
 };
 
 // Soft type guards for skeleton responses — distinguish app shape, not route depth.

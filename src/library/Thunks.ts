@@ -2,7 +2,6 @@ import { jwtDecode } from "jwt-decode";
 import { getCurAppIndex, userroles, timeout, getMoldsResolver } from "../utils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { EntityTypeMap, ResultPayload } from "../store/slices/rowSlice";
-import { clearEscrow } from "../store/slices/viewSlice";
 import { getGraphqlResolver, redirectUrl, ToolKit, RECORDS, Tree } from "../utils";
 import { clearData as clearReducers } from "../store/slices/rowSlice";
 import { UpdateTextsPayload } from "../store/slices/textSlice";
@@ -62,7 +61,6 @@ export const authenticate = createAsyncThunk<Partial<SessionState>, AuthPayload,
                 const roleIndex = roles.findIndex((r: string) => r === userroles[baseRoleIndex]);
                 console.log("authenticate_roles", roles);
                 dispatch(clearReducers());
-                dispatch(clearEscrow());
                 redirectUrl(ingredients);
                 const session = {
                     quota,
@@ -185,7 +183,7 @@ export const fetchData = createAsyncThunk<
     'fetchData',
     async (payload: FetchDataPayload, { rejectWithValue, getState, dispatch, requestId }) => {
         const state = getState() as RootState;
-        const { convolution, search, webapp, fetchSequence } = payload;
+        const { convolution, search, webapp } = payload;
         const {
             isUnzipCourses,
             isUnzipTutorials,
@@ -211,7 +209,6 @@ export const fetchData = createAsyncThunk<
             unzipCoursesType,
             unzipTutorialsType,
             unzipQuizzesType,
-            fetchSequence,
             convolution,
             webapp,
             search,
@@ -253,7 +250,6 @@ export const fetchData = createAsyncThunk<
                 : await getAnonymousRecords(params);
             const { executedQueries: query, ...fetchedData } = content ?? { counts: {} };
             validateThenDispatch({
-                fetchSequence: payload.fetchSequence,
                 response: fetchedData,
                 curApp: unzippedApp,
                 dispatch,
@@ -283,7 +279,6 @@ type UnzipFetchArgs = {
     unzipCoursesType: string;
     unzipTutorialsType: string;
     unzipQuizzesType: string;
-    fetchSequence?: { index: number; total: number };
 };
 
 let curskip = 0;
@@ -297,7 +292,6 @@ const getUnzippedApp = (args: UnzipFetchArgs): [number, string, string] => {
         curApp,
         webapp,
         convolution,
-        fetchSequence,
         isUnzipCourses,
         isUnzipTutorials,
         isUnzipQuizzes,
@@ -306,7 +300,6 @@ const getUnzippedApp = (args: UnzipFetchArgs): [number, string, string] => {
         unzipQuizzesType,
     } = args;
     const _webapp = webapp.toLowerCase();
-    if (fetchSequence) return [curApp, webapp, convolution];
     switch (_webapp) {
 
         case 'course': {

@@ -7,6 +7,7 @@ import {
   type OutgoingMessage,
   CommsState,
 } from '../../library/commsUtils';
+import { signedOut } from './sessionSlice';
 
 export type {
   IncomingMessage,
@@ -46,6 +47,9 @@ const commsSlice = createSlice({
     setOutgoings: (state, action: PayloadAction<OutgoingMessage[]>) => {
       state.outgoing = mergeOutgoingMessages(state.outgoing, action.payload);
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signedOut, () => initialState);
   },
 });
 
