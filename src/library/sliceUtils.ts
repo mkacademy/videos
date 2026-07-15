@@ -1,6 +1,6 @@
 import type { Draft } from 'immer';
 import { jwtDecode } from 'jwt-decode';
-import { UpdatePayload, OrdinalUpdate, MetadataUpdate } from './actions';
+import { UpdatePayload, MetadataUpdate } from './actions';
 import type { Pennant, SlideItem, Banner as CourseBanner, SlideGroupItem, SlideGroup } from './CourseUtils';
 import { Quiz, Submition } from './QuizUtils';
 import type { Banner, Content } from './TutorialUtils';
@@ -381,16 +381,6 @@ export const idsMergerComms = (
       sizeInBytes: 0,
     };
   else return row;
-};
-
-export const ordinalsUpdator = <T extends Mergable>(payload: OrdinalUpdate[], hasBannerId: boolean) => (row: Draft<T>): Draft<T> => {
-  const match = hasBannerId
-    ? payload.find(
-      ({ id, bannerIds }) => bannerIds.includes(row.bannerId || 0) && id === row.id
-    )
-    : payload.find(({ id }) => id === row.id);
-  if (match === undefined) return row;
-  return { ...row, ordinal: match.ordinal } as Draft<T>;
 };
 
 export const metadataUpdator = <T extends Mergable>(payload: MetadataUpdate[], hasBannerId: boolean) => (row: Draft<T>): Draft<T> => {

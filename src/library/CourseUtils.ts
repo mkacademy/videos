@@ -10,11 +10,10 @@ import {
   mergeSlideshows,
   courseBannerDedupKey,
   textsMerger,
-  ordinalsUpdator,
   metadataUpdator,
   type CourseCouplings,
 } from "./sliceUtils";
-import { type MetadataUpdate, type OrdinalUpdate, type UpdatePayload } from "./actions";
+import { type MetadataUpdate, type UpdatePayload } from "./actions";
 
 export interface SlideItem {
   id: number;
@@ -195,28 +194,6 @@ export const applyUpdateSteps = (state: CourseState, payload: UpdatePayload[]): 
       )
   );
   state.content = nState;
-};
-
-export const applyUpdateCoversOrdinals = (state: CourseState, payload: OrdinalUpdate[]): void => {
-  const { content } = state;
-  const nState = content.map(({ slides, ...fields }: SlideGroup) => {
-    const updatedFields = Object.entries(fields).reduce(
-      (acc, [key, value]) => {
-        if (typeof value === "object" && value !== null && "ordinal" in value)
-          acc[key] = ordinalsUpdator(payload, true)(value);
-        else acc[key] = value;
-        return acc;
-      },
-      {} as { [x: number]: SlideGroupItem }
-    );
-
-    return {
-      ...updatedFields,
-      slides,
-    };
-  });
-  state.content = nState;
-  state.couplings = getSlideIndeces(state.banners, nState);
 };
 
 export const applyUpdateCoversMetadata = (state: CourseState, payload: MetadataUpdate[]): void => {

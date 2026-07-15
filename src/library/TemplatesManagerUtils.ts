@@ -12,7 +12,7 @@ import {
 } from "./CourseUtils";
 import { Quiz } from "../store/slices/quizSlice";
 import { CourseTrees, QuizTrees, TutorialTrees } from "./controlPanelUtils";
-import { flushCourseTrees, flushQuizTrees, flushTutorialTrees } from "./controlPanelUtilz";
+import { flushTutorialTrees } from "./controlPanelUtilz";
 import { Metadata } from "../components/Core/types";
 import {
   dataUrlByteLength,
@@ -66,61 +66,6 @@ import {
   validateTutorialVideoChunkBanners,
 } from "./videoChunkPlayback";
 import { withTruncatedSaveTitle } from "./DeletionManagerUtils";
-
-/** Mirrors `tutorialPresetOptions` in ColFourteen.tsx */
-const TUTORIAL_PRESET: Record<string, { count: number; steps: number }> = {
-  "1_10": { count: 1, steps: 10 },
-  "5_10": { count: 5, steps: 10 },
-  "5_50": { count: 5, steps: 50 },
-  "10_10": { count: 10, steps: 10 },
-  "15_10": { count: 1, steps: 15 },
-  "25_10": { count: 1, steps: 25 },
-};
-
-/** Mirrors `coursePresetOptions` in ColFourteen.tsx — middle = covers per course, last = slides per cover. */
-const COURSE_PRESET: Record<string, { count: number; covers: number; slidesPerCover: number }> = {
-  "1_10_4": { count: 1, covers: 10, slidesPerCover: 4 },
-  "1_50_4": { count: 1, covers: 50, slidesPerCover: 4 },
-  "5_10_4": { count: 5, covers: 10, slidesPerCover: 4 },
-  "5_50_4": { count: 5, covers: 50, slidesPerCover: 4 },
-  "10_10_4": { count: 10, covers: 10, slidesPerCover: 4 },
-  "15_10_4": { count: 15, covers: 15, slidesPerCover: 4 },
-  "25_10_4": { count: 25, covers: 25, slidesPerCover: 4 },
-};
-
-/** Mirrors `quizPresetOptions` — per quiz: `questions` course banners; each has `options` slideGroupItems and `reports` slides under one pennant. */
-const QUIZ_PRESET: Record<string, { count: number; questions: number; options: number; reports: number }> = {
-  "1_10_4_1": { count: 1, questions: 10, options: 2, reports: 1 },
-  "5_10_4_1": { count: 5, questions: 10, options: 2, reports: 1 },
-  "5_50_4_1": { count: 5, questions: 50, options: 2, reports: 1 },
-  "10_10_4_1": { count: 10, questions: 10, options: 2, reports: 1 },
-  "15_10_4_1": { count: 15, questions: 15, options: 2, reports: 1 },
-  "25_10_4_1": { count: 25, questions: 25, options: 2, reports: 1 },
-};
-
-export const parseTutorialPreset = (preset: string): { count: number; steps: number } | null => {
-  const spec = TUTORIAL_PRESET[preset];
-  return spec ?? null;
-};
-
-export const parseCoursePreset = (preset: string): {
-  count: number;
-  covers: number;
-  slidesPerCover: number;
-} | null => {
-  const spec = COURSE_PRESET[preset];
-  return spec ?? null;
-};
-
-export const parseQuizPreset = (preset: string): {
-  count: number;
-  questions: number;
-  options: number;
-  reports: number;
-} | null => {
-  const spec = QUIZ_PRESET[preset];
-  return spec ?? null;
-};
 
 /** Flush defaults attach metadata; preset materialization should leave `metadata` unset. */
 const withoutMetadata = <T extends {
@@ -2561,97 +2506,4 @@ export const exportCourseTreesToAudioFolder = async (
   }
 
   return { exportedBanners, exportedFiles, errors, skipped };
-};
-
-export const buildTutorialTreesFromPreset = (
-  preset: string
-): { Trees: TutorialTrees; banners: TutorialBanner[]; content: TutorialContent[][] } | null => {
-  const parsed = parseTutorialPreset(preset);
-  if (!parsed) return null;
-  const { count, steps } = parsed;
-  const Trees: TutorialTrees = {};
-  for (let i = 0; i < count; i++) {
-    const bannerId = incrementID();
-    Trees[bannerId] = Array.from({ length: steps }, () => incrementID());
-  }
-  const flushed = flushTutorialTrees(Trees);
-  const stripped = stripTutorialFlushMetadata(flushed.banners ?? [], flushed.content ?? []);
-  return {
-    Trees,
-    banners: stripped.banners,
-    content: stripped.content,
-  };
-};
-
-/**
- * Each course banner: **covers** pennants (one per cover), each with **slidesPerCover** slide ids, plus
- * **slideGroupItems** (one id per cover — parallel cover row for `flushCourseTrees` / `getCourseTrees`).
- */
-export const buildCourseTreesFromPreset = (
-  preset: string
-): { Trees: CourseTrees; banners: CourseBanner[]; content: SlideGroup[] } | null => {
-  const parsed = parseCoursePreset(preset);
-  if (!parsed) return null;
-  const { count, covers, slidesPerCover } = parsed;
-  const Trees: CourseTrees = {};
-  for (let i = 0; i < count; i++) {
-    const bannerId = incrementID();
-    const byPennant: Record<number, number[]> = {};
-    for (let c = 0; c < covers; c++) {
-      const pennantId = incrementID();
-      byPennant[pennantId] = Array.from({ length: slidesPerCover }, () => incrementID());
-    }
-    Trees[bannerId] = {
-      ...byPennant,
-      slideGroupItems: Array.from({ length: covers }, () => incrementID()),
-    };
-  }
-  const flushed = flushCourseTrees(Trees);
-  const stripped = stripCourseFlushMetadata(flushed.banners ?? [], flushed.content ?? []);
-  return {
-    Trees,
-    banners: stripped.banners,
-    content: stripped.content,
-  };
-};
-
-/**
- * Each quiz → `banners` is a {@link CourseTrees} with **one course banner per question**.
- * Per question banner: **slideGroupItems** = options (ids); one pennant with **slides** = reports (ids).
- * No `submissions` on the quiz tree.
- */
-export const buildQuizTreesFromPreset = (
-  preset: string
-): { Trees: QuizTrees; quizzes: Quiz[]; banners: CourseBanner[]; content: SlideGroup[] } | null => {
-  const parsed = parseQuizPreset(preset);
-  if (!parsed) return null;
-  const { count, questions, options, reports } = parsed;
-  const Trees: QuizTrees = {};
-  for (let i = 0; i < count; i++) {
-    const quizId = incrementID();
-    const questionBanners: CourseTrees = {};
-    for (let q = 0; q < questions; q++) {
-      const questionBannerId = incrementID();
-      const pennantId = incrementID();
-      questionBanners[questionBannerId] = {
-        slideGroupItems: Array.from({ length: options }, () => incrementID()),
-        [pennantId]: Array.from({ length: reports }, () => incrementID()),
-      };
-    }
-    Trees[quizId] = {
-      banners: questionBanners,
-    };
-  }
-  const flushed = flushQuizTrees(Trees);
-  const stripped = stripQuizFlushMetadata(
-    flushed.quizzes ?? [],
-    flushed.banners ?? [],
-    flushed.content ?? []
-  );
-  return {
-    Trees,
-    quizzes: stripped.quizzes,
-    banners: stripped.banners,
-    content: stripped.content,
-  };
 };

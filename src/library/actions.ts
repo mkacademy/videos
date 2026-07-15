@@ -1,11 +1,7 @@
 import { createAction } from '@reduxjs/toolkit';
-import { MutateEntityResponse } from './types';
 import { Metadata, Status } from '../components/Core/types';
 import { FetchDataPayload } from './ThunksUtils';
 import { ResultPayload } from '../store/slices/rowSlice';
-
-/** Slices listen for this fulfilled type from the (historical) fetchSkeletons thunk. */
-export const FETCH_SKELETONS_FULFILLED = 'fetchSkeletons/fulfilled';
 
 export interface MetadataPayload {
   interaction?: boolean;
@@ -13,18 +9,6 @@ export interface MetadataPayload {
   GUID?: string;
   orig: string;
   dest: string;
-}
-
-export interface clearSelectedPayload {
-  pathname: string;
-  payload: erasePayload;
-}
-
-export interface erasePayload {
-  Ids?: number[] | string[];
-  IDs?: number[];
-  route?: string;
-  isShow: boolean;
 }
 
 export interface UpdatePayload {
@@ -45,36 +29,6 @@ export interface UpdatePayload {
   edited?: boolean;
 }
 
-export interface OrdinalUpdate {
-  id: number;
-  ordinal: number;
-  bannerIds: number[];
-}
-
-/** Negative ordinals are reserved for comment chaining and must not be sent as reorder updates. */
-export const isPersistableOrdinal = (ordinal: number): boolean =>
-  Number.isFinite(ordinal) && ordinal >= 0;
-
-export const sanitizeNumericOrdinalBatch = (
-  batch: Record<number, number>,
-): Record<number, number> => {
-  const sanitized: Record<number, number> = {};
-  for (const [idStr, ordinal] of Object.entries(batch)) {
-    if (isPersistableOrdinal(ordinal)) sanitized[Number(idStr)] = ordinal;
-  }
-  return sanitized;
-};
-
-export const sanitizeStringKeyOrdinalBatch = (
-  batch: Record<string, number>,
-): Record<string, number> => {
-  const sanitized: Record<string, number> = {};
-  for (const [key, ordinal] of Object.entries(batch)) {
-    if (isPersistableOrdinal(ordinal)) sanitized[key] = ordinal;
-  }
-  return sanitized;
-};
-
 export interface MetadataUpdate {
   id: number;
   owner: boolean;
@@ -82,8 +36,6 @@ export interface MetadataUpdate {
   bannerId?: number;
 }
 
-export const mutateRows = createAction<MutateEntityResponse>('mutateRows');
-export const linkRows = createAction<MutateEntityResponse>('linkRows');
 export const hydrateRows = createAction<ResultPayload>('hydrateRows');
 export const hydrateData = createAction<number>('hydrateData');
 
