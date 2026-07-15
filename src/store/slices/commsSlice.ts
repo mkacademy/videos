@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { orderPredicate, contiguousOrdinalPred } from '../../library/sliceUtils';
 import {
   mergeOutgoingMessages,
-  createCommsStartIdInitial,
   type IncomingMessage,
   type OutgoingMessage,
   CommsState,
@@ -17,11 +16,8 @@ export type {
 } from '../../library/commsUtils';
 
 const initialState: CommsState = {
-  startId: createCommsStartIdInitial(),
-  modifiedOrdinals: {},
   outgoing: [],
   incoming: [],
-  tutors: [],
 };
 
 const commsSlice = createSlice({

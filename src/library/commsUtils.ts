@@ -31,32 +31,6 @@ export const dashboardTypes = [MD, BD, UD];
 
 export type TutorType = typeof U | typeof B | typeof M;
 
-export interface TutorStatus {
-  isModified: boolean;
-  state: boolean;
-}
-
-export interface Tutor {
-  id: number;
-  type: TutorType;
-  email: string;
-  title: string;
-  status: number;
-  ordinal: number;
-  isAble: TutorStatus;
-  isActive: TutorStatus;
-  isDismissed: boolean;
-  isHighlighted: boolean;
-  isModified: boolean;
-  contiguousOrdinal?: number;
-  checked?: boolean;
-  motion?: {
-    prev: TutorType;
-    cur: TutorType;
-    token: string;
-  };
-}
-
 export type IncomingType = typeof FF | typeof FI | typeof FS | typeof FD;
 
 export type OutgoingType = typeof MF | typeof UF | typeof BF | typeof MI | typeof UI | typeof BI |
@@ -113,38 +87,9 @@ export interface OutgoingMessage {
   };
 }
 
-/** Per-outline-lane anchor for Shift+single-id outline tracking (see `RangeSelectionOrReorderManger`). */
-export interface CommsStartId {
-  tutorOutline: string | null;
-  outgoingOutline: string | null;
-  incomingOutline: string | null;
-}
-
-export const createCommsStartIdInitial = (): CommsStartId => ({
-  tutorOutline: null,
-  outgoingOutline: null,
-  incomingOutline: null,
-});
-
-/** One batch: composite row key (`id`+`type`) → new `ordinal`. */
-export type CommsModifiedOrdinalBatch = Record<string, number>;
-
-/**
- * Tracks ordinal edits from comms reorder reducers: lane → row `type` within that lane →
- * append-only batches of { compositeKey → new ordinal }.
- */
-export interface CommsModifiedOrdinals {
-  tutor?: Record<string, CommsModifiedOrdinalBatch[]>;
-  outgoing?: Record<string, CommsModifiedOrdinalBatch[]>;
-  incoming?: Record<string, CommsModifiedOrdinalBatch[]>;
-}
-
 export interface CommsState {
-  tutors: Tutor[];
   outgoing: OutgoingMessage[];
   incoming: IncomingMessage[];
-  startId: CommsStartId;
-  modifiedOrdinals: CommsModifiedOrdinals;
 }
 
 export const mergeOutgoingMessages = (
@@ -178,20 +123,5 @@ export const mergeOutgoingMessages = (
       return prev;
     }, {})
   ).sort(orderPredicate).map((row, index, array) => contiguousOrdinalPred(row, index, array));
-
-export const outRoutes: Record<OutgoingType, string> = {
-  [BF]: "bossesFilters",
-  [BS]: "bossesSifters",
-  [MS]: "minionsSifters",
-  [MF]: "minionsFilters",
-  [BD]: "bossesDashboards",
-  [MD]: "minionsDashboards",
-  [US]: "underbossesSifters",
-  [BI]: "bossesInstructions",
-  [UF]: "underbossesFilters",
-  [MI]: "minionsInstructions",
-  [UD]: "underbossesDashboards",
-  [UI]: "underbossesInstructions",
-};
 
 export const avatars: Record<TutorType, string> = { [B]: bossImg, [M]: minionImg, [U]: underbossImg };

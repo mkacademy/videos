@@ -1,8 +1,7 @@
 import { createAction } from '@reduxjs/toolkit';
 import { MutateEntityResponse } from './types';
 import { Metadata, Status } from '../components/Core/types';
-import { StatsMiddlewareState } from '../store/types';
-import { Executedquery, FetchDataPayload } from './ThunksUtils';
+import { FetchDataPayload } from './ThunksUtils';
 import { ResultPayload } from '../store/slices/rowSlice';
 
 /** Slices listen for this fulfilled type from the (historical) fetchSkeletons thunk. */
@@ -83,55 +82,14 @@ export interface MetadataUpdate {
   bannerId?: number;
 }
 
-const fetchedErasers: Record<string, string> = {
-  "/convolution/quiz": "quiz/clearSelected",
-  "/convolution/tutors": "comms/eraseTutors",
-  "/convolution/course": "course/clearSelected",
-  "/convolution/outgoing": "comms/eraseOutgoing",
-  "/convolution/incoming": "comms/eraseIncoming",
-  "/convolution/tutorial": "tutorial/clearSelected",
-};
-
-export const clearSelected = ({ pathname, payload }: clearSelectedPayload) => ({
-  type: fetchedErasers[pathname],
-  payload,
-});
-
-export interface InsertStatsPayload {
-  screen: string;
-  state: StatsMiddlewareState;
-  totals: Record<string, number>;
-  counts: Record<string, Record<string, number>>;
-  query: Record<string, Record<string, Executedquery>>;
-  requestId?: string;
-}
-
-export interface OwnershipPayload {
-  ids: string[];
-  owner: boolean;
-  route: string;
-}
-
 export const mutateRows = createAction<MutateEntityResponse>('mutateRows');
 export const linkRows = createAction<MutateEntityResponse>('linkRows');
 export const hydrateRows = createAction<ResultPayload>('hydrateRows');
 export const hydrateData = createAction<number>('hydrateData');
 
-export const initTotals = createAction('initTotals');
-export const insertStats = createAction<InsertStatsPayload>('insertStats');
-
 export const fetchingCompleted = createAction<{ dest?: string, orig?: string }>('fetchingCompleted');
 export const insertMetadata = createAction<MetadataPayload>('insertMetadata');
 export const hydrateMetadata = createAction<MetadataPayload>('hydrateMetadata');
-
-export const createSteps = createAction<string[]>('createSteps');
-export const createQuizzes = createAction<string[]>('createQuizzes');
-export const createCourses = createAction<string[]>('createCourses');
-export const createTutorials = createAction<string[]>('createTutorials');
-export const persistQuizzes = createAction<{ id: string; modified: boolean }[]>('persistQuizzes');
-export const persistTutorials = createAction<{ id: string; modified: boolean }[]>('persistTutorials');
-export const persistCourses = createAction<{ id: string; modified: boolean }[]>('persistCourses');
-export const persistSteps = createAction<{ id: string; modified: boolean }[]>('persistSteps');
 
 export const updateSteps = createAction<UpdatePayload[]>('updateSteps');
 export const updateTutorials = createAction<UpdatePayload[]>('updateTutorials');
@@ -153,4 +111,3 @@ export const UnzipAndHydrate = createAction('UnzipAndHydrate');
 export const hydratedThenFetch = createAction<FetchDataPayload>('hydratedThenFetch');
 
 export const initSettings = createAction('initSettings');
-export const updateOwnerships = createAction<OwnershipPayload>('updateOwnerships');

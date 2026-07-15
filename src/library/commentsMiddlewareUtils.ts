@@ -7,9 +7,7 @@ import type { CommentContentQuery } from './comments-api-messagesOn-mutations';
 import { parseCommentId } from '../types/comments';
 
 export interface LatestChildCommentSelectionArgs {
-  /** Full list of comments already present in the store for this `commentsId`. */
   entryComments: CommentItem[];
-  /** Composite id of the parent comment (e.g. `userId:commentId`). */
   parentIdComposite: string;
 }
 
@@ -18,12 +16,7 @@ export type LatestCommentItemsByAuthorAndContentType = Partial<
 >;
 
 export interface LatestRootCommentSelectionArgs {
-  /** Full list of comments already present in the store for this `commentsId`. */
   entryComments: CommentItem[];
-  /**
-   * Root "container" comment id.
-   * Root comments are those whose `parentId` equals `-1:${rootParentCommentId}` (negative user id).
-   */
   rootParentCommentId: number;
 }
 

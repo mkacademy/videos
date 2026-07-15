@@ -9,10 +9,7 @@ import { ResultPayload } from '../store/slices/rowSlice';
 import { Quiz, setQuizzes } from '../store/slices/quizSlice';
 import { CpanelRow } from '../components/Core/types';
 import { QueryParams } from '../store/types';
-import { insertStats } from './actions';
 import { RootState } from '../store';
-import { initTotals } from './actions';
-import { StatsMiddlewareState } from '../store/types';
 import { buildRecordStateProps} from './requestIdsUtils';   
 import { setOutgoings, setIncomings } from '../store/slices/commsSlice';
 
@@ -413,8 +410,6 @@ export interface TutorialResponse {
     counts: Record<string, Record<string, number>>;
 }
 
-const emptyTotals = {} as Record<string, number>;
-
 export interface validatedSkeletonsResponse {
     response: FetchedData;
     screen: string;
@@ -450,30 +445,11 @@ interface validateThenDispatchPayload {
 
 export const validateThenDispatch = ({
     response,
-    query,
     dispatch,
     curApp,
-    state,
-    requestId
 }: validateThenDispatchPayload): void => {
-    const {
-        session: { curMailer },
-        search: { selectedRoute },
-        pagination: { selectedRoutes },
-        course: { banners: courseBanners, selected: courseSelected },
-        quiz: { quizzes, banners: quizBanners, selected: quizSelected },
-        tutorial: { banners: tutorialBanners, selected: tutorialSelected },
-    } = state;
 
-    const statsState: StatsMiddlewareState = {
-        search: { selectedRoute },
-        session: { curApp, curMailer },
-        pagination: { selectedRoutes },
-        course: { selected: courseSelected, banners: courseBanners },
-        quiz: { selected: quizSelected, banners: quizBanners, quizzes },
-        tutorial: { selected: tutorialSelected, banners: tutorialBanners },
-    }
-    const { content, counts, totals } = response;
+    const { content } = response;
     const routeReasons: string[] = [];
 
     if (isQuizResponse(response)) {
@@ -481,7 +457,6 @@ export const validateThenDispatch = ({
         const [app, _] = getCurAppIndex('quiz');
         if (!app) throw new Error('Invalid app index');
         dispatch(setQuizzes(response));
-        dispatch(insertStats({ screen: 'quiz', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
 
     }
     else if (isCourseResponse(response)) {
@@ -489,14 +464,12 @@ export const validateThenDispatch = ({
         const [app, _] = getCurAppIndex('course');
         if (!app) throw new Error('Invalid app index');
         dispatch(setCourses(response));
-        dispatch(insertStats({ screen: 'course', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
     }
     else if (isTutorialResponse(response)) {
         console.log("is_tutorial_response");
         const [app, _] = getCurAppIndex('tutorial');
         if (!app) throw new Error('Invalid app index');
         dispatch(setTutorials(response));
-        dispatch(insertStats({ screen: 'tutorial', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
     }
     else if (isCountsResponse(response)) {
         console.log("is_counts_response");
@@ -507,26 +480,19 @@ export const validateThenDispatch = ({
          if (isArrayOfType(content, isOutgoingMessage)) {
                 console.log("is_outgoing_response");
                 dispatch(setOutgoings(content));
-                dispatch(insertStats({ screen: 'outgoing', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
             }
             else if (isArrayOfType(content, isIncomingMessage)) {
                 console.log("is_incoming_response");
                 dispatch(setIncomings(content));
-                dispatch(insertStats({ screen: 'incoming', query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
             }
 
         } else {
             console.log("is_empty_response");
             if (routeReasons.length > 0) logGuardInvalidReasons(`has_route_slice_data_${getCurAppName(curApp)}`, routeReasons, response);
-            dispatch(insertStats({ screen: getCurAppName(curApp), query, counts, totals: totals ?? emptyTotals, state: statsState, requestId }));
         }
     }
-    setTimeout(() => dispatch(initTotals()), 100);
 
 }
-
-
-
 
 const isArrayOfType = <T>(arr: unknown[], typeGuard: (item: unknown) => item is T): arr is T[] => {
     return Array.isArray(arr) && arr.every((item) => typeGuard(item));

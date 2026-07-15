@@ -127,9 +127,6 @@ export const isSlideGroupItem = (item: unknown): item is SlideGroupItem =>
   'bannerId' in item &&
   'ordinal' in item;
 
-/**
- * Slide-group item (cover) whose couplings row applies to this pennant — same pairing rules as {@link getSlideIndeces}.
- */
 export const getSlideGroupItemForPennantChapterCoupling = (
   selectedContent: SlideGroup,
   pennant: Pennant
