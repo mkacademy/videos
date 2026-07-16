@@ -4,12 +4,11 @@ import {
 import {
   DataRow,
   BaseFormattedData,
-  InstructionTextProperties,
 } from "../Core/types";
 
 interface Instruction {
   name: string;
-  formattedData: (instructions: DataRow[]) => BaseFormattedData<InstructionTextProperties>;
+  formattedData: (instructions: DataRow[]) => BaseFormattedData;
 }
 
 const Instruction: Instruction = {

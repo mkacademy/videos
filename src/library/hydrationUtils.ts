@@ -5,7 +5,6 @@ import { Quiz } from '../store/slices/quizSlice';
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 import { RootState } from '../store';
 import { hydrateData, hydratedThenFetch } from './actions';
-import { getHydrationDefaultTake } from '../utils';
 import { getPlural, convolutionDelay } from '../utils';
 import { prependError } from '../store/slices/errorSlice';
 import { viewRequestFetching, cpanelMessage } from '../store/slices/viewSlice';
@@ -634,8 +633,7 @@ export const buildOrderedHydrationQueries = (
       return [];
   }
 
-  const hydrationTake = getHydrationDefaultTake(defaultTake);
-  return orderQueries(getFixedSizeQueries(queries, hydrationTake));
+  return orderQueries(getFixedSizeQueries(queries, defaultTake));
 };
 
 export type DeriveHydrationLegQueries = () => QueryParams[];

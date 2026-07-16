@@ -1,4 +1,4 @@
-import { Status } from "../components/Core/types";
+
 import { Metadata } from "../components/Core/types";
 import type { CourseTrees } from "./controlPanelUtils";
 import {
@@ -27,7 +27,7 @@ export interface SlideItem {
   metadata?: Metadata;
   sizeInBytes: number;
   isHighlighted: boolean;
-  status: Status | number;
+  status: number;
   descendentsSums: Record<string, number>;
   contiguousOrdinal?: number;
   isDismissed: boolean;
@@ -47,7 +47,7 @@ export interface SlideGroupItem {
   metadata?: Metadata;
   sizeInBytes: number;
   isHighlighted: boolean;
-  status: Status | number;
+  status: number;
   descendentsSums: Record<string, number>;
   contiguousOrdinal?: number;
   isDismissed: boolean;
@@ -72,7 +72,7 @@ export interface Banner {
   sizeInBytes: number;
   isDismissed: boolean;
   isHighlighted: boolean;
-  status: Status | number;
+  status: number;
   contiguousOrdinal?: number;
   descendentsSums: Record<string, number>;
   pennants: Pennant[];
@@ -94,7 +94,7 @@ export interface Pennant {
   sizeInBytes: number;
   isDismissed: boolean;
   isHighlighted: boolean;
-  status: Status | number;
+  status: number;
   descendentsSums: Record<string, number>;
   contiguousOrdinal?: number;
   modified?: boolean;

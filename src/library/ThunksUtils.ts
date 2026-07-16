@@ -1,12 +1,11 @@
 import { jwtDecode } from 'jwt-decode';
 import { createSelector, Dispatch } from '@reduxjs/toolkit';
-import { Content, Banner as TutorialBanner } from '../store/slices/tutorialSlice';
-import { Banner, SlideGroup } from './CourseUtils';
+import { Banner as TutorialBanner } from '../store/slices/tutorialSlice';
+import { Banner } from './CourseUtils';
 import { IncomingMessage, OutgoingMessage } from '../store/slices/commsSlice';
 import { ToolKit, getCurAppName, timeout } from '../utils';
 import { ResultPayload } from '../store/slices/rowSlice';
 import { Quiz } from '../store/slices/quizSlice';
-import { CpanelRow } from '../components/Core/types';
 import { QueryParams } from '../store/types';
 import { RootState } from '../store';
 import { setOutgoings, setIncomings } from '../store/slices/commsSlice';
@@ -258,7 +257,7 @@ export interface FetchedData {
     banners?: Banner[] | TutorialBanner[];
     counts: Record<string, Record<string, number>>;
     executedQueries?: Record<string, Executedquery>;
-    content?: SlideGroup[] | Content[][] | OutgoingMessage[] | IncomingMessage[] | Record<string, Record<string, CpanelRow[]>>;
+    content?: OutgoingMessage[] | IncomingMessage[];
 }
 
 interface validateThenDispatchPayload {

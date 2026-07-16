@@ -1,5 +1,4 @@
 import type { Draft } from 'immer';
-import { Status } from '../components/Core/types';
 import { Metadata } from '../components/Core/types';
 import type { TutorialTrees } from './controlPanelUtils';
 import {
@@ -31,7 +30,7 @@ export interface Banner {
   sizeInBytes: number;
   isDismissed: boolean;
   isHighlighted: boolean;
-  status: Status | number;
+  status: number;
   contiguousOrdinal?: number;
   descendentsSums: Record<string, number>;
   modified?: boolean;
@@ -50,7 +49,7 @@ export interface Content {
   metadata?: Metadata;
   sizeInBytes: number;
   isHighlighted: boolean;
-  status: Status | number;
+  status: number;
   contiguousOrdinal?: number;
   descendentsSums: Record<string, number>;
   isDismissed: boolean;

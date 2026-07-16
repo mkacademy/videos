@@ -37,7 +37,7 @@ let activeWebapp: string | undefined;
 let hydrationQueue: HydrationFetchSpec[] = [];
 let hydrationQueueActive = false;
 let hydrationCancelled = false;
-let currentBatchTimeouts: NodeJS.Timeout[] = [];
+let currentBatchTimeouts: ReturnType<typeof setTimeout>[] = [];
 let batchSize = 0;
 let batchTimeoutsFired = 0;
 let batchInFlight = 0;

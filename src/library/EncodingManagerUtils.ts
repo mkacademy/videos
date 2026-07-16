@@ -1,5 +1,5 @@
 import { Buffer } from "buffer";
-import { incrementID, textEllipsis } from "../utils";
+import { incrementID } from "../utils"; 
 import { idsMerger } from "../library/sliceUtils";
 import {
   TutorialState,
@@ -40,7 +40,7 @@ export const parse = <T = CourseBanner | TutorialBanner | Quiz | SlideGroup | Tu
     const obj = JSON.parse(Buffer.from(encodedStr, "base64").toString());
     output = unsign(obj, username);
   } catch (error) {
-    console.log(textEllipsis((error as Error).message, 25));
+    console.log((error as Error).message);
   } finally {
     return output;
   }

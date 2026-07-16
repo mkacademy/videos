@@ -2,7 +2,7 @@ import { jwtDecode } from "jwt-decode";
 import { getCurAppIndex, userroles, timeout, getMoldsResolver } from "../utils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { EntityTypeMap, ResultPayload } from "../store/slices/rowSlice";
-import { getGraphqlResolver, ToolKit, RECORDS, Tree } from "../utils";
+import { getGraphqlResolver, ToolKit, Tree } from "../utils";
 import { clearData as clearReducers } from "../store/slices/rowSlice";
 import { UpdateTextsPayload } from "../store/slices/textSlice";
 import { DataRow } from "../components/Core/types";
@@ -112,7 +112,7 @@ export const deHydratedRowsDataFetcher = createAsyncThunk<void, DehydratedRowsFe
         try {
             const { payload: data, parent: fromEntity, entity: toEntity, isAppend, keywords } = await fetcher();
             const { graphqlResolver, to, from } = getGraphqlResolver(fromEntity ?? '', toEntity ?? '');
-            const corData = data[RECORDS][graphqlResolver];
+            const corData = data['records'][graphqlResolver];
             enqueueHydrationStoreUpdate({
                 rows: {
                     entity: toEntity as keyof EntityTypeMap,
@@ -155,7 +155,7 @@ export const bytesFetcher = createAsyncThunk<UpdateTextsPayload[], BytesFetcherA
                 : await authenticatedFetch(query);
             const { graphqlResolver, from, to } = getGraphqlResolver(fromEntity ?? '', toEntity ?? '');
             const { to: moldsTo } = getMoldsResolver(from, to);
-            const corData = data[RECORDS][graphqlResolver];
+            const corData = data['records'][graphqlResolver];
             const entity = toEntity as keyof EntityTypeMap;
             const dataFormatter = Tree.getProperty(entity, "formattedData") as
                 | ((payload: DataRow[]) => { texts?: UpdateTextsPayload[] })

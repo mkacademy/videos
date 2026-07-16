@@ -17,7 +17,7 @@ import {
   validatePennantSlideItems,
 } from '../../library/directoryTreeUtils';
 import { exportCourseTreesToVideoFolder, type CourseTreesVideoExportResult } from '../../library/TemplatesManagerUtils';
-import { getCurAppName, isPncUserApp } from '../../utils';
+import { getCurAppName } from '../../utils';
 
 export type MediaPlayerTab = 'course' | 'tutorial' | 'quiz';
 
@@ -49,11 +49,9 @@ export function resolveMediaPlayerTab(
   if (tabParam === 'tutorial' || tabParam === 'course' || tabParam === 'quiz') {
     return tabParam;
   }
-  if (isPncUserApp(curApp)) {
-    const appName = getCurAppName(curApp);
-    if (appName === 'tutorial' || appName === 'course' || appName === 'quiz') {
-      return appName;
-    }
+  const appName = getCurAppName(curApp);
+  if (appName === 'tutorial' || appName === 'course' || appName === 'quiz') {
+    return appName;
   }
   return 'course';
 }

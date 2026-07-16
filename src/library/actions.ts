@@ -1,5 +1,5 @@
 import { createAction } from '@reduxjs/toolkit';
-import { Metadata, Status } from '../components/Core/types';
+import { Metadata } from '../components/Core/types';
 import { FetchDataPayload } from './ThunksUtils';
 import { ResultPayload } from '../store/slices/rowSlice';
 
@@ -23,7 +23,7 @@ export interface UpdatePayload {
   sizeInBytes?: number;
   isDismissed?: boolean;
   isHighlighted?: boolean;
-  status?: Status | number;
+  status?: number;
   descendentsSums?: Record<string, number>;
   modified?: boolean;
   edited?: boolean;

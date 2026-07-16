@@ -5,7 +5,7 @@ import { authenticate } from '../../library/Thunks';
 import { resolveLoginLoadingRedirectUrl } from '../../library/hydrationUtils';
 import { initializedLoading } from '../../store/slices/sessionSlice';
 import { AppDispatch, RootState } from '../../store';
-import { convolutionDelay, convolutionTake, sessionSizes } from '../../utils';
+import { convolutionDelay, convolutionTake } from '../../utils';
 import * as styles from '../../styles/course.module.css';
 import * as registrationStyles from '../../styles/registration.module.css';
 import { CourseGlobal } from '../views/wrappers/courseGlobal';
@@ -118,11 +118,18 @@ const Login: React.FC = () => {
                     onChange={(e) => setSeconds(e.target.value)}
                     required
                   >
-                    {Object.entries(sessionSizes).map(([key, value]) => (
-                      <option key={key} value={key}>
-                        {value}
-                      </option>
-                    ))}
+                    <option value="7200">2 hours</option>
+                    <option value="14400">4 hours</option>
+                    <option value="21600">6 hours</option>
+                    <option value="28800">8 hours</option>
+                    <option value="36000">10 hours</option>
+                    <option value="43200">12 hours</option>
+                    <option value="50400">14 hours</option>
+                    <option value="57600">16 hours</option>
+                    <option value="64800">18 hours</option>
+                    <option value="72000">20 hours</option>
+                    <option value="79200">22 hours</option>
+                    <option value="86400">24 hours</option>
                   </select>
                 </div>
                 <div className={`form-group ${registrationStyles['form-group']}`}>

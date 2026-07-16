@@ -3,7 +3,7 @@ import type { RootState } from '../store';
 import type { SlideGroup } from './CourseUtils';
 import { normalizeBase64Payload } from './directoryTreeUtils';
 
-export const hasValidBase64Imageurl = (imageurl: string | undefined | null): boolean =>
+const hasValidBase64Imageurl = (imageurl: string | undefined | null): boolean =>
   normalizeBase64Payload(imageurl ?? '').length > 0;
 
 type ImageurlCarrier = { id?: number; imageurl?: string };
@@ -25,7 +25,7 @@ const collectCourseLikeInstructionRows = (content: readonly SlideGroup[]): Image
   return rows;
 };
 
-export const findInstructionRowImageurlById = (
+const findInstructionRowImageurlById = (
   state: RootState,
   id: number,
 ): string | undefined => {
@@ -46,7 +46,7 @@ export const findInstructionRowImageurlById = (
   return undefined;
 };
 
-export const shouldPreserveExistingImageurl = (
+const shouldPreserveExistingImageurl = (
   existingImageurl: string | undefined,
   incomingImageurl: string | undefined,
 ): boolean => {
