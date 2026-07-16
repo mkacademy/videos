@@ -24,7 +24,6 @@ const commsSlice = createSlice({
   name: 'comms',
   initialState,
   reducers: {
-
     setIncomings: (state, action: PayloadAction<IncomingMessage[]>) => {
       state.incoming = Object.values(
         [...state.incoming, ...action.payload].reduce((prev: Record<string, IncomingMessage>, cur: IncomingMessage) => {
