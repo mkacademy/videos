@@ -4,6 +4,7 @@ import type { CommentAuthorType } from '../../types/comments';
 import { selectCommentById } from '../../store/slices/commentsSlice';
 import * as styles from '../../styles/comments.module.css';
 import { useSelector } from 'react-redux';
+import LinkifiedText from '../LinkifiedText';
 
 const getAvatarForComment = (type: CommentAuthorType): string => avatars[type];
 
@@ -61,9 +62,10 @@ const CommentRow = React.memo(function CommentRow({
                 : undefined
             }
           >
-            {comment.body.length > COMMENT_BODY_DISPLAY_MAX_LEN
-              ? `${comment.body.slice(0, COMMENT_BODY_DISPLAY_MAX_LEN)}...`
-              : comment.body}
+            <LinkifiedText
+              text={comment.body}
+              maxLength={COMMENT_BODY_DISPLAY_MAX_LEN}
+            />
           </p>
         </div>
       </div>

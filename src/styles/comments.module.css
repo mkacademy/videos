@@ -230,6 +230,15 @@
   max-width: 100%;
 }
 
+.commentBody a {
+  color: #6cb6ff;
+  text-decoration: underline;
+}
+
+.commentBody a:hover {
+  color: #9dceff;
+}
+
 .messageIconButton {
   position: absolute;
   top: 0;

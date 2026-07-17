@@ -214,4 +214,20 @@ export const getGraphqlResolver = (fromEntity: string, toEntity: string) => {
     };
 };
 
+export const textEllipsis = (
+  str: string,
+  maxLength = 500,
+  { side = "end", ellipsis = "..." } = {}
+) => {
+  if (str && str.length > maxLength) {
+    switch (side) {
+      case "start":
+        return ellipsis + str.slice(-(maxLength - ellipsis.length));
+      case "end":
+      default:
+        return str.slice(0, maxLength - ellipsis.length) + ellipsis;
+    }
+  }
+  return str;
+};
 
