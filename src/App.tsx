@@ -9,6 +9,7 @@ import NotFound from './components/views/NotFound'
 import MediaPrepper from './components/mediaPrepper/mediaPrepper'
 import MediaPlayer from './components/mediaPlayer/mediaPlayer'
 import MediaPlayerStatusBar from './components/mediaPlayer/MediaPlayerStatusBar'
+import HydrationProgressBar from './components/HydrationProgressBar'
 import LoadingAnimation from './components/views/Loading'
 import Login from './components/convolutions/Login'
 
@@ -60,6 +61,7 @@ function AppShell() {
             <Route key={route.path} path={route.path} element={route.element} />
           ))}
         </Routes>
+        <HydrationProgressBar />
         <MediaPlayerStatusBar />
       </BrowserRouter>
       <ErrorModal />

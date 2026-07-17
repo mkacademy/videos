@@ -29,7 +29,7 @@ export interface ToolKit {
 
 export const userroles = ["ROLE_USER", "ROLE_ADMIN", "ROLE_MODERATOR"];
 
-let take = 10;
+let take = 100;
 export const timeout = 30000;
 export const hydrationDelay = 100;
 export const convolutionDelay = 1000;
@@ -39,7 +39,7 @@ export const globalVars: GlobalVars = { globallyUniqueIDs: -1 };
 export const incrementID = (): number => globalVars.globallyUniqueIDs--;
 export const signOut = (): string => {
   globalVars.globallyUniqueIDs = -1;
-  take = 10;
+  take = 100;
   return "session/signedOut";
 };
 

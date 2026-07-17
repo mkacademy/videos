@@ -12,6 +12,7 @@ export interface SessionState {
   isFetching: boolean;
   defaultTake: number;
   hydrationQueries: number;
+  hydrationTotal: number;
   roleIndex: number;
   isIncognito: boolean;
   authenticated: boolean;
@@ -28,6 +29,7 @@ export interface SessionState {
 
 const initialState: SessionState = {
   hydrationQueries: 0,
+  hydrationTotal: 0,
   userid: undefined,
   curApp: 1,
   curMailer: -1,
@@ -42,7 +44,7 @@ const initialState: SessionState = {
   isIncognito: true,
   username: undefined,
   authenticated: false,
-  defaultTake: 10,
+  defaultTake: 100,
   roleIndex: -1,
   allowMimeOnlyImageurlOverrideOnUpdateSteps: false,
 };
@@ -89,7 +91,7 @@ const sessionSlice = createSlice({
       state.isIncognito = true;
       state.username = undefined;
       state.authenticated = false;
-      state.defaultTake = 10;
+      state.defaultTake = 100;
       state.roleIndex = -1;
       state.allowMimeOnlyImageurlOverrideOnUpdateSteps = false;
     },
@@ -121,6 +123,11 @@ const sessionSlice = createSlice({
         });
       })
       .addCase(hydrateData, (state, action) => {
+        if (state.hydrationQueries === 0) {
+          state.hydrationTotal = action.payload;
+        } else {
+          state.hydrationTotal += action.payload;
+        }
         state.hydrationQueries += action.payload;
         state.allowMimeOnlyImageurlOverrideOnUpdateSteps = false;
       })

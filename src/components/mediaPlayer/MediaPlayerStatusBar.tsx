@@ -8,7 +8,10 @@ import * as styles from '../../styles/roletoggler.module.css';
 const MEDIA_PLAYER_PATH = '/media-player';
 const WEBAPP_TABS = ['tutorial', 'course', 'quiz'] as const;
 
-/** Editor RoleToggler parity: shows `view.message` (hydration progress, etc.) on the media player. */
+const isHydrationMessage = (message: string | undefined): boolean =>
+  !!message?.startsWith('hydrating');
+
+/** Editor RoleToggler parity: non-hydration `view.message` status on the media player. */
 const MediaPlayerStatusBar: React.FC = () => {
   const dispatch = useDispatch();
   const { pathname } = useLocation();
@@ -40,7 +43,7 @@ const MediaPlayerStatusBar: React.FC = () => {
 
   const onMediaPlayer = pathname === MEDIA_PLAYER_PATH || pathname.endsWith(MEDIA_PLAYER_PATH);
 
-  if (!onMediaPlayer || !convCss || !message) return null;
+  if (!onMediaPlayer || !convCss || !message || isHydrationMessage(message)) return null;
 
   return (
     <div className={`${styles['notRolePicker']} ${convCss}`}>
