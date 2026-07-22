@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { getCurAppIndex, userroles, timeout, getMoldsResolver } from "../utils";
+import { getCurAppIndex, userroles, timeout, getMoldsResolver, signOut } from "../utils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { EntityTypeMap, ResultPayload } from "../store/slices/rowSlice";
 import { getGraphqlResolver, ToolKit, Tree } from "../utils";
@@ -60,6 +60,7 @@ export const authenticate = createAsyncThunk<Partial<SessionState>, AuthPayload,
                 const roleIndex = roles.findIndex((r: string) => r === userroles[baseRoleIndex]);
                 console.log("authenticate_roles", roles);
                 dispatch(clearReducers());
+                dispatch({ type: signOut() });
                 const session = {
                     quota,
                     roles,
