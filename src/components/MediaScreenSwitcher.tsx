@@ -2,15 +2,20 @@ import React from 'react';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-type MediaScreen = 'prepper' | 'player';
+type MediaScreen = 'player' | 'thumbs';
+
+const SCREEN_PATH: Record<MediaScreen, string> = {
+  player: '/media-player',
+  thumbs: '/media-thumbs',
+};
 
 function resolveScreen(pathname: string): MediaScreen | null {
-  if (pathname.includes('media-prepper')) return 'prepper';
   if (pathname.includes('media-player')) return 'player';
+  if (pathname.includes('media-thumbs')) return 'thumbs';
   return null;
 }
 
-/** Toggle between Media Prepper and Media Player while preserving `?tab=`. */
+/** Toggle between Media Player and Thumbs while preserving `?tab=`. */
 const MediaScreenSwitcher: React.FC = () => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -22,7 +27,7 @@ const MediaScreenSwitcher: React.FC = () => {
 
   const go = (screen: MediaScreen) => {
     if (screen === current) return;
-    const path = screen === 'prepper' ? '/media-prepper' : '/media-player';
+    const path = SCREEN_PATH[screen];
     const next = tab ? `${path}?tab=${encodeURIComponent(tab)}` : path;
     navigate(next);
   };
@@ -30,18 +35,18 @@ const MediaScreenSwitcher: React.FC = () => {
   return (
     <ButtonGroup size="sm" aria-label="Switch media screen">
       <Button
-        variant={current === 'prepper' ? 'secondary' : 'outline-secondary'}
-        active={current === 'prepper'}
-        onClick={() => go('prepper')}
-      >
-        Prepper
-      </Button>
-      <Button
         variant={current === 'player' ? 'secondary' : 'outline-secondary'}
         active={current === 'player'}
         onClick={() => go('player')}
       >
         Player
+      </Button>
+      <Button
+        variant={current === 'thumbs' ? 'secondary' : 'outline-secondary'}
+        active={current === 'thumbs'}
+        onClick={() => go('thumbs')}
+      >
+        Thumbs
       </Button>
     </ButtonGroup>
   );

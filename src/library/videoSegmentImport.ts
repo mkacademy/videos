@@ -1,6 +1,6 @@
 import { FFmpeg } from '@ffmpeg/ffmpeg';
 import { fetchFile } from '@ffmpeg/util';
-import { resolveFfmpegLoadUrls } from '../components/mediaPrepper/ffmpegAssets';
+import { resolveFfmpegLoadUrls } from './ffmpegAssets';
 import { MAX_IMAGE_WIDTH } from './imageCompression';
 import { blobToBase64Payload, base64PayloadToBlob, isMp3File, FMP4_MEDIA_MIME, VIDEO_MP4_MIME } from './directoryTreeUtils';
 

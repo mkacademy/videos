@@ -1,11 +1,11 @@
 # mkacademy/videos
 
-Standalone media player and prepper app for the mkacademy workspace. FFmpeg powers chunked video playback; course and tutorial content can be imported and exported.
+Standalone media player and thumbs app for the mkacademy workspace. FFmpeg powers chunked video playback; course and tutorial content can be imported and exported.
 
 ## Features
 
 - **Media Player** (`/media-player`) — chunked FFmpeg video playback for course and tutorial content
-- **Media Prepper** (`/media-prepper`) — prepare and manage media segments for courses and tutorials
+- **Media Thumbs** (`/media-thumbs`) — browse and export tutorial instruction images and course covers
 
 ## Development
 

@@ -41,7 +41,7 @@ export const resolveLdrRedirectUrl = (url: string): string => {
 /**
  * After login (or continue-incognito), resolve where to send the user.
  * Prefer an explicit `ldr` back-link, fall back to the loading entry (`/`) so it can
- * route into media-prepper/media-player, and otherwise honor an in-app redirect path.
+ * route into media-player/media-thumbs, and otherwise honor an in-app redirect path.
  */
 export const resolveLoginLoadingRedirectUrl = (url: string): string => {
   if (!url) return '/';

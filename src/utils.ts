@@ -231,3 +231,14 @@ export const textEllipsis = (
   return str;
 };
 
+export const placeholder = new URL("./Images/placeholder.jpg", import.meta.url).href;
+
+/** Shown for dehydrated / mime-only image slots (data:image, data:image/jpeg, …). */
+export const imageMimePlaceholder = new URL("./Images/imageLoading.gif", import.meta.url).href;
+/** Shown for dehydrated / mime-only audio slots (data:audio, data:audio/mpeg, …). */
+export const audioMimePlaceholder = new URL("./Images/audioMimePlaceholder.png", import.meta.url).href;
+/** Shown for dehydrated / mime-only video slots (data:video, data:video/mp4, …). */
+export const videoMimePlaceholder = new URL("./Images/videoMimePlaceholder.png", import.meta.url).href;
+/** @deprecated Prefer imageMimePlaceholder */
+export const imageLoadingGif = imageMimePlaceholder;
+

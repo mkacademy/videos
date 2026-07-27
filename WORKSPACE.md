@@ -7,7 +7,7 @@
 | **Videos** | `~/Desktop/videos` | `mkacademy/videos` | http://localhost:3002 |
 | Landing | `~/Desktop/landing` | `mkacademy/landing` | http://localhost:4000 |
 
-The **videos** repo is a standalone app with routes trimmed to media player and prepper only. It retains the dependency closure needed for FFmpeg tooling and media workflows without the full studio convolution UI.
+The **videos** repo is a standalone app with routes trimmed to media player and thumbs only. It retains the dependency closure needed for FFmpeg tooling and media workflows without the full studio convolution UI.
 
 ## Clone (SSH)
 
@@ -26,4 +26,4 @@ npm run sync-ffmpeg-assets
 npm run dev
 ```
 
-Default route redirects `/` → `/media-prepper`.
+Default route redirects `/` → `/media-player`.

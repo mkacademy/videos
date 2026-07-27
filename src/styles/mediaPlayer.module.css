@@ -6,6 +6,15 @@
 
 .playerContainer {
   max-width: none;
+  padding-bottom: 1rem;
+}
+
+.playerContainer .headerRow {
+  margin-bottom: 0.75rem;
+}
+
+.playerContainer .tabRow {
+  margin-bottom: 0.75rem;
 }
 
 .title {
@@ -154,6 +163,15 @@
   object-fit: contain;
 }
 
+.thumbsImage {
+  object-fit: contain;
+  user-select: none;
+}
+
+.thumbsImageClickable {
+  cursor: pointer;
+}
+
 .videoActive {
   z-index: 1;
 }
@@ -258,6 +276,13 @@
   font-weight: 600;
   color: #6c757d;
   font-size: 1.25rem;
+}
+
+.chunkBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.35rem;
 }
 
 .chunkMeta {

@@ -5,7 +5,7 @@ import * as styles from '../styles/hydrationProgress.module.css';
 
 const FINISH_FADE_MS = 400;
 
-/** Thin top-of-viewport bar for hydration progress (all routes, including prepper). */
+/** Thin top-of-viewport bar for hydration progress (all routes, including media thumbs). */
 const HydrationProgressBar: React.FC = () => {
   const hydrationQueries = useSelector((state: RootState) => state.session.hydrationQueries);
   const hydrationTotal = useSelector((state: RootState) => state.session.hydrationTotal);

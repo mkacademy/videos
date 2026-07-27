@@ -131,7 +131,7 @@ const LoadingAnimation: React.FC = () => {
       hasNavigated.current = true;
 
       if (!isDeepLinkExit) {
-        navigate('/media-prepper', { replace: true });
+        navigate('/media-player', { replace: true });
         return;
       }
 

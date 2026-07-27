@@ -6,8 +6,8 @@ import './init'
 import { store } from './store'
 import ErrorModal from './components/modals/Error'
 import NotFound from './components/views/NotFound'
-import MediaPrepper from './components/mediaPrepper/mediaPrepper'
 import MediaPlayer from './components/mediaPlayer/mediaPlayer'
+import MediaThumbs from './components/mediaPlayer/mediaThumbs'
 import MediaPlayerStatusBar from './components/mediaPlayer/MediaPlayerStatusBar'
 import HydrationProgressBar from './components/HydrationProgressBar'
 import LoadingAnimation from './components/views/Loading'
@@ -42,7 +42,7 @@ const mediaRoutes = [
   { path: "/", element: <LoadingAnimation /> },
   { path: "/login", element: <Login /> },
   { path: "/media-player", element: <MediaPlayer /> },
-  { path: "/media-prepper", element: <MediaPrepper /> },
+  { path: "/media-thumbs", element: <MediaThumbs /> },
   { path: "/*", element: <NotFound /> },
 ]
 
