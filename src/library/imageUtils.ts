@@ -1,11 +1,12 @@
 import {
   audioMimePlaceholder,
   imageMimePlaceholder,
+  initMimePlaceholder,
   placeholder,
   videoMimePlaceholder,
 } from '../utils';
 
-export type MediaMimeGroup = 'image' | 'audio' | 'video';
+export type MediaMimeGroup = 'image' | 'audio' | 'video' | 'init';
 
 export const isValidDataUrl = (url: string): boolean => {
   if (!url.startsWith('data:image')) return false;
@@ -22,11 +23,13 @@ export const isValidDataUrl = (url: string): boolean => {
   }
 };
 
-/** Image, audio, or video data-URL slot (payload or mime-only sentinel). */
+/** Image, audio, video fragment, or init data-URL slot (payload or mime-only sentinel). */
 export const getMediaMimeGroup = (url: string): MediaMimeGroup | null => {
   if (typeof url !== 'string') return null;
   if (url.startsWith('data:image')) return 'image';
   if (url.startsWith('data:audio')) return 'audio';
+  // fMP4 init uses video/mp4; media fragments use video/iso.segment.
+  if (url.startsWith('data:video/mp4')) return 'init';
   if (url.startsWith('data:video')) return 'video';
   return null;
 };
@@ -56,7 +59,8 @@ export const isImageSlotValue = (url: string): boolean =>
  * - valid image data URL → itself
  * - image mime-only → image group placeholder
  * - audio (any) → audio group placeholder
- * - video (any) → video group placeholder
+ * - video/mp4 (init) → init placeholder
+ * - other video (fragments) → video group placeholder
  */
 export const resolveMediaSlotSrc = (url: string): string => {
   const group = getMediaMimeGroup(url);
@@ -65,6 +69,9 @@ export const resolveMediaSlotSrc = (url: string): string => {
   }
   if (group === 'audio') {
     return audioMimePlaceholder;
+  }
+  if (group === 'init') {
+    return initMimePlaceholder;
   }
   if (group === 'video') {
     return videoMimePlaceholder;

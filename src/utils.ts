@@ -237,8 +237,10 @@ export const placeholder = new URL("./Images/placeholder.jpg", import.meta.url).
 export const imageMimePlaceholder = new URL("./Images/imageLoading.gif", import.meta.url).href;
 /** Shown for dehydrated / mime-only audio slots (data:audio, data:audio/mpeg, …). */
 export const audioMimePlaceholder = new URL("./Images/audioMimePlaceholder.png", import.meta.url).href;
-/** Shown for dehydrated / mime-only video slots (data:video, data:video/mp4, …). */
+/** Shown for dehydrated / mime-only fMP4 media fragment slots (data:video/iso.segment, …). */
 export const videoMimePlaceholder = new URL("./Images/videoMimePlaceholder.png", import.meta.url).href;
+/** Shown for fMP4 init segment slots (data:video/mp4, …). */
+export const initMimePlaceholder = new URL("./Images/initMimePlaceholder.png", import.meta.url).href;
 /** @deprecated Prefer imageMimePlaceholder */
 export const imageLoadingGif = imageMimePlaceholder;
 

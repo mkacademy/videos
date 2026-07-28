@@ -6,7 +6,9 @@ import {
   extractFmp4InitPayloadFromRows,
   findContentRowsForBannerId,
   getFmp4ChunkAssemblyFailure,
+  hasLegacyFmp4InitSidecar,
   isChunkPayloadStoredLocally,
+  isFmp4InitBannerQuote,
   isFmp4InitContentLabel,
   isFmp4InitSegment,
   isFmp4MediaSegment,
@@ -247,18 +249,51 @@ function collapseChunkTimings(
   });
 }
 
-/** fMP4 init from any video pennant's slide row (normally stored on chunk 1). */
+/** fMP4 init from any pennant's slide row (init/i/n parts; order-independent). */
 export function resolveCourseVideoInitPayload(
   banner: CourseBanner,
   slideGroup: SlideGroup,
 ): string | null {
-  for (const { pennant } of collectCourseVideoPennants(banner)) {
+  for (const pennant of banner.pennants ?? []) {
     const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
     if (!slideRow) continue;
     const initPayload = extractFmp4InitPayloadFromRows(slideRow);
     if (initPayload) return initPayload;
   }
+  // Also scan all slide rows in case pennant linkage is incomplete.
+  for (const row of slideGroup.slides ?? []) {
+    const initPayload = extractFmp4InitPayloadFromRows(row);
+    if (initPayload) return initPayload;
+  }
   return null;
+}
+
+/** True when any media pennant still has a legacy bare `init` sidecar row. */
+export function courseHasLegacySidecarInit(
+  banner: CourseBanner,
+  slideGroup: SlideGroup,
+): boolean {
+  for (const { pennant } of collectCourseVideoPennants(banner)) {
+    const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
+    if (slideRow && hasLegacyFmp4InitSidecar(slideRow)) return true;
+  }
+  return false;
+}
+
+export function resolveTutorialVideoInitPayload(
+  entries: readonly TutorialVideoBannerEntry[],
+): string | null {
+  for (const entry of entries) {
+    const initPayload = extractFmp4InitPayloadFromRows(entry.contentRows);
+    if (initPayload) return initPayload;
+  }
+  return null;
+}
+
+export function tutorialHasLegacySidecarInit(
+  entries: readonly TutorialVideoBannerEntry[],
+): boolean {
+  return entries.some((entry) => hasLegacyFmp4InitSidecar(entry.contentRows));
 }
 
 export function sumPartPayloadsBytes(partPayloads: readonly string[]): number {
@@ -588,7 +623,9 @@ export function groupTutorialVideoBannerEntries(
   const byTitle = new Map<string, TutorialVideoBannerEntry[]>();
 
   for (const banner of banners) {
-    if (parseVideoChunkSequence(banner.quote) === null) continue;
+    const isMediaChunk = parseVideoChunkSequence(banner.quote) !== null;
+    const isInitChunk = isFmp4InitBannerQuote(banner.quote);
+    if (!isMediaChunk && !isInitChunk) continue;
 
     const contentRows = findContentRowsForBannerId(contentGroups, banner.id);
     const group = byTitle.get(banner.title) ?? [];
@@ -718,11 +755,7 @@ export function buildPlaylistFromTutorialVideoGroup(
   return {
     chunks: attachPlaylistInitPayload(
       chunks as PlaylistChunk[],
-      extractFmp4InitPayloadFromRows(
-        entries.find((entry) => entry.banner.id === byIndex.get(1)?.banner.id)?.contentRows
-          ?? entries[0]?.contentRows
-          ?? [],
-      ),
+      resolveTutorialVideoInitPayload(entries),
     ),
     error: null,
   };
@@ -858,6 +891,10 @@ export function validateCourseVideoPennants(
   banner: CourseBanner,
   slideGroup: SlideGroup,
 ): { valid: true } | { valid: false; error: string } {
+  if (courseHasLegacySidecarInit(banner, slideGroup)) {
+    return { valid: false, error: 'legacy sidecar init segmentation is not supported' };
+  }
+
   const quoteValidation = validateCourseVideoChunkQuotes(banner);
   if (!quoteValidation.valid) {
     return quoteValidation;
@@ -997,17 +1034,18 @@ export function buildChunkPlaylistFromTutorialVideoGroup(
   const failedContentRows = failedIndex >= 0
     ? entries.find((entry) => entry.banner.id === chunks[failedIndex]?.contentId)?.contentRows ?? []
     : [];
-  const firstContentRows = entries.find((entry) => entry.banner.id === byIndex.get(1)?.banner.id)?.contentRows
-    ?? entries[0]?.contentRows
-    ?? [];
+  const initPayload = resolveTutorialVideoInitPayload(entries);
+  let error: string | null = null;
+  if (tutorialHasLegacySidecarInit(entries)) {
+    error = 'legacy sidecar init segmentation is not supported';
+  } else if (!initPayload) {
+    error = 'missing fMP4 initialization segment';
+  } else if (failedIndex >= 0) {
+    error = `Chunk ${failedIndex + 1}/${expectedTotal}: ${getChunkAssemblyFailure(failedContentRows) ?? 'invalid segment'}`;
+  }
   return {
-    chunks: attachPlaylistInitPayload(
-      chunks,
-      extractFmp4InitPayloadFromRows(firstContentRows),
-    ),
-    error: failedIndex >= 0
-      ? `Chunk ${failedIndex + 1}/${expectedTotal}: ${getChunkAssemblyFailure(failedContentRows) ?? 'invalid segment'}`
-      : null,
+    chunks: attachPlaylistInitPayload(chunks, initPayload),
+    error,
   };
 }
 
@@ -1054,7 +1092,9 @@ export function buildChunkPlaylistFromCourseSlideGroup(
   const failedChunk = failedIndex >= 0 ? chunksWithInit[failedIndex] : null;
 
   let error: string | null = null;
-  if (!initPayload) {
+  if (courseHasLegacySidecarInit(banner, slideGroup)) {
+    error = 'legacy sidecar init segmentation is not supported';
+  } else if (!initPayload) {
     error = 'missing fMP4 initialization segment';
   } else if (failedChunk) {
     error = `Chunk ${failedChunk.index}/${failedChunk.total}: ${getFmp4ChunkAssemblyFailure(failedSlideRow) ?? 'invalid fMP4 segment'}`;
