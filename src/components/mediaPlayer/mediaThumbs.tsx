@@ -479,10 +479,7 @@ const MediaThumbs: React.FC = () => {
       return (
         <div className={styles['container']}>
           <div className={styles['headerRow']}>
-            <h1 className={styles['title']}>Media Thumbs</h1>
-            <div className={styles['headerActions']}>
-              <MediaScreenSwitcher />
-            </div>
+            <MediaScreenSwitcher asHeader />
           </div>
           {tabs}
           <Alert variant="warning">
@@ -516,10 +513,7 @@ const MediaThumbs: React.FC = () => {
     return (
       <div className={styles['container']}>
         <div className={styles['headerRow']}>
-          <h1 className={styles['title']}>Media Thumbs</h1>
-          <div className={styles['headerActions']}>
-            <MediaScreenSwitcher />
-          </div>
+          <MediaScreenSwitcher asHeader />
         </div>
         {tabs}
         <Alert variant="warning">
@@ -550,11 +544,8 @@ const MediaThumbs: React.FC = () => {
     <div className={styles['container']}>
       <div className={styles['headerRow']}>
         <div>
-          <h1 className={styles['title']}>Media Thumbs</h1>
+          <MediaScreenSwitcher asHeader />
           <p className={styles['subtitle']}>{librarySubtitle}</p>
-        </div>
-        <div className={styles['headerActions']}>
-          <MediaScreenSwitcher />
         </div>
       </div>
 

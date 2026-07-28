@@ -214,6 +214,53 @@ function chunkTimingFromSequence(seq: VideoChunkSequence): { startMs: number; en
   return { startMs, endMs };
 }
 
+type CourseVideoPennantEntry = {
+  pennant: Pennant;
+  seq: VideoChunkSequence;
+};
+
+/** Present video-chunk pennants sorted by quote index (gaps allowed). */
+function collectCourseVideoPennants(banner: CourseBanner): CourseVideoPennantEntry[] {
+  const videoPennants = [...(banner.pennants ?? [])]
+    .sort((a, b) => a.ordinal - b.ordinal)
+    .flatMap((pennant) => {
+      const seq = parseVideoChunkSequence(pennant.quote);
+      return seq ? [{ pennant, seq }] : [];
+    });
+  videoPennants.sort((a, b) => a.seq.index - b.seq.index);
+  return videoPennants;
+}
+
+/**
+ * Remap sparse chunk quote ranges onto a contiguous timeline for MSE `sequence`
+ * mode (present fragments play back-to-back; missing indices are omitted).
+ */
+function collapseChunkTimings(
+  timings: readonly { startMs: number; endMs: number }[],
+): { startMs: number; endMs: number }[] {
+  let cursor = 0;
+  return timings.map(({ startMs, endMs }) => {
+    const durationMs = Math.max(0, endMs - startMs);
+    const collapsed = { startMs: cursor, endMs: cursor + durationMs };
+    cursor = collapsed.endMs;
+    return collapsed;
+  });
+}
+
+/** fMP4 init from any video pennant's slide row (normally stored on chunk 1). */
+export function resolveCourseVideoInitPayload(
+  banner: CourseBanner,
+  slideGroup: SlideGroup,
+): string | null {
+  for (const { pennant } of collectCourseVideoPennants(banner)) {
+    const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
+    if (!slideRow) continue;
+    const initPayload = extractFmp4InitPayloadFromRows(slideRow);
+    if (initPayload) return initPayload;
+  }
+  return null;
+}
+
 export function sumPartPayloadsBytes(partPayloads: readonly string[]): number {
   return partPayloads.reduce((sum, part) => sum + estimateBase64DecodedBytes(part), 0);
 }
@@ -737,13 +784,7 @@ function getVideoPennantAtChunkIndex(
   banner: CourseBanner,
   chunkListIndex: number,
 ): Pennant | null {
-  const pennants = [...(banner.pennants ?? [])].sort((a, b) => a.ordinal - b.ordinal);
-  const videoPennants = pennants.flatMap((pennant) => {
-    const seq = parseVideoChunkSequence(pennant.quote);
-    return seq ? [{ pennant, seq }] : [];
-  });
-  videoPennants.sort((a, b) => a.seq.index - b.seq.index);
-  return videoPennants[chunkListIndex]?.pennant ?? null;
+  return collectCourseVideoPennants(banner)[chunkListIndex]?.pennant ?? null;
 }
 
 export function getCourseChunkPartRows(
@@ -776,30 +817,43 @@ function thumbnailUrlFromCover(cover: SlideGroupItem | null): string | undefined
   return cover.imageurl;
 }
 
+/**
+ * Playback/library quote rules: allow a sparse subset of chunk indices as long as
+ * present quotes agree on `total`, have unique in-range indices, and at least one
+ * chunk exists. Missing indices are omitted and collapsed at playlist build time.
+ */
 export function validateCourseVideoChunkQuotes(
   banner: CourseBanner,
 ): { valid: true; chunkCount: number } | { valid: false; error: string } {
-  const pennants = [...(banner.pennants ?? [])].sort((a, b) => a.ordinal - b.ordinal);
-  const videoPennants = pennants.flatMap((pennant) => {
-    const seq = parseVideoChunkSequence(pennant.quote);
-    return seq ? [{ pennant, seq }] : [];
-  });
+  const videoPennants = collectCourseVideoPennants(banner);
 
   if (videoPennants.length === 0) {
     return { valid: false, error: 'no video chunk sequences in pennant quotes' };
   }
 
-  const quoteValidation = validateIndexedSequenceSet(
-    videoPennants.map(({ seq }) => seq),
-    'chunk',
-  );
-  if (!quoteValidation.valid) {
-    return quoteValidation;
+  const expectedTotal = videoPennants[0].seq.total;
+  if (!videoPennants.every(({ seq }) => seq.total === expectedTotal)) {
+    return { valid: false, error: 'mismatched chunk totals' };
   }
 
-  return { valid: true, chunkCount: videoPennants[0].seq.total };
+  const indices = videoPennants.map(({ seq }) => seq.index);
+  if (new Set(indices).size !== indices.length) {
+    return { valid: false, error: 'duplicate chunk indices' };
+  }
+
+  for (const { seq } of videoPennants) {
+    if (seq.index < 1 || seq.index > expectedTotal) {
+      return { valid: false, error: `chunk ${seq.index}/${expectedTotal} out of range` };
+    }
+  }
+
+  return { valid: true, chunkCount: videoPennants.length };
 }
 
+/**
+ * Same sparse quote rules as playback, plus present chunk slide payloads and an
+ * fMP4 init segment — used by export / quiz video-course detection.
+ */
 export function validateCourseVideoPennants(
   banner: CourseBanner,
   slideGroup: SlideGroup,
@@ -809,11 +863,7 @@ export function validateCourseVideoPennants(
     return quoteValidation;
   }
 
-  const pennants = [...(banner.pennants ?? [])].sort((a, b) => a.ordinal - b.ordinal);
-  const videoPennants = pennants.flatMap((pennant) => {
-    const seq = parseVideoChunkSequence(pennant.quote);
-    return seq ? [{ pennant, seq }] : [];
-  });
+  const videoPennants = collectCourseVideoPennants(banner);
 
   for (const { pennant } of videoPennants) {
     const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
@@ -824,6 +874,10 @@ export function validateCourseVideoPennants(
     if (!slideValidation.valid) {
       return { valid: false, error: `${pennant.title}: ${slideValidation.error}` };
     }
+  }
+
+  if (!resolveCourseVideoInitPayload(banner, slideGroup)) {
+    return { valid: false, error: 'missing fMP4 initialization segment' };
   }
 
   return { valid: true };
@@ -838,20 +892,20 @@ export function buildPlaylistFromCourseSlideGroup(
     return { chunks: [], error: quoteValidation.error };
   }
 
-  const pennants = [...(banner.pennants ?? [])].sort((a, b) => a.ordinal - b.ordinal);
-  const videoPennants = pennants.flatMap((pennant) => {
-    const seq = parseVideoChunkSequence(pennant.quote);
-    return seq ? [{ pennant, seq }] : [];
-  });
+  const videoPennants = collectCourseVideoPennants(banner);
+  const collapsedTimings = collapseChunkTimings(
+    videoPennants.map(({ seq }) => chunkTimingFromSequence(seq)),
+  );
 
-  const chunks: (PlaylistChunk | null)[] = videoPennants.map(({ pennant, seq }) => {
-    const slideRow = findSlideRowForPennant(slideGroup, pennant.id)!;
+  const chunks: (PlaylistChunk | null)[] = videoPennants.map(({ pennant, seq }, listIndex) => {
+    const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
+    if (!slideRow) return null;
     const chunkFields = buildPlaylistChunkFieldsFromRows(slideRow);
     if (!chunkFields.playable || !isPlayableVideoChunkPayload(joinBase64SplitParts(chunkFields.partPayloads))) {
       return null;
     }
     const cover = getCoverForPennant(slideGroup, pennant);
-    const { startMs, endMs } = chunkTimingFromSequence(seq);
+    const { startMs, endMs } = collapsedTimings[listIndex];
     const thumbnailUrl = thumbnailUrlFromCover(cover);
 
     return {
@@ -868,22 +922,23 @@ export function buildPlaylistFromCourseSlideGroup(
 
   const failedIndex = chunks.findIndex((chunk) => chunk === null);
   if (failedIndex >= 0) {
+    const failed = videoPennants[failedIndex];
     return {
       chunks: [],
-      error: `Chunk ${failedIndex + 1} could not be assembled into a playable fMP4 segment`,
+      error: `Chunk ${failed?.seq.index ?? failedIndex + 1}/${failed?.seq.total ?? '?'} could not be assembled into a playable fMP4 segment`,
     };
   }
 
-  const firstPennant = videoPennants[0]?.pennant;
-  const firstSlideRow = firstPennant
-    ? findSlideRowForPennant(slideGroup, firstPennant.id) ?? []
-    : [];
+  const initPayload = resolveCourseVideoInitPayload(banner, slideGroup);
+  if (!initPayload) {
+    return {
+      chunks: [],
+      error: 'missing fMP4 initialization segment',
+    };
+  }
 
   return {
-    chunks: attachPlaylistInitPayload(
-      chunks as PlaylistChunk[],
-      extractFmp4InitPayloadFromRows(firstSlideRow),
-    ),
+    chunks: attachPlaylistInitPayload(chunks as PlaylistChunk[], initPayload),
     error: null,
   };
 }
@@ -956,7 +1011,7 @@ export function buildChunkPlaylistFromTutorialVideoGroup(
   };
 }
 
-/** Builds a full chunk playlist for the UI, including chunks that are not yet playable. */
+/** Builds a course chunk playlist from present pennants only (sparse OK), with collapsed timing. */
 export function buildChunkPlaylistFromCourseSlideGroup(
   banner: CourseBanner,
   slideGroup: SlideGroup,
@@ -966,34 +1021,15 @@ export function buildChunkPlaylistFromCourseSlideGroup(
     return { chunks: [], error: quoteValidation.error };
   }
 
-  const pennants = [...(banner.pennants ?? [])].sort((a, b) => a.ordinal - b.ordinal);
-  const videoPennants = pennants.flatMap((pennant) => {
-    const seq = parseVideoChunkSequence(pennant.quote);
-    return seq ? [{ pennant, seq }] : [];
-  });
-  videoPennants.sort((a, b) => a.seq.index - b.seq.index);
-  const expectedTotal = videoPennants[0]?.seq.total ?? videoPennants.length;
+  const videoPennants = collectCourseVideoPennants(banner);
+  const collapsedTimings = collapseChunkTimings(
+    videoPennants.map(({ seq }) => chunkTimingFromSequence(seq)),
+  );
 
-  const chunks: PlaylistChunk[] = Array.from({ length: expectedTotal }, (_, i) => {
-    const entry = videoPennants[i];
-    if (!entry) {
-      return {
-        index: i + 1,
-        total: expectedTotal,
-        startMs: 0,
-        endMs: 0,
-        partPayloads: [],
-        expectedPartCount: 0,
-        playable: false,
-        contentId: -1,
-        title: banner.title,
-      };
-    }
-
-    const { pennant, seq } = entry;
+  const chunks: PlaylistChunk[] = videoPennants.map(({ pennant, seq }, listIndex) => {
     const slideRow = findSlideRowForPennant(slideGroup, pennant.id) ?? [];
     const cover = getCoverForPennant(slideGroup, pennant);
-    const { startMs, endMs } = chunkTimingFromSequence(seq);
+    const { startMs, endMs } = collapsedTimings[listIndex];
     const thumbnailUrl = thumbnailUrlFromCover(cover);
 
     return {
@@ -1008,22 +1044,25 @@ export function buildChunkPlaylistFromCourseSlideGroup(
     };
   });
 
-  const failedIndex = chunks.findIndex((chunk) => !isPlaylistChunkPlayable(chunk));
+  const initPayload = resolveCourseVideoInitPayload(banner, slideGroup);
+  const chunksWithInit = attachPlaylistInitPayload(chunks, initPayload);
+
+  const failedIndex = chunksWithInit.findIndex((chunk) => !isPlaylistChunkPlayable(chunk));
   const failedSlideRow = failedIndex >= 0
     ? findSlideRowForPennant(slideGroup, videoPennants[failedIndex]?.pennant.id ?? -1) ?? []
     : [];
-  const firstPennant = videoPennants[0]?.pennant;
-  const firstSlideRow = firstPennant
-    ? findSlideRowForPennant(slideGroup, firstPennant.id) ?? []
-    : [];
+  const failedChunk = failedIndex >= 0 ? chunksWithInit[failedIndex] : null;
+
+  let error: string | null = null;
+  if (!initPayload) {
+    error = 'missing fMP4 initialization segment';
+  } else if (failedChunk) {
+    error = `Chunk ${failedChunk.index}/${failedChunk.total}: ${getFmp4ChunkAssemblyFailure(failedSlideRow) ?? 'invalid fMP4 segment'}`;
+  }
+
   return {
-    chunks: attachPlaylistInitPayload(
-      chunks,
-      extractFmp4InitPayloadFromRows(firstSlideRow),
-    ),
-    error: failedIndex >= 0
-      ? `Chunk ${failedIndex + 1}/${expectedTotal}: ${getFmp4ChunkAssemblyFailure(failedSlideRow) ?? 'invalid fMP4 segment'}`
-      : null,
+    chunks: chunksWithInit,
+    error,
   };
 }
 

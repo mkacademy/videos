@@ -47,7 +47,6 @@ import {
   MAX_VIDEO_BASE64_BYTES,
   uniqueFileName,
   areFmp4VideoChunks,
-  extractFmp4InitPayloadFromRows,
   FMP4_INIT_CONTENT_LABEL,
   FMP4_MEDIA_MIME,
   VIDEO_MP4_MIME,
@@ -62,6 +61,7 @@ import {
   getPlaylistFmp4InitPayload,
   groupTutorialVideoBannerEntries,
   joinChunkPartPayloads,
+  resolveCourseVideoInitPayload,
   validateCourseVideoPennants,
   validateTutorialVideoChunkBanners,
 } from "./videoChunkPlayback";
@@ -2374,17 +2374,28 @@ export const exportCourseTreesToVideoFolder = async (
       continue;
     }
 
-    const pennantsToExport = [...(banner.pennants ?? [])].sort((a, b) => a.ordinal - b.ordinal);
+    const videoPennants = [...(banner.pennants ?? [])]
+      .flatMap((pennant) => {
+        const seq = parseVideoChunkSequence(pennant.quote);
+        return seq ? [{ pennant, seq }] : [];
+      })
+      .sort((a, b) => a.seq.index - b.seq.index);
 
-    if (pennantsToExport.length === 0) {
-      skipped.push(`Skipped course "${banner.title}": no pennants`);
+    if (videoPennants.length === 0) {
+      skipped.push(`Skipped course "${banner.title}": no video chunk pennants`);
+      continue;
+    }
+
+    const pennantValidation = validateCourseVideoPennants(banner, slideGroup);
+    if (!pennantValidation.valid) {
+      skipped.push(`Skipped course "${banner.title}": ${pennantValidation.error}`);
       continue;
     }
 
     const pennantPayloads: string[] = [];
     let pennantError: string | null = null;
 
-    for (const pennant of pennantsToExport) {
+    for (const { pennant } of videoPennants) {
       const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
       if (!slideRow) {
         pennantError = `missing slides for pennant ${pennant.id}`;
@@ -2410,12 +2421,7 @@ export const exportCourseTreesToVideoFolder = async (
       usedFileNames,
     );
 
-    const firstSlideRow = pennantsToExport[0]
-      ? findSlideRowForPennant(slideGroup, pennantsToExport[0].id)
-      : null;
-    const initPayload = firstSlideRow
-      ? extractFmp4InitPayloadFromRows(firstSlideRow)
-      : null;
+    const initPayload = resolveCourseVideoInitPayload(banner, slideGroup);
 
     try {
       if (!areFmp4VideoChunks(pennantPayloads, initPayload)) {

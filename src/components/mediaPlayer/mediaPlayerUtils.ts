@@ -5,13 +5,12 @@ import type { UpdatePayload } from '../../library/actions';
 import {
   groupTutorialVideoBannerEntries,
   resolveCourseSlideGroupForBanner,
+  resolveCourseVideoInitPayload,
   validateCourseVideoChunkQuotes,
   validateTutorialVideoChunkQuotes,
 } from '../../library/videoChunkPlayback';
 import {
   isChunkPayloadStoredLocally,
-  isFmp4InitContentLabel,
-  normalizeBase64Payload,
   parseVideoChunkSequence,
   stripDataUrlToMimeOnly,
   validatePennantSlideItems,
@@ -174,12 +173,6 @@ export function courseVideoHasReleasablePayload(
   return getCourseFilterInstructionRows(banner, contentGroups).some(slideItemHasReleasablePayload);
 }
 
-function slideRowInitPayloadStored(slideRow: readonly SlideItem[]): boolean {
-  const initRow = slideRow.find((row) => isFmp4InitContentLabel(row.content));
-  if (!initRow) return true;
-  return normalizeBase64Payload(initRow.imageurl ?? '').length > 0;
-}
-
 export function findSlideRowForPennant(
   slideGroup: SlideGroup,
   pennantId: number,
@@ -192,13 +185,15 @@ export function findSlideRowForPennant(
   return null;
 }
 
-/** True when every split part (and fMP4 init row, if present) has full base64 — not mime-only placeholders. */
+/** True when sparse video chunks + init are locally stored and exportable (same rules as playback). */
 export function courseVideoHasExportablePayload(
   banner: CourseBanner,
   contentGroups: readonly SlideGroup[],
 ): boolean {
   const slideGroup = resolveCourseSlideGroupForBanner(banner, contentGroups);
   if (!slideGroup) return false;
+  if (!validateCourseVideoChunkQuotes(banner).valid) return false;
+  if (!resolveCourseVideoInitPayload(banner, slideGroup)) return false;
 
   const videoPennants = [...(banner.pennants ?? [])]
     .sort((a, b) => a.ordinal - b.ordinal)
@@ -210,8 +205,7 @@ export function courseVideoHasExportablePayload(
     const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
     if (!slideRow || slideRow.length === 0) return false;
     if (!validatePennantSlideItems(slideRow).valid) return false;
-    if (!isChunkPayloadStoredLocally(slideRow)) return false;
-    return slideRowInitPayloadStored(slideRow);
+    return isChunkPayloadStoredLocally(slideRow);
   });
 }
 

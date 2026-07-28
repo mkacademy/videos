@@ -1,0 +1,19 @@
+.headerTitle {
+  font-family: 'Bai Jamjuree', sans-serif;
+  font-weight: 600;
+  font-size: 1.75rem;
+  line-height: 1.2;
+  margin: 0 0 0.5rem;
+}
+
+.headerGroup {
+  vertical-align: middle;
+}
+
+.headerGroup :global(.btn) {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  padding: 0.35rem 0.85rem;
+}

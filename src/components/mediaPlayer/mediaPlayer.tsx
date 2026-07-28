@@ -391,11 +391,8 @@ const MediaPlayer: React.FC = () => {
       <div className={styles['container']}>
         <div className={styles['headerRow']}>
           <div>
-            <h1 className={styles['title']}>Media Player</h1>
+            <MediaScreenSwitcher asHeader />
             <p className={styles['subtitle']}>{librarySubtitle}</p>
-          </div>
-          <div className={styles['headerActions']}>
-            <MediaScreenSwitcher />
           </div>
         </div>
 
@@ -528,10 +525,7 @@ const MediaPlayer: React.FC = () => {
     return (
       <div className={styles['container']}>
         <div className={styles['headerRow']}>
-          <h1 className={styles['title']}>Media Player</h1>
-          <div className={styles['headerActions']}>
-            <MediaScreenSwitcher />
-          </div>
+          <MediaScreenSwitcher asHeader />
         </div>
         {tabs}
         <Alert variant="warning">
@@ -577,10 +571,7 @@ const MediaPlayer: React.FC = () => {
   return (
     <div className={styles['container']}>
       <div className={styles['headerRow']}>
-        <h1 className={styles['title']}>Media Player</h1>
-        <div className={styles['headerActions']}>
-          <MediaScreenSwitcher />
-        </div>
+        <MediaScreenSwitcher asHeader />
       </div>
       {tabs}
       <Alert variant="warning">
