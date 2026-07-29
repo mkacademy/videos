@@ -22,7 +22,6 @@ import {
   parseBase64SplitSequence,
   filterSplitPayloadRows,
   parseVideoChunkSequence,
-  validateIndexedSequenceSet,
   validatePennantSlideItems,
   validateTutorialContentRows,
   type VideoChunkSequence,
@@ -409,12 +408,32 @@ export function getPlaylistFmp4InitPayload(chunks: readonly PlaylistChunk[]): st
   return init && isFmp4InitSegment(init) ? init : null;
 }
 
-function getChunkAssemblyFailure(rows: readonly PlayablePayloadRow[]): string | null {
+/** Streamable MP3 chunk only — rejects standalone/non-MP3 payloads. */
+function getStreamableMp3ChunkAssemblyFailure(
+  rows: readonly PlayablePayloadRow[],
+): string | null {
   if (rows.length === 0) return 'missing content rows';
   const assembled = joinSplitPayloadRows(rows);
   if ('error' in assembled) return assembled.error;
   if (isPlayableAudioChunkPayload(assembled.payload)) return null;
-  return getFmp4ChunkAssemblyFailure(rows) ?? 'invalid segment';
+  return 'expected streamable MP3 segment';
+}
+
+type TutorialVideoEntry = {
+  banner: TutorialVideoChunkBanner;
+  seq: VideoChunkSequence;
+};
+
+/** Present media-chunk banners sorted by quote index (gaps allowed). */
+function collectTutorialVideoEntries(
+  chunkBanners: readonly TutorialVideoChunkBanner[],
+): TutorialVideoEntry[] {
+  const videoEntries = chunkBanners.flatMap((banner) => {
+    const seq = parseVideoChunkSequence(banner.quote);
+    return seq ? [{ banner, seq }] : [];
+  });
+  videoEntries.sort((a, b) => a.seq.index - b.seq.index);
+  return videoEntries;
 }
 
 /** Joins chunk parts for export paths that still need a single payload string. */
@@ -647,6 +666,11 @@ export function findTutorialVideoGroupForBanner(
     .find((group) => group.some((entry) => entry.banner.id === bannerId)) ?? null;
 }
 
+/**
+ * Playback/library quote rules: allow a sparse subset of chunk indices as long as
+ * present quotes agree on `total`, have unique in-range indices, and at least one
+ * chunk exists. Missing indices are omitted and collapsed at playlist build time.
+ */
 export function validateTutorialVideoChunkQuotes(
   chunkBanners: readonly TutorialVideoChunkBanner[],
 ): { valid: true; chunkCount: number } | { valid: false; error: string } {
@@ -654,24 +678,29 @@ export function validateTutorialVideoChunkQuotes(
     return { valid: false, error: 'no video chunk banners' };
   }
 
-  const videoEntries = chunkBanners.flatMap((banner) => {
-    const seq = parseVideoChunkSequence(banner.quote);
-    return seq ? [{ banner, seq }] : [];
-  });
+  const videoEntries = collectTutorialVideoEntries(chunkBanners);
 
   if (videoEntries.length === 0) {
     return { valid: false, error: 'no video chunk sequences in banner quotes' };
   }
 
-  const quoteValidation = validateIndexedSequenceSet(
-    videoEntries.map(({ seq }) => seq),
-    'chunk',
-  );
-  if (!quoteValidation.valid) {
-    return quoteValidation;
+  const expectedTotal = videoEntries[0].seq.total;
+  if (!videoEntries.every(({ seq }) => seq.total === expectedTotal)) {
+    return { valid: false, error: 'mismatched chunk totals' };
   }
 
-  return { valid: true, chunkCount: videoEntries[0].seq.total };
+  const indices = videoEntries.map(({ seq }) => seq.index);
+  if (new Set(indices).size !== indices.length) {
+    return { valid: false, error: 'duplicate chunk indices' };
+  }
+
+  for (const { seq } of videoEntries) {
+    if (seq.index < 1 || seq.index > expectedTotal) {
+      return { valid: false, error: `chunk ${seq.index}/${expectedTotal} out of range` };
+    }
+  }
+
+  return { valid: true, chunkCount: videoEntries.length };
 }
 
 export function validateTutorialVideoChunkBanners(
@@ -683,10 +712,7 @@ export function validateTutorialVideoChunkBanners(
     return quoteValidation;
   }
 
-  const videoEntries = chunkBanners.flatMap((banner) => {
-    const seq = parseVideoChunkSequence(banner.quote);
-    return seq ? [{ banner, seq }] : [];
-  });
+  const videoEntries = collectTutorialVideoEntries(chunkBanners);
 
   for (const { banner } of videoEntries) {
     const contentRows = findContentRowsForBannerId(contentGroups, banner.id);
@@ -711,26 +737,23 @@ export function buildPlaylistFromTutorialVideoGroup(
     return { chunks: [], error: quoteValidation.error };
   }
 
-  const videoEntries = chunkBanners.flatMap((banner) => {
-    const seq = parseVideoChunkSequence(banner.quote);
-    return seq ? [{ banner, seq }] : [];
-  });
-
-  const byIndex = new Map(videoEntries.map(({ banner, seq }) => [seq.index, { banner, seq }]));
-  const expectedTotal = videoEntries[0].seq.total;
+  const videoEntries = collectTutorialVideoEntries(chunkBanners);
+  const collapsedTimings = collapseChunkTimings(
+    videoEntries.map(({ seq }) => chunkTimingFromSequence(seq)),
+  );
   const title = entries[0]?.banner.title ?? '';
 
-  const chunks: (PlaylistChunk | null)[] = Array.from({ length: expectedTotal }, (_, i) => {
-    const { banner, seq } = byIndex.get(i + 1)!;
+  const chunks: (PlaylistChunk | null)[] = videoEntries.map(({ banner, seq }, listIndex) => {
     const contentRows = entries.find((entry) => entry.banner.id === banner.id)?.contentRows ?? [];
     const assembled = joinSplitPayloadRows(contentRows);
     if ('error' in assembled) {
       return null;
     }
-    if (!isPlayableVideoChunkPayload(assembled.payload) && !isPlayableAudioChunkPayload(assembled.payload)) {
+    // Tutorial audio: streamable MP3 only. fMP4 remains for legacy video-export paths.
+    if (!isPlayableAudioChunkPayload(assembled.payload) && !isPlayableVideoChunkPayload(assembled.payload)) {
       return null;
     }
-    const { startMs, endMs } = chunkTimingFromSequence(seq);
+    const { startMs, endMs } = collapsedTimings[listIndex];
     const chunkFields = buildPlaylistChunkFieldsFromRows(contentRows);
 
     return {
@@ -746,9 +769,10 @@ export function buildPlaylistFromTutorialVideoGroup(
 
   const failedIndex = chunks.findIndex((chunk) => chunk === null);
   if (failedIndex >= 0) {
+    const failed = videoEntries[failedIndex];
     return {
       chunks: [],
-      error: `Chunk ${failedIndex + 1}/${expectedTotal} could not be assembled into a playable segment`,
+      error: `Chunk ${failed?.seq.index ?? failedIndex + 1}/${failed?.seq.total ?? '?'} could not be assembled into a playable segment`,
     };
   }
 
@@ -980,7 +1004,7 @@ export function buildPlaylistFromCourseSlideGroup(
   };
 }
 
-/** Builds a full chunk playlist for the UI, including chunks that are not yet playable. */
+/** Builds a tutorial audio chunk playlist from present banners only (sparse OK), with collapsed timing. */
 export function buildChunkPlaylistFromTutorialVideoGroup(
   entries: readonly TutorialVideoBannerEntry[],
 ): PlaylistBuildResult {
@@ -990,34 +1014,15 @@ export function buildChunkPlaylistFromTutorialVideoGroup(
     return { chunks: [], error: quoteValidation.error };
   }
 
-  const videoEntries = chunkBanners.flatMap((banner) => {
-    const seq = parseVideoChunkSequence(banner.quote);
-    return seq ? [{ banner, seq }] : [];
-  });
-
-  const byIndex = new Map(videoEntries.map(({ banner, seq }) => [seq.index, { banner, seq }]));
-  const expectedTotal = videoEntries[0].seq.total;
+  const videoEntries = collectTutorialVideoEntries(chunkBanners);
+  const collapsedTimings = collapseChunkTimings(
+    videoEntries.map(({ seq }) => chunkTimingFromSequence(seq)),
+  );
   const title = entries[0]?.banner.title ?? '';
 
-  const chunks: PlaylistChunk[] = Array.from({ length: expectedTotal }, (_, i) => {
-    const entry = byIndex.get(i + 1);
-    if (!entry) {
-      return {
-        index: i + 1,
-        total: expectedTotal,
-        startMs: 0,
-        endMs: 0,
-        partPayloads: [],
-        expectedPartCount: 0,
-        playable: false,
-        contentId: -1,
-        title,
-      };
-    }
-
-    const { banner, seq } = entry;
+  const chunks: PlaylistChunk[] = videoEntries.map(({ banner, seq }, listIndex) => {
     const contentRows = entries.find((item) => item.banner.id === banner.id)?.contentRows ?? [];
-    const { startMs, endMs } = chunkTimingFromSequence(seq);
+    const { startMs, endMs } = collapsedTimings[listIndex];
 
     return {
       index: seq.index,
@@ -1034,17 +1039,26 @@ export function buildChunkPlaylistFromTutorialVideoGroup(
   const failedContentRows = failedIndex >= 0
     ? entries.find((entry) => entry.banner.id === chunks[failedIndex]?.contentId)?.contentRows ?? []
     : [];
-  const initPayload = resolveTutorialVideoInitPayload(entries);
+  const failedChunk = failedIndex >= 0 ? chunks[failedIndex] : null;
+
   let error: string | null = null;
   if (tutorialHasLegacySidecarInit(entries)) {
     error = 'legacy sidecar init segmentation is not supported';
-  } else if (!initPayload) {
-    error = 'missing fMP4 initialization segment';
-  } else if (failedIndex >= 0) {
-    error = `Chunk ${failedIndex + 1}/${expectedTotal}: ${getChunkAssemblyFailure(failedContentRows) ?? 'invalid segment'}`;
+  } else if (failedChunk) {
+    error = `Chunk ${failedChunk.index}/${failedChunk.total}: ${getStreamableMp3ChunkAssemblyFailure(failedContentRows) ?? 'invalid streamable MP3 segment'}`;
+  } else {
+    const nonMp3Index = chunks.findIndex((chunk) => {
+      if (!isPlaylistChunkPlayable(chunk)) return false;
+      return !isPlayableAudioChunkPayload(joinBase64SplitParts(chunk.partPayloads));
+    });
+    if (nonMp3Index >= 0) {
+      const bad = chunks[nonMp3Index];
+      error = `Chunk ${bad.index}/${bad.total}: expected streamable MP3 segment`;
+    }
   }
+
   return {
-    chunks: attachPlaylistInitPayload(chunks, initPayload),
+    chunks,
     error,
   };
 }

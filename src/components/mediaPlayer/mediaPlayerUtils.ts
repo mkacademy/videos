@@ -12,6 +12,8 @@ import {
   validateTutorialVideoChunkQuotes,
 } from '../../library/videoChunkPlayback';
 import {
+  FMP4_MEDIA_MIME,
+  VIDEO_MP4_MIME,
   isChunkPayloadStoredLocally,
   parseVideoChunkSequence,
   stripDataUrlToMimeOnly,
@@ -19,6 +21,33 @@ import {
 } from '../../library/directoryTreeUtils';
 import { exportCourseTreesToVideoFolder, type CourseTreesVideoExportResult } from '../../library/TemplatesManagerUtils';
 import { getCurAppName } from '../../utils';
+
+/** True when an instruction imageurl is fMP4 media or init (mime-only or data URL with payload). */
+export function isCourseVideoInstructionImageUrl(imageurl: string | undefined | null): boolean {
+  if (!imageurl) return false;
+  const trimmed = imageurl.trim();
+  if (!trimmed) return false;
+  if (trimmed === FMP4_MEDIA_MIME || trimmed === VIDEO_MP4_MIME) return true;
+  if (trimmed === `data:${FMP4_MEDIA_MIME}` || trimmed === `data:${VIDEO_MP4_MIME}`) return true;
+  return trimmed.startsWith(`data:${FMP4_MEDIA_MIME}`)
+    || trimmed.startsWith(`data:${VIDEO_MP4_MIME}`)
+    || trimmed.startsWith(FMP4_MEDIA_MIME)
+    || trimmed.startsWith(VIDEO_MP4_MIME);
+}
+
+function courseHasVideoMimeInstruction(
+  banner: CourseBanner,
+  slideGroup: SlideGroup,
+): boolean {
+  const videoPennants = [...(banner.pennants ?? [])]
+    .filter((pennant) => parseVideoChunkSequence(pennant.quote) !== null);
+
+  return videoPennants.some((pennant) => {
+    const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
+    if (!slideRow) return false;
+    return slideRow.some((item) => isCourseVideoInstructionImageUrl(item.imageurl));
+  });
+}
 
 export type MediaPlayerTab = 'course' | 'tutorial' | 'quiz';
 
@@ -85,6 +114,8 @@ export function buildCourseVideoLibrary(
 
     const quoteValidation = validateCourseVideoChunkQuotes(banner);
     if (!quoteValidation.valid) return [];
+
+    if (!courseHasVideoMimeInstruction(banner, slideGroup)) return [];
 
     const unsupported = courseHasLegacySidecarInit(banner, slideGroup);
 
