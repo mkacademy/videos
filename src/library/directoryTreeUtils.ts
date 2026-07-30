@@ -715,6 +715,16 @@ export const extractFmp4InitPayloadFromRows = (
   return joined && isFmp4InitSegment(joined) ? joined : null;
 };
 
+/** Legacy bare `init` sidecar payload (export recovery only; not used for playback). */
+export const extractLegacyFmp4InitPayloadFromRows = (
+  rows: readonly PlayablePayloadRow[],
+): string | null => {
+  const legacyInit = rows.find((row) => isLegacyFmp4InitContentLabel(row.content));
+  if (!legacyInit) return null;
+  const payload = normalizeBase64Payload(legacyInit.imageurl ?? '');
+  return payload && isFmp4InitSegment(payload) ? payload : null;
+};
+
 /** True when rows include a legacy bare `init` sidecar beside media parts. */
 export const hasLegacyFmp4InitSidecar = (
   rows: readonly PlayablePayloadRow[],

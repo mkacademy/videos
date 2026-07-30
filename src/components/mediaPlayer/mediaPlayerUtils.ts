@@ -52,7 +52,7 @@ function courseHasVideoMimeInstruction(
 export type MediaPlayerTab = 'course' | 'tutorial' | 'quiz';
 
 export const UNSUPPORTED_SEGMENTATION_MESSAGE =
-  'This segmentation is not supported anymore, switch to Thumb section and download video and re-import in studio so it is segmented correctly';
+  'This segmentation is not supported anymore. Use Download to export the video, then re-import in studio so it is segmented correctly';
 
 export type VideoLibraryEntry = {
   id: number;
@@ -125,7 +125,7 @@ export function buildCourseVideoLibrary(
       quote: banner.quote,
       chunkCount: quoteValidation.chunkCount,
       hasReleasablePayload: courseVideoHasReleasablePayload(banner, contentGroups),
-      hasExportablePayload: !unsupported && courseVideoHasExportablePayload(banner, contentGroups),
+      hasExportablePayload: courseVideoHasExportablePayload(banner, contentGroups),
       usesUnsupportedSegmentation: unsupported,
     }];
   });
@@ -230,16 +230,19 @@ export function findSlideRowForPennant(
   return null;
 }
 
-/** True when sparse video chunks + init are locally stored and exportable (same rules as playback). */
+/**
+ * True when sparse video chunks + init are locally stored and exportable.
+ * Legacy sidecar init is allowed here so users can Download → re-import
+ * (playback remains blocked via usesUnsupportedSegmentation).
+ */
 export function courseVideoHasExportablePayload(
   banner: CourseBanner,
   contentGroups: readonly SlideGroup[],
 ): boolean {
   const slideGroup = resolveCourseSlideGroupForBanner(banner, contentGroups);
   if (!slideGroup) return false;
-  if (courseHasLegacySidecarInit(banner, slideGroup)) return false;
   if (!validateCourseVideoChunkQuotes(banner).valid) return false;
-  if (!resolveCourseVideoInitPayload(banner, slideGroup)) return false;
+  if (!resolveCourseVideoInitPayload(banner, slideGroup, { allowLegacySidecar: true })) return false;
 
   const videoPennants = [...(banner.pennants ?? [])]
     .sort((a, b) => a.ordinal - b.ordinal)

@@ -4,6 +4,7 @@ import type { Banner as CourseBanner, Pennant, SlideGroup, SlideGroupItem } from
 import { getSlideGroupItemForPennantChapterCoupling, isSlideGroupItem } from './CourseUtils';
 import {
   extractFmp4InitPayloadFromRows,
+  extractLegacyFmp4InitPayloadFromRows,
   findContentRowsForBannerId,
   getFmp4ChunkAssemblyFailure,
   hasLegacyFmp4InitSidecar,
@@ -248,10 +249,16 @@ function collapseChunkTimings(
   });
 }
 
+export type ResolveCourseVideoInitOptions = {
+  /** When true, also accept a legacy bare `init` sidecar (export recovery only). */
+  allowLegacySidecar?: boolean;
+};
+
 /** fMP4 init from any pennant's slide row (init/i/n parts; order-independent). */
 export function resolveCourseVideoInitPayload(
   banner: CourseBanner,
   slideGroup: SlideGroup,
+  options?: ResolveCourseVideoInitOptions,
 ): string | null {
   for (const pennant of banner.pennants ?? []) {
     const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
@@ -263,6 +270,17 @@ export function resolveCourseVideoInitPayload(
   for (const row of slideGroup.slides ?? []) {
     const initPayload = extractFmp4InitPayloadFromRows(row);
     if (initPayload) return initPayload;
+  }
+  if (!options?.allowLegacySidecar) return null;
+  for (const pennant of banner.pennants ?? []) {
+    const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
+    if (!slideRow) continue;
+    const legacy = extractLegacyFmp4InitPayloadFromRows(slideRow);
+    if (legacy) return legacy;
+  }
+  for (const row of slideGroup.slides ?? []) {
+    const legacy = extractLegacyFmp4InitPayloadFromRows(row);
+    if (legacy) return legacy;
   }
   return null;
 }
@@ -914,8 +932,9 @@ export function validateCourseVideoChunkQuotes(
 export function validateCourseVideoPennants(
   banner: CourseBanner,
   slideGroup: SlideGroup,
+  options?: ResolveCourseVideoInitOptions,
 ): { valid: true } | { valid: false; error: string } {
-  if (courseHasLegacySidecarInit(banner, slideGroup)) {
+  if (!options?.allowLegacySidecar && courseHasLegacySidecarInit(banner, slideGroup)) {
     return { valid: false, error: 'legacy sidecar init segmentation is not supported' };
   }
 
@@ -937,7 +956,7 @@ export function validateCourseVideoPennants(
     }
   }
 
-  if (!resolveCourseVideoInitPayload(banner, slideGroup)) {
+  if (!resolveCourseVideoInitPayload(banner, slideGroup, options)) {
     return { valid: false, error: 'missing fMP4 initialization segment' };
   }
 

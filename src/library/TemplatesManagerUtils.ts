@@ -845,7 +845,9 @@ export const exportCourseTreesToVideoFolder = async (
       continue;
     }
 
-    const pennantValidation = validateCourseVideoPennants(banner, slideGroup);
+    const pennantValidation = validateCourseVideoPennants(banner, slideGroup, {
+      allowLegacySidecar: true,
+    });
     if (!pennantValidation.valid) {
       skipped.push(`Skipped course "${banner.title}": ${pennantValidation.error}`);
       continue;
@@ -880,7 +882,9 @@ export const exportCourseTreesToVideoFolder = async (
       usedFileNames,
     );
 
-    const initPayload = resolveCourseVideoInitPayload(banner, slideGroup);
+    const initPayload = resolveCourseVideoInitPayload(banner, slideGroup, {
+      allowLegacySidecar: true,
+    });
 
     try {
       if (!areFmp4VideoChunks(pennantPayloads, initPayload)) {
