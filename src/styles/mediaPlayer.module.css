@@ -72,6 +72,17 @@
   width: 32px;
   height: 32px;
   margin-bottom: 0.35rem;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.accountButton:hover {
+  filter: brightness(1.08);
+  transform: scale(1.06);
+}
+
+.accountButton:active {
+  transform: scale(0.96);
+  filter: brightness(0.95);
 }
 
 .accountIcon {
