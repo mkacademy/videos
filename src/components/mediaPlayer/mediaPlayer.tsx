@@ -429,7 +429,13 @@ const MediaPlayer: React.FC = () => {
           ) : (
             <div className={styles['libraryList']}>
               {courseLibrary.map((video) => (
-                <div key={video.id} className={styles['libraryItem']}>
+                <div
+                  key={video.id}
+                  className={[
+                    styles['libraryItem'],
+                    video.isHighlighted ? styles['libraryItemHighlighted'] : '',
+                  ].filter(Boolean).join(' ')}
+                >
                   <div>
                     <div className={styles['chunkTitle']}>{video.title}</div>
                     <div className={styles['chunkTime']}>
@@ -484,7 +490,13 @@ const MediaPlayer: React.FC = () => {
           ) : (
             <div className={styles['libraryList']}>
               {tutorialLibrary.map((audio) => (
-                <div key={audio.id} className={styles['libraryItem']}>
+                <div
+                  key={audio.id}
+                  className={[
+                    styles['libraryItem'],
+                    audio.isHighlighted ? styles['libraryItemHighlighted'] : '',
+                  ].filter(Boolean).join(' ')}
+                >
                   <div>
                     <div className={styles['chunkTitle']}>{audio.title}</div>
                     <div className={styles['chunkTime']}>
@@ -514,7 +526,13 @@ const MediaPlayer: React.FC = () => {
           ) : (
             <div className={styles['libraryList']}>
               {quizLibrary.map((quiz) => (
-                <div key={quiz.id} className={styles['libraryItem']}>
+                <div
+                  key={quiz.id}
+                  className={[
+                    styles['libraryItem'],
+                    quiz.isHighlighted ? styles['libraryItemHighlighted'] : '',
+                  ].filter(Boolean).join(' ')}
+                >
                   <div>
                     <div className={styles['chunkTitle']}>{quiz.title}</div>
                     <div className={styles['chunkTime']}>
@@ -578,7 +596,6 @@ const MediaPlayer: React.FC = () => {
         expectedChunkCount={expectedChunkCount}
         selectedCourseBanner={selectedCourseBanner}
         selectedCourseSlideGroup={selectedCourseSlideGroup}
-        autoPlay={videoId !== null}
         onChangeMedia={handleChangeCourseMedia}
         onPlaylistFinished={handlePlaylistFinished}
         tabs={tabs}

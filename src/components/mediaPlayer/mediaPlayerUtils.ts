@@ -62,6 +62,7 @@ export type VideoLibraryEntry = {
   hasReleasablePayload: boolean;
   hasExportablePayload: boolean;
   usesUnsupportedSegmentation: boolean;
+  isHighlighted: boolean;
 };
 
 export type QuizLibraryEntry = {
@@ -69,6 +70,7 @@ export type QuizLibraryEntry = {
   title: string;
   quote?: string;
   courseCount: number;
+  isHighlighted: boolean;
 };
 
 export function parseMediaPlayerTab(value: string | null): MediaPlayerTab {
@@ -127,6 +129,7 @@ export function buildCourseVideoLibrary(
       hasReleasablePayload: courseVideoHasReleasablePayload(banner, contentGroups),
       hasExportablePayload: courseVideoHasExportablePayload(banner, contentGroups),
       usesUnsupportedSegmentation: unsupported,
+      isHighlighted: banner.isHighlighted,
     }];
   });
 }
@@ -153,6 +156,10 @@ export function buildTutorialVideoLibrary(
     ) ?? group[0];
 
     const unsupported = tutorialHasLegacySidecarInit(group);
+    const groupIds = new Set(group.map((entry) => entry.banner.id));
+    const isHighlighted = banners.some(
+      (banner) => groupIds.has(banner.id) && banner.isHighlighted,
+    );
 
     return [{
       id: anchor.banner.id,
@@ -162,6 +169,7 @@ export function buildTutorialVideoLibrary(
       hasReleasablePayload: false,
       hasExportablePayload: false,
       usesUnsupportedSegmentation: unsupported,
+      isHighlighted,
     }];
   });
 }
@@ -180,6 +188,7 @@ export function buildQuizVideoLibrary(
       title: quiz.title,
       quote: quiz.quote,
       courseCount,
+      isHighlighted: quiz.isHighlighted,
     }];
   });
 }

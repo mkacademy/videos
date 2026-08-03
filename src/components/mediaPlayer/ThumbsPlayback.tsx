@@ -26,6 +26,7 @@ type ThumbsPlaybackProps = {
   kind: 'tutorial' | 'course';
   onChangeMedia: () => void;
   onMainImageClick?: (item: ThumbsPlaylistItem) => void;
+  onToggleHighlight?: (item: ThumbsPlaylistItem) => void;
   tabs: React.ReactNode;
 };
 
@@ -35,6 +36,7 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
   kind,
   onChangeMedia,
   onMainImageClick,
+  onToggleHighlight,
   tabs,
 }) => {
   const dispatch = useDispatch();
@@ -136,6 +138,7 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
         className={[
           styles['chunkItem'],
           isActive ? styles['chunkItemActive'] : '',
+          item.isHighlighted ? styles['chunkItemHighlighted'] : '',
         ].filter(Boolean).join(' ')}
         onClick={() => setActiveIndex(index)}
       >
@@ -149,7 +152,28 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
           }}
         />
         <div className={styles['chunkMeta']}>
-          <div className={styles['chunkTitle']} title={item.title || undefined}>
+          <div
+            className={[
+              styles['chunkTitle'],
+              onToggleHighlight ? styles['titleClickable'] : '',
+            ].filter(Boolean).join(' ')}
+            title={item.title || undefined}
+            role={onToggleHighlight ? 'button' : undefined}
+            tabIndex={onToggleHighlight ? 0 : undefined}
+            onClick={(e) => {
+              if (!onToggleHighlight) return;
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleHighlight(item);
+            }}
+            onKeyDown={(e) => {
+              if (!onToggleHighlight) return;
+              if (e.key !== 'Enter' && e.key !== ' ') return;
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleHighlight(item);
+            }}
+          >
             {textEllipsis(item.title || `Image ${index + 1}`, 15)}
           </div>
           <div className={styles['chunkBadges']}>

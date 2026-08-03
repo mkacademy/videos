@@ -8,6 +8,17 @@ import { signOut } from '../../utils';
 import { clearData as clearReducers } from '../../store/slices/rowSlice';
 import { resetPlayback, setPlaybackWebapp } from '../../store/slices/playbackSlice';
 import { mutateCurApp } from '../../store/slices/sessionSlice';
+import {
+  highlightCoversBreathSelection,
+  highlightCourseBreathSelection,
+  highlightPennantBreathSelection,
+  highlightSlideBreathSelection,
+} from '../../store/slices/courseSlice';
+import {
+  highlightContentBreathSelection,
+  highlightTutorialBreathSelection,
+} from '../../store/slices/tutorialSlice';
+import { highlightQuizBreathSelection } from '../../store/slices/quizSlice';
 import { resolveCourseSlideGroupForBanner } from '../../library/videoChunkPlayback';
 import { isDirectoryExportSupported, pickWritableDirectoryHandle } from '../../library/directoryTreeUtils';
 import { prependError, prependWarning } from '../../store/slices/errorSlice';
@@ -221,8 +232,9 @@ const MediaThumbs: React.FC = () => {
     if (!filterCourseContext) return entries;
 
     return entries.map((entry) => {
-      const pennantTitle = filterCourseContext.courseBanner.pennants
-        ?.find((pennant) => pennant.id === entry.id)?.title;
+      const pennant = filterCourseContext.courseBanner.pennants
+        ?.find((p) => p.id === entry.id);
+      const pennantTitle = pennant?.title;
       const chapterCount = entry.imageCount > 0
         ? entry.imageCount
         : buildThumbsPlaylistFromCourseChapter(
@@ -235,6 +247,7 @@ const MediaThumbs: React.FC = () => {
           ? pennantTitle
           : entry.title,
         imageCount: chapterCount,
+        isHighlighted: entry.isHighlighted || pennant?.isHighlighted || false,
       };
     });
   }, [filterCourseContext, tutorialBanners, tutorialContent, tutorialFilterIds]);
@@ -385,6 +398,41 @@ const MediaThumbs: React.FC = () => {
     }));
   }, [courseId, dispatch, ldr, navigate, quizId, videoId]);
 
+  const handleTogglePlaylistHighlight = useCallback((item: ThumbsPlaylistItem) => {
+    const source = item.highlightSource
+      ?? (activeTab === 'course' ? 'cover' : 'content');
+    if (source === 'cover') {
+      dispatch(highlightCoversBreathSelection({ ids: [item.id] }));
+      return;
+    }
+    if (source === 'slide') {
+      dispatch(highlightSlideBreathSelection({ ids: [item.id] }));
+      return;
+    }
+    dispatch(highlightContentBreathSelection({ ids: [item.id] }));
+  }, [activeTab, dispatch]);
+
+  const handleToggleCourseHighlight = useCallback((id: number) => {
+    dispatch(highlightCourseBreathSelection({ ids: [id] }));
+  }, [dispatch]);
+
+  const handleToggleTutorialHighlight = useCallback((id: number) => {
+    const hasTutorialBanner = tutorialBanners.some((banner) => banner.id === id);
+    if (hasTutorialBanner) {
+      dispatch(highlightTutorialBreathSelection({ ids: [id] }));
+      return;
+    }
+    if (filterCourseContext) {
+      dispatch(highlightPennantBreathSelection({ ids: [id] }));
+      return;
+    }
+    dispatch(highlightTutorialBreathSelection({ ids: [id] }));
+  }, [dispatch, filterCourseContext, tutorialBanners]);
+
+  const handleToggleQuizHighlight = useCallback((id: number) => {
+    dispatch(highlightQuizBreathSelection({ ids: [id] }));
+  }, [dispatch]);
+
   const handleExportTutorial = useCallback(async (id: number) => {
     if (!exportSupported || exportInProgress) return;
     const banner = tutorialBanners.find((entry) => entry.id === id);
@@ -469,6 +517,7 @@ const MediaThumbs: React.FC = () => {
         items={tutorialPlaylist}
         kind="tutorial"
         onChangeMedia={handleChangeTutorialMedia}
+        onToggleHighlight={handleTogglePlaylistHighlight}
         tabs={tabs}
       />
     );
@@ -504,6 +553,7 @@ const MediaThumbs: React.FC = () => {
         kind="course"
         onChangeMedia={handleChangeCourseMedia}
         onMainImageClick={handleCourseMainImageClick}
+        onToggleHighlight={handleTogglePlaylistHighlight}
         tabs={tabs}
       />
     );
@@ -596,9 +646,27 @@ const MediaThumbs: React.FC = () => {
         ) : (
           <div className={styles['libraryList']}>
             {courseLibrary.map((course) => (
-              <div key={course.id} className={styles['libraryItem']}>
+              <div
+                key={course.id}
+                className={[
+                  styles['libraryItem'],
+                  course.isHighlighted ? styles['libraryItemHighlighted'] : '',
+                ].filter(Boolean).join(' ')}
+              >
                 <div>
-                  <div className={styles['chunkTitle']}>{course.title}</div>
+                  <div
+                    className={`${styles['chunkTitle']} ${styles['titleClickable']}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleToggleCourseHighlight(course.id)}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' && e.key !== ' ') return;
+                      e.preventDefault();
+                      handleToggleCourseHighlight(course.id);
+                    }}
+                  >
+                    {course.title}
+                  </div>
                   <div className={styles['chunkTime']}>
                     {course.imageCount}
                     {' '}
@@ -646,9 +714,27 @@ const MediaThumbs: React.FC = () => {
         ) : (
           <div className={styles['libraryList']}>
             {tutorialLibrary.map((tutorial) => (
-              <div key={tutorial.id} className={styles['libraryItem']}>
+              <div
+                key={tutorial.id}
+                className={[
+                  styles['libraryItem'],
+                  tutorial.isHighlighted ? styles['libraryItemHighlighted'] : '',
+                ].filter(Boolean).join(' ')}
+              >
                 <div>
-                  <div className={styles['chunkTitle']}>{tutorial.title}</div>
+                  <div
+                    className={`${styles['chunkTitle']} ${styles['titleClickable']}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleToggleTutorialHighlight(tutorial.id)}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' && e.key !== ' ') return;
+                      e.preventDefault();
+                      handleToggleTutorialHighlight(tutorial.id);
+                    }}
+                  >
+                    {tutorial.title}
+                  </div>
                   <div className={styles['chunkTime']}>
                     {tutorial.imageCount}
                     {' '}
@@ -694,9 +780,27 @@ const MediaThumbs: React.FC = () => {
         ) : (
           <div className={styles['libraryList']}>
             {quizLibrary.map((quiz) => (
-              <div key={quiz.id} className={styles['libraryItem']}>
+              <div
+                key={quiz.id}
+                className={[
+                  styles['libraryItem'],
+                  quiz.isHighlighted ? styles['libraryItemHighlighted'] : '',
+                ].filter(Boolean).join(' ')}
+              >
                 <div>
-                  <div className={styles['chunkTitle']}>{quiz.title}</div>
+                  <div
+                    className={`${styles['chunkTitle']} ${styles['titleClickable']}`}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => handleToggleQuizHighlight(quiz.id)}
+                    onKeyDown={(e) => {
+                      if (e.key !== 'Enter' && e.key !== ' ') return;
+                      e.preventDefault();
+                      handleToggleQuizHighlight(quiz.id);
+                    }}
+                  >
+                    {quiz.title}
+                  </div>
                   <div className={styles['chunkTime']}>
                     {quiz.courseCount}
                     {' '}

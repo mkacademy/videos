@@ -252,6 +252,21 @@
   border-color: #9ec5fe;
 }
 
+.chunkItemHighlighted {
+  background: #666666;
+  color: #fff;
+}
+
+.chunkItemHighlighted:hover {
+  background: #5a5a5a;
+  border-color: #868e96;
+}
+
+.chunkItemActive.chunkItemHighlighted {
+  background: #666666;
+  border-color: #9ec5fe;
+}
+
 .chunkItemPlayed {
   opacity: 0.55;
 }
@@ -294,6 +309,15 @@
   font-size: 0.85rem;
 }
 
+.titleClickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.titleClickable:hover {
+  text-decoration: underline;
+}
+
 .chunkTime {
   font-size: 0.75rem;
   color: #6c757d;
@@ -321,6 +345,16 @@
   border: 1px solid #dee2e6;
   border-radius: 10px;
   background: #fff;
+}
+
+.libraryItemHighlighted {
+  background: #666666;
+  border-color: #555555;
+  color: #fff;
+}
+
+.libraryItemHighlighted .chunkTime {
+  color: #dee2e6;
 }
 
 .libraryPlayExited {

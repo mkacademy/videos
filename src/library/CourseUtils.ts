@@ -217,3 +217,91 @@ export const applyUpdateCoversMetadata = (state: CourseState, payload: MetadataU
   state.content = nState;
   state.couplings = getSlideIndeces(state.banners, nState);
 };
+
+export interface CourseHighlightSlideBreathSelectionPayload {
+  ids: number[];
+  slideIndex?: number;
+  isHighlighted?: boolean;
+}
+
+export const applyHighlightSlideBreathSelection = (
+  state: CourseState,
+  { ids, slideIndex, isHighlighted }: CourseHighlightSlideBreathSelectionPayload
+): void => {
+  const pennantIds: number[] = [];
+  const { content, banners, selected } = state;
+  if (selected === -1)
+    pennantIds.push(...banners.map(({ pennants }) => pennants).flat().map(({ id }) => id));
+  else pennantIds.push(...(banners[selected]?.pennants?.map(({ id }: Pennant) => id) ?? []));
+  const predicate = ({ slides }: SlideGroup, index: number) => ({
+    isMatch: slides.find((slide: SlideItem[]) =>
+      slide.find(({ bannerId }: SlideItem) => pennantIds.includes(bannerId))
+    ),
+    index,
+  });
+  const contIndeces = content
+    .map(predicate)
+    .filter(({ isMatch }) => isMatch)
+    .map(({ index }) => index);
+  for (let i = 0; i < content.length; i++) {
+    const contIndex = contIndeces.find((x) => x === i);
+    if (contIndex === undefined) continue;
+    const { slides, ...mainslides } = content[contIndex];
+    content[contIndex] = {
+      slides: slides.map((slideRow: SlideItem[], index: number) => {
+        return index === (slideIndex ?? index)
+          ? slideRow.map((slide: SlideItem) => {
+              return ids.includes(slide.id)
+                ? {
+                    ...slide,
+                    isHighlighted: isHighlighted ?? !slide.isHighlighted,
+                  }
+                : slide;
+            })
+          : slideRow;
+      }),
+      ...mainslides,
+    };
+  }
+};
+
+export interface CourseHighlightCoversBreathSelectionPayload {
+  ids: number[];
+  isHighlighted?: boolean;
+}
+
+export const applyHighlightCoversBreathSelection = (
+  state: CourseState,
+  { ids, isHighlighted }: CourseHighlightCoversBreathSelectionPayload
+): void => {
+  const bannerIds =
+    state.selected === -1 ? state.banners.map(({ id }) => id) : [state.banners[state.selected]?.id];
+
+  state.content = state.content.map((group) => {
+    if (!bannerIds.includes(group[0]?.bannerId)) return group;
+
+    const { slides, ...mainslides } = group;
+    const updatedMainslides = Object.entries(mainslides).reduce(
+      (acc, [key, value]) => {
+        if (typeof value === "object" && value !== null && "id" in value) {
+          acc[key] = ids.includes((value as SlideGroupItem).id)
+            ? {
+                ...(value as SlideGroupItem),
+                isHighlighted: isHighlighted ?? !(value as SlideGroupItem).isHighlighted,
+              }
+            : value as SlideGroupItem;
+        } else {
+          acc[key] = value as SlideGroupItem;
+        }
+        return acc;
+      },
+      {} as { [x: number]: SlideGroupItem }
+    );
+
+    return {
+      ...updatedMainslides,
+      slides,
+    };
+  });
+};
+

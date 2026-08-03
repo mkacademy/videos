@@ -29,6 +29,12 @@ import {
   updateStepsMetadata,
   updateAnswersMetadata,
 } from '../../library/actions';
+import {
+  highlightCoversBreathSelection,
+  highlightCourseBreathSelection,
+  highlightPennantBreathSelection,
+  highlightSlideBreathSelection,
+} from './courseSlice';
 import { clearData } from './rowSlice';
 const initialState: QuizState = {
   noQuizzes: true,
@@ -44,6 +50,18 @@ const quizSlice = createSlice({
   reducers: {
     setQuizzes: (state, action: PayloadAction<SetQuizzesPayload>) => {
       applySetQuizzes(state, action.payload);
+    },
+    highlightQuizBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
+      const { quizzes, selected } = state;
+      const { ids, isHighlighted } = action.payload;
+      const quizIds = selected === -1
+        ? quizzes.map(({ id }) => id).filter((id) => ids.includes(id))
+        : [quizzes[selected]?.id];
+      state.quizzes = quizzes.map((quiz) =>
+        quizIds.includes(quiz.id)
+          ? { ...quiz, isHighlighted: isHighlighted ?? !quiz.isHighlighted }
+          : quiz
+      );
     },
   },
   extraReducers: (builder) => {
@@ -115,6 +133,23 @@ const quizSlice = createSlice({
         const { content } = applyCourseReducer(state, action);
         if (content) state.content = content;
       })
+      .addCase(highlightCourseBreathSelection, (state, action) => {
+        const { banners, content } = applyCourseReducer(state, action);
+        if (banners) state.banners = banners;
+        if (content) state.content = content;
+      })
+      .addCase(highlightSlideBreathSelection, (state, action) => {
+        const { content } = applyCourseReducer(state, action);
+        if (content) state.content = content;
+      })
+      .addCase(highlightPennantBreathSelection, (state, action) => {
+        const { banners } = applyCourseReducer(state, action);
+        if (banners) state.banners = banners;
+      })
+      .addCase(highlightCoversBreathSelection, (state, action) => {
+        const { content } = applyCourseReducer(state, action);
+        if (content) state.content = content;
+      })
       .addCase(clearData, () => {
         return initialState;
       })
@@ -123,6 +158,7 @@ const quizSlice = createSlice({
 
 export const {
   setQuizzes,
+  highlightQuizBreathSelection,
 } = quizSlice.actions;
 
 export default quizSlice.reducer; 

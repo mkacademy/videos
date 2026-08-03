@@ -14,6 +14,7 @@ import {
 import {
   type SetTutorialsPayload,
   type TutorialState,
+  applyHighlightContentBreathSelection,
   applySetTutorials,
   assignTutorialContentContiguousOrdinals,
 } from '../../library/TutorialUtils';
@@ -42,6 +43,17 @@ const tutorialSlice = createSlice({
     setTutorials: (state, action: PayloadAction<SetTutorialsPayload>) => {
       applySetTutorials(state, action.payload);
     },
+    highlightTutorialBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
+      const { ids, isHighlighted } = action.payload;
+      state.banners = state.banners.map((banner) =>
+        ids.includes(banner.id)
+          ? { ...banner, isHighlighted: isHighlighted ?? !banner.isHighlighted }
+          : banner
+      );
+    },
+    highlightContentBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
+      applyHighlightContentBreathSelection(state, action.payload);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -66,6 +78,8 @@ const tutorialSlice = createSlice({
 
 export const {
   setTutorials,
+  highlightTutorialBreathSelection,
+  highlightContentBreathSelection,
 } = tutorialSlice.actions;
 
 export default tutorialSlice.reducer;

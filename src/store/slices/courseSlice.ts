@@ -18,12 +18,17 @@ import {
 
 import type {
   Banner,
+  Pennant,
   SetCoursesPayload,
   SlideGroup,
   SlideItem,
   CourseState,
+  CourseHighlightCoversBreathSelectionPayload,
+  CourseHighlightSlideBreathSelectionPayload,
 } from '../../library/CourseUtils';
 import {
+  applyHighlightCoversBreathSelection,
+  applyHighlightSlideBreathSelection,
   applySetCourses,
   applyUpdateCoversMetadata,
   applyUpdateSteps,
@@ -50,6 +55,36 @@ const courseSlice = createSlice({
   reducers: {
     setCourses: (state, action: PayloadAction<SetCoursesPayload>) => {
       applySetCourses(state, action.payload);
+    },
+    highlightSlideBreathSelection: (state, action: PayloadAction<CourseHighlightSlideBreathSelectionPayload>) => {
+      applyHighlightSlideBreathSelection(state, action.payload);
+    },
+    highlightCourseBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
+      const { ids, isHighlighted } = action.payload;
+      const { banners, selected } = state;
+      const bannerIds = selected === -1
+        ? banners.map(({ id }) => id).filter((id) => ids.includes(id))
+        : [banners[selected]?.id];
+      state.banners = banners.map((banner: Banner) =>
+        bannerIds.includes(banner.id)
+          ? { ...banner, isHighlighted: isHighlighted ?? !banner.isHighlighted }
+          : banner
+      );
+    },
+    highlightPennantBreathSelection: (state, action: PayloadAction<{ ids: number[]; isHighlighted?: boolean }>) => {
+      const { banners } = state;
+      const { ids, isHighlighted } = action.payload;
+      state.banners = banners.map((banner: Banner) => ({
+        ...banner,
+        pennants: banner.pennants.map((pennant: Pennant) =>
+          ids.includes(pennant.id)
+            ? { ...pennant, isHighlighted: isHighlighted ?? !pennant.isHighlighted }
+            : pennant
+        ),
+      }));
+    },
+    highlightCoversBreathSelection: (state, action: PayloadAction<CourseHighlightCoversBreathSelectionPayload>) => {
+      applyHighlightCoversBreathSelection(state, action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -113,6 +148,10 @@ const courseSlice = createSlice({
 
 export const {
   setCourses,
+  highlightSlideBreathSelection,
+  highlightCourseBreathSelection,
+  highlightPennantBreathSelection,
+  highlightCoversBreathSelection,
 } = courseSlice.actions;
 
 export default courseSlice.reducer;

@@ -245,6 +245,33 @@ export const applySetTutorials = (state: TutorialState, payload: SetTutorialsPay
   }
 };
 
-
-
+export const applyHighlightContentBreathSelection = (
+  state: TutorialState,
+  payload: { ids: number[]; isHighlighted?: boolean },
+) => {
+  const bannerIds: number[] = [];
+  const { ids, isHighlighted } = payload;
+  if (state.selected === -1) {
+    bannerIds.push(...state.banners.map(({ id }) => id));
+  } else {
+    bannerIds.push(state.banners[state.selected]?.id);
+  }
+  const predicate = (slides: WritableContentArray, index: number) => ({
+    isMatch: slides.find(({ bannerId }) => bannerId && bannerIds.includes(bannerId)),
+    index,
+  });
+  const contIndices = state.content
+    .map(predicate)
+    .filter(({ isMatch }) => isMatch)
+    .map(({ index }) => index);
+  for (let i = 0; i < state.content.length; i++) {
+    const contIndex = contIndices.find((x) => x === i);
+    if (contIndex === undefined) continue;
+    state.content[contIndex] = state.content[contIndex].map((slide) =>
+      ids.includes(slide.id)
+        ? { ...slide, isHighlighted: isHighlighted ?? !slide.isHighlighted }
+        : slide
+    );
+  }
+};
 

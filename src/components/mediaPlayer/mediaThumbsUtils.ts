@@ -28,6 +28,7 @@ export type ThumbsLibraryEntry = {
   quote?: string;
   imageCount: number;
   hasExportableImages: boolean;
+  isHighlighted?: boolean;
 };
 
 export type ThumbsQuizLibraryEntry = {
@@ -35,6 +36,7 @@ export type ThumbsQuizLibraryEntry = {
   title: string;
   quote?: string;
   courseCount: number;
+  isHighlighted?: boolean;
 };
 
 export type ThumbsPlaylistItem = {
@@ -46,6 +48,9 @@ export type ThumbsPlaylistItem = {
   content?: string;
   metadata?: ChunkPartRow['metadata'];
   sizeInBytes?: number;
+  isHighlighted?: boolean;
+  /** Which store lane to toggle when the title is clicked. */
+  highlightSource?: 'content' | 'cover' | 'slide';
   /** Course cover rows only — coupled tutorial banner id when known. */
   coupledTutorialId?: number | null;
 };
@@ -90,6 +95,7 @@ export function buildTutorialThumbsLibrary(
         quote: banner.quote,
         imageCount: rows.length,
         hasExportableImages: rows.some((row) => rowHasExportableImage(row.imageurl)),
+        isHighlighted: banner.isHighlighted,
       }];
     });
 
@@ -103,6 +109,7 @@ export function buildTutorialThumbsLibrary(
       title: `Tutorial #${id}`,
       imageCount: 0,
       hasExportableImages: false,
+      isHighlighted: false,
     }));
 
   return [...entries, ...stubs].sort((a, b) => a.id - b.id);
@@ -129,6 +136,7 @@ export function buildCourseThumbsLibrary(
         quote: banner.quote,
         imageCount: covers.length,
         hasExportableImages: covers.some((cover) => rowHasExportableImage(cover.imageurl)),
+        isHighlighted: banner.isHighlighted,
       }];
     });
 }
@@ -146,6 +154,7 @@ export function buildQuizThumbsLibrary(
       title: quiz.title,
       quote: quiz.quote,
       courseCount,
+      isHighlighted: quiz.isHighlighted,
     }];
   });
 }
@@ -226,6 +235,8 @@ export function buildThumbsPlaylistFromTutorial(
       bannerId: row.bannerId,
       content: row.content,
       sizeInBytes: row.sizeInBytes,
+      isHighlighted: row.isHighlighted,
+      highlightSource: 'content' as const,
     }));
 }
 
@@ -248,6 +259,8 @@ export function buildThumbsPlaylistFromCourseChapter(
       content: row.content,
       metadata: row.metadata,
       sizeInBytes: row.sizeInBytes,
+      isHighlighted: row.isHighlighted,
+      highlightSource: 'slide' as const,
     }));
 }
 
@@ -279,6 +292,8 @@ export function buildThumbsPlaylistFromCourseCovers(
     content: cover.content,
     metadata: cover.metadata,
     sizeInBytes: cover.sizeInBytes,
+    isHighlighted: cover.isHighlighted,
+    highlightSource: 'cover' as const,
     coupledTutorialId: resolveTutorialIdForCourseCover(
       cover,
       banner,
