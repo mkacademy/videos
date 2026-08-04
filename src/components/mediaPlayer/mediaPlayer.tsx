@@ -144,6 +144,7 @@ const MediaPlayer: React.FC = () => {
 
   const [exitedCourseVideoId, setExitedCourseVideoId] = React.useState<number | null>(null);
   const [exitedTutorialAudioId, setExitedTutorialAudioId] = React.useState<number | null>(null);
+  const exitedLibraryItemRef = React.useRef<HTMLDivElement | null>(null);
 
   const courseBanners = useSelector((state: RootState) => state.course.banners);
   const courseContent = useSelector((state: RootState) => state.course.content);
@@ -169,6 +170,17 @@ const MediaPlayer: React.FC = () => {
   React.useEffect(() => {
     dispatch(mutateCurApp(activeTab));
   }, [activeTab, dispatch]);
+
+  React.useLayoutEffect(() => {
+    if (hasSelectedMedia) return;
+    const exitedId = activeTab === 'course'
+      ? exitedCourseVideoId
+      : activeTab === 'tutorial'
+        ? exitedTutorialAudioId
+        : null;
+    if (exitedId == null) return;
+    exitedLibraryItemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [activeTab, exitedCourseVideoId, exitedTutorialAudioId, hasSelectedMedia]);
 
   const courseLibrary = useMemo(
     () => {
@@ -431,6 +443,7 @@ const MediaPlayer: React.FC = () => {
               {courseLibrary.map((video) => (
                 <div
                   key={video.id}
+                  ref={video.id === exitedCourseVideoId ? exitedLibraryItemRef : undefined}
                   className={[
                     styles['libraryItem'],
                     video.isHighlighted ? styles['libraryItemHighlighted'] : '',
@@ -492,6 +505,7 @@ const MediaPlayer: React.FC = () => {
               {tutorialLibrary.map((audio) => (
                 <div
                   key={audio.id}
+                  ref={audio.id === exitedTutorialAudioId ? exitedLibraryItemRef : undefined}
                   className={[
                     styles['libraryItem'],
                     audio.isHighlighted ? styles['libraryItemHighlighted'] : '',

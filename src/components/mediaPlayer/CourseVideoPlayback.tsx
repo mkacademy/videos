@@ -24,6 +24,7 @@ import {
 } from './useVideoChunkPlayer';
 import Comments from '../views/Comments';
 import MediaScreenSwitcher from '../MediaScreenSwitcher';
+import { useChangeMediaOnEscape } from '../../Hooks/useChangeMediaOnEscape';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 type CourseVideoPlaybackProps = {
@@ -429,6 +430,8 @@ const CourseVideoPlayback: React.FC<CourseVideoPlaybackProps> = ({
   const [playbackSession, setPlaybackSession] = useState<PlaybackSession | null>(null);
   const bufferQueueLoadedForRef = useRef<string | null>(null);
 
+  useChangeMediaOnEscape(onChangeMedia);
+
   const getPartRows = useCallback(
     (index: number) => getCourseChunkPartRows(
       selectedCourseBanner,
@@ -532,7 +535,12 @@ const CourseVideoPlayback: React.FC<CourseVideoPlaybackProps> = ({
         </div>
         <div className={styles['headerActions']}>
           <MediaScreenSwitcher />
-          <Button variant="link" className={styles['changeMediaLink']} onClick={onChangeMedia}>
+          <Button
+            variant="link"
+            className={styles['changeMediaLink']}
+            onClick={onChangeMedia}
+            title="Change video (Escape)"
+          >
             Change video
           </Button>
         </div>

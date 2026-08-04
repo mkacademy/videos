@@ -156,6 +156,7 @@ const MediaThumbs: React.FC = () => {
 
   const [exitedCourseId, setExitedCourseId] = React.useState<number | null>(null);
   const [exitedTutorialId, setExitedTutorialId] = React.useState<number | null>(null);
+  const exitedLibraryItemRef = React.useRef<HTMLDivElement | null>(null);
 
   const courseBanners = useSelector((state: RootState) => state.course.banners);
   const courseContent = useSelector((state: RootState) => state.course.content);
@@ -179,6 +180,17 @@ const MediaThumbs: React.FC = () => {
   React.useEffect(() => {
     dispatch(mutateCurApp(activeTab));
   }, [activeTab, dispatch]);
+
+  React.useLayoutEffect(() => {
+    if (hasSelectedMedia) return;
+    const exitedId = activeTab === 'course'
+      ? exitedCourseId
+      : activeTab === 'tutorial'
+        ? exitedTutorialId
+        : null;
+    if (exitedId == null) return;
+    exitedLibraryItemRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [activeTab, exitedCourseId, exitedTutorialId, hasSelectedMedia]);
 
   const courseLibrary = useMemo(() => {
     if (quizId !== null) {
@@ -648,6 +660,7 @@ const MediaThumbs: React.FC = () => {
             {courseLibrary.map((course) => (
               <div
                 key={course.id}
+                ref={course.id === exitedCourseId ? exitedLibraryItemRef : undefined}
                 className={[
                   styles['libraryItem'],
                   course.isHighlighted ? styles['libraryItemHighlighted'] : '',
@@ -716,6 +729,7 @@ const MediaThumbs: React.FC = () => {
             {tutorialLibrary.map((tutorial) => (
               <div
                 key={tutorial.id}
+                ref={tutorial.id === exitedTutorialId ? exitedLibraryItemRef : undefined}
                 className={[
                   styles['libraryItem'],
                   tutorial.isHighlighted ? styles['libraryItemHighlighted'] : '',

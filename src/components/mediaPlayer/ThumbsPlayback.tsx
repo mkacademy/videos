@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { Badge, Button, Card } from 'react-bootstrap';
+import { Alert, Badge, Button, Card } from 'react-bootstrap';
 import { useDispatch } from 'react-redux';
 import { isMimeOnlyMediaUrl, resolveMediaSlotSrc } from '../../library/imageUtils';
 import { placeholder, textEllipsis } from '../../utils';
 import { clearChunkBuffer, updateChunkBuffer } from '../../store/slices/playbackSlice';
 import MediaScreenSwitcher from '../MediaScreenSwitcher';
+import { useChangeMediaOnEscape } from '../../Hooks/useChangeMediaOnEscape';
 import {
   collectThumbsBufferingEntries,
   type ThumbsPlaylistItem,
@@ -44,6 +45,8 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
   const [activeIndex, setActiveIndex] = useState(0);
   const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null);
   const bufferQueueLoadedForRef = useRef<string | null>(null);
+
+  useChangeMediaOnEscape(onChangeMedia);
 
   const structureSignature = useMemo(
     () => items.map((item) => item.id).join(','),
@@ -120,6 +123,12 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
 
   const activeItem = items[activeIndex] ?? items[0] ?? null;
   const mainSrc = activeItem ? resolveMediaSlotSrc(activeItem.imageurl) : placeholder;
+
+  const awaitingCount = useMemo(
+    () => items.filter((item) => isMimeOnlyMediaUrl(item.imageurl)).length,
+    [items],
+  );
+  const readyCount = items.length - awaitingCount;
 
   const handleMainImageClick = () => {
     if (!activeItem || !onMainImageClick) return;
@@ -199,13 +208,26 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
         </div>
         <div className={styles['headerActions']}>
           <MediaScreenSwitcher />
-          <Button variant="link" className={styles['changeMediaLink']} onClick={onChangeMedia}>
+          <Button
+            variant="link"
+            className={styles['changeMediaLink']}
+            onClick={onChangeMedia}
+            title={kind === 'course' ? 'Change course (Escape)' : 'Change tutorial (Escape)'}
+          >
             {kind === 'course' ? 'Change course' : 'Change tutorial'}
           </Button>
         </div>
       </div>
 
       {tabs}
+
+      {awaitingCount > 0 && (
+        <Alert variant="warning" className="mb-3">
+          {readyCount > 0
+            ? `Still downloading images: ${readyCount} / ${items.length} ready`
+            : `Images are not ready yet: ${awaitingCount} buffering`}
+        </Alert>
+      )}
 
       <div className={styles['layout']}>
         <Card className={styles['playerCard']}>

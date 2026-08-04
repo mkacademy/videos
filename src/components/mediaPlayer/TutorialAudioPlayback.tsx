@@ -17,6 +17,7 @@ import AudioWaveformPlayer from './AudioWaveformPlayer';
 import { useAudioChunkPlayer } from './useAudioChunkPlayer';
 import Comments from '../views/Comments';
 import MediaScreenSwitcher from '../MediaScreenSwitcher';
+import { useChangeMediaOnEscape } from '../../Hooks/useChangeMediaOnEscape';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 type TutorialAudioPlaybackProps = {
@@ -44,6 +45,8 @@ const TutorialAudioPlayback: React.FC<TutorialAudioPlaybackProps> = ({
   const [playerError, setPlayerError] = useState<string | null>(null);
   const bufferQueueLoadedForRef = useRef<string | null>(null);
   const commentsId = selectedTutorialGroup[0]?.banner.id ?? 0;
+
+  useChangeMediaOnEscape(onChangeMedia);
 
   const playableChunkCount = useMemo(
     () => chunkPlaylist.filter(isPlaylistChunkPlayable).length,
@@ -163,7 +166,12 @@ const TutorialAudioPlayback: React.FC<TutorialAudioPlaybackProps> = ({
         </div>
         <div className={styles['headerActions']}>
           <MediaScreenSwitcher />
-          <Button variant="link" className={styles['changeMediaLink']} onClick={onChangeMedia}>
+          <Button
+            variant="link"
+            className={styles['changeMediaLink']}
+            onClick={onChangeMedia}
+            title="Change audio (Escape)"
+          >
             Change audio
           </Button>
         </div>
