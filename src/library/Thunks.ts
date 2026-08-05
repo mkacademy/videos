@@ -18,7 +18,12 @@ import { anonymousFetch, authenticatedFetch, FetchDataPayload } from "./ThunksUt
 import { QueryParams } from "../store/types";
 import { Executedquery, validateThenDispatch } from "./ThunksUtils";
 import { getAccountRecords, getAnonymousRecords } from "./ThunksUtils";
-       
+import { updateSteps } from "./actions";
+import {
+    buildEmptyImageHydrationCollapseUpdates,
+    partitionImageHydrationRows,
+} from "./imageHydrationCollapseUtils";
+
 
 
 export const authenticate = createAsyncThunk<Partial<SessionState>, AuthPayload, { rejectValue: string }>(
@@ -146,9 +151,29 @@ export const deHydratedRowsDataFetcher = createAsyncThunk<void, DehydratedRowsFe
 
 export type BytesFetcherArg = { query: QueryParams };
 
+const bytesFetcherSeekIds = (seek: QueryParams['seek']): number[] => {
+    if (seek == null) return [];
+    if (Array.isArray(seek)) {
+        return seek.map((id) => Number(id)).filter((id) => Number.isFinite(id));
+    }
+    const n = Number(seek);
+    return Number.isFinite(n) ? [n] : [];
+};
+
 export const bytesFetcher = createAsyncThunk<UpdateTextsPayload[], BytesFetcherArg, { rejectValue: string; state: RootState }>(
     'row/bytesFetcher',
-    async ({ query }, { rejectWithValue, getState }) => {
+    async ({ query }, { rejectWithValue, getState, dispatch }) => {
+        const seekIds = bytesFetcherSeekIds(query.seek);
+        const collapseMisses = (ids: number[]) => {
+            if (!ids.length) return;
+            const collapseUpdates = buildEmptyImageHydrationCollapseUpdates(ids, getState());
+            if (collapseUpdates.length > 0) {
+                // Videos has no mediaHydration action — collapse via updateSteps with
+                // { id, imageurl } only (no edited/modified) so slots are not dirty-saved.
+                dispatch(updateSteps(collapseUpdates));
+            }
+        };
+
         try {
             const { isIncognito } = getState().session;
             const { payload: data, parent: fromEntity, entity: toEntity, } = isIncognito
@@ -161,8 +186,23 @@ export const bytesFetcher = createAsyncThunk<UpdateTextsPayload[], BytesFetcherA
             const dataFormatter = Tree.getProperty(entity, "formattedData") as
                 | ((payload: DataRow[]) => { texts?: UpdateTextsPayload[] })
                 | undefined;
-            return dataFormatter?.(corData[moldsTo.toLowerCase()])?.texts ?? [];
+            const rawRows = corData[moldsTo.toLowerCase()];
+            const rowsPayload: DataRow[] = Array.isArray(rawRows) ? rawRows : [];
+
+            // Only forward rows with real media; collapse empty misses to bare sentinels
+            // so mime-only slots are not re-queued forever by the chunk buffer chain.
+            if (seekIds.length > 0) {
+                const { hydratedRows, collapseSeekIds } = partitionImageHydrationRows(
+                    seekIds,
+                    rowsPayload,
+                );
+                collapseMisses(collapseSeekIds);
+                return dataFormatter?.(hydratedRows)?.texts ?? [];
+            }
+
+            return dataFormatter?.(rowsPayload)?.texts ?? [];
         } catch (error) {
+            collapseMisses(seekIds);
             if (error instanceof Error)
                 return rejectWithValue(error.message);
             return rejectWithValue('An unknown error occurred');

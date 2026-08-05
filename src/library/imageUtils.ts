@@ -46,9 +46,33 @@ export const hasMediaBase64Payload = (url: string): boolean => {
   return url.slice(comma + 1).trim().length > 0;
 };
 
+/** Bare UI sentinels — never re-fetched by bytesFetcher (`data:image`, `data:audio`, `data:video`). */
+export const isPermanentMediaSlotSentinel = (url: string): boolean => {
+  const trimmed = url.trim();
+  return trimmed === 'data:image' || trimmed === 'data:audio' || trimmed === 'data:video';
+};
+
+/**
+ * Collapse a typed mime-only slot to a permanent bare sentinel.
+ * image → `data:image`; audio → `data:audio`; video/init → `data:video`.
+ */
+export const toPermanentMediaSlotSentinel = (
+  url: string,
+): 'data:image' | 'data:audio' | 'data:video' | null => {
+  const group = getMediaMimeGroup(url);
+  if (group === 'image') return 'data:image';
+  if (group === 'audio') return 'data:audio';
+  if (group === 'video' || group === 'init') return 'data:video';
+  return null;
+};
+
 /** Mime-only image/audio/video sentinel awaiting fetch (no base64 payload yet). */
-export const isMimeOnlyMediaUrl = (url: string): boolean =>
-  isMediaSlotValue(url) && !hasMediaBase64Payload(url);
+export const isMimeOnlyMediaUrl = (url: string): boolean => {
+  if (typeof url !== 'string') return false;
+  // Permanent UI sentinels — never re-queued by bytesFetcher.
+  if (isPermanentMediaSlotSentinel(url)) return false;
+  return isMediaSlotValue(url) && !hasMediaBase64Payload(url);
+};
 
 /** @deprecated Prefer isMediaSlotValue — kept for image-only checks. */
 export const isImageSlotValue = (url: string): boolean =>

@@ -25,7 +25,7 @@ const collectCourseLikeInstructionRows = (content: readonly SlideGroup[]): Image
   return rows;
 };
 
-const findInstructionRowImageurlById = (
+export const findInstructionRowImageurlById = (
   state: RootState,
   id: number,
 ): string | undefined => {

@@ -3,6 +3,7 @@ import { bytesFetcher } from '../../library/Thunks';
 import type { SlideGroup } from '../../library/CourseUtils';
 import type { ChunkBufferingEntry } from '../../library/videoChunkPlayback';
 import { normalizeBase64Payload } from '../../library/directoryTreeUtils';
+import { isPermanentMediaSlotSentinel } from '../../library/imageUtils';
 import { Metadata } from '../../components/Core/types';
 import { QueryParams } from '../types';
 import { SessionState } from '../slices/sessionSlice';
@@ -70,6 +71,10 @@ const rowMatchesChunkBufferEntry = (
 const rowHasValidBase64 = (row: { imageurl?: string }): boolean =>
   normalizeBase64Payload(row.imageurl ?? '').length > 0;
 
+/** Base64 payload or permanent bare sentinel (empty-miss collapse) — stop re-fetching. */
+const rowIsChunkFetchComplete = (row: { imageurl?: string }): boolean =>
+  rowHasValidBase64(row) || isPermanentMediaSlotSentinel(row.imageurl ?? '');
+
 const isPlayablePayloadRow = (value: unknown): value is ChunkBufferMatchRow & { content: string; imageurl: string } =>
   value != null && typeof value === 'object' && 'content' in value && 'imageurl' in value;
 
@@ -110,7 +115,7 @@ const collectWebappInstructionRows = (state: RootState): ChunkBufferMatchRow[] =
   return [];
 };
 
-/** True when the webapp row for this buffer entry already carries base64 payload. */
+/** True when the webapp row for this buffer entry is done fetching (base64 or collapsed sentinel). */
 export const chunkBufferEntryHasValidBase64 = (
   state: RootState,
   entry: ChunkBufferingEntry,
@@ -123,7 +128,7 @@ export const chunkBufferEntryHasValidBase64 = (
   );
   const rowsToCheck = specificRows.length > 0 ? specificRows : matchingRows;
   return rowsToCheck.length > 0
-    && rowsToCheck.every((row) => rowHasValidBase64(row));
+    && rowsToCheck.every((row) => rowIsChunkFetchComplete(row));
 };
 
 /** Maps the first chunk-buffer entry to a ViewManager-style fetch query. */
