@@ -1,13 +1,11 @@
 import type { Metadata } from '../components/Core/types';
 import type { Content } from '../store/slices/tutorialSlice';
 import type { Banner as CourseBanner, Pennant, SlideGroup, SlideGroupItem } from './CourseUtils';
-import { getSlideGroupItemForPennantChapterCoupling, isSlideGroupItem } from './CourseUtils';
+import { getSlideGroupItemForPennantChapterCoupling, isSlideGroupItem, type SlideItem } from './CourseUtils';
 import {
   extractFmp4InitPayloadFromRows,
-  extractLegacyFmp4InitPayloadFromRows,
   findContentRowsForBannerId,
   getFmp4ChunkAssemblyFailure,
-  hasLegacyFmp4InitSidecar,
   isChunkPayloadStoredLocally,
   isFmp4InitBannerQuote,
   isFmp4InitContentLabel,
@@ -249,16 +247,10 @@ function collapseChunkTimings(
   });
 }
 
-export type ResolveCourseVideoInitOptions = {
-  /** When true, also accept a legacy bare `init` sidecar (export recovery only). */
-  allowLegacySidecar?: boolean;
-};
-
 /** fMP4 init from any pennant's slide row (init/i/n parts; order-independent). */
 export function resolveCourseVideoInitPayload(
   banner: CourseBanner,
   slideGroup: SlideGroup,
-  options?: ResolveCourseVideoInitOptions,
 ): string | null {
   for (const pennant of banner.pennants ?? []) {
     const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
@@ -271,30 +263,7 @@ export function resolveCourseVideoInitPayload(
     const initPayload = extractFmp4InitPayloadFromRows(row);
     if (initPayload) return initPayload;
   }
-  if (!options?.allowLegacySidecar) return null;
-  for (const pennant of banner.pennants ?? []) {
-    const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
-    if (!slideRow) continue;
-    const legacy = extractLegacyFmp4InitPayloadFromRows(slideRow);
-    if (legacy) return legacy;
-  }
-  for (const row of slideGroup.slides ?? []) {
-    const legacy = extractLegacyFmp4InitPayloadFromRows(row);
-    if (legacy) return legacy;
-  }
   return null;
-}
-
-/** True when any media pennant still has a legacy bare `init` sidecar row. */
-export function courseHasLegacySidecarInit(
-  banner: CourseBanner,
-  slideGroup: SlideGroup,
-): boolean {
-  for (const { pennant } of collectCourseVideoPennants(banner)) {
-    const slideRow = findSlideRowForPennant(slideGroup, pennant.id);
-    if (slideRow && hasLegacyFmp4InitSidecar(slideRow)) return true;
-  }
-  return false;
 }
 
 export function resolveTutorialVideoInitPayload(
@@ -305,12 +274,6 @@ export function resolveTutorialVideoInitPayload(
     if (initPayload) return initPayload;
   }
   return null;
-}
-
-export function tutorialHasLegacySidecarInit(
-  entries: readonly TutorialVideoBannerEntry[],
-): boolean {
-  return entries.some((entry) => hasLegacyFmp4InitSidecar(entry.contentRows));
 }
 
 export function sumPartPayloadsBytes(partPayloads: readonly string[]): number {
@@ -812,9 +775,37 @@ function findSlideRowForPennant(slideGroup: SlideGroup, pennantId: number) {
   return null;
 }
 
+/** Prefer the row that already has local base64 (or a resolvable fMP4 init). */
+function preferRicherSlideRow(
+  existing: SlideItem[],
+  incoming: SlideItem[],
+): SlideItem[] {
+  const existingInit = extractFmp4InitPayloadFromRows(existing);
+  const incomingInit = extractFmp4InitPayloadFromRows(incoming);
+  if (existingInit && !incomingInit) return existing;
+  if (incomingInit && !existingInit) return incoming;
+
+  const existingLocal = isChunkPayloadStoredLocally(existing);
+  const incomingLocal = isChunkPayloadStoredLocally(incoming);
+  if (existingLocal && !incomingLocal) return existing;
+  if (incomingLocal && !existingLocal) return incoming;
+
+  const existingBytes = existing.reduce(
+    (sum, row) => sum + normalizeBase64Payload(row.imageurl ?? '').length,
+    0,
+  );
+  const incomingBytes = incoming.reduce(
+    (sum, row) => sum + normalizeBase64Payload(row.imageurl ?? '').length,
+    0,
+  );
+  if (existingBytes > incomingBytes) return existing;
+  return incoming;
+}
+
 /**
  * Merges covers and pennant slide rows for one course banner across all content
  * groups. Quiz fetches can land slides in a separate group from the cover group.
+ * When the same pennant appears in more than one group, keep the richer (hydrated) row.
  */
 export function resolveCourseSlideGroupForBanner(
   banner: CourseBanner,
@@ -844,7 +835,10 @@ export function resolveCourseSlideGroupForBanner(
         (existing) => existing[0]?.bannerId === pennantId,
       );
       if (existingIndex >= 0) {
-        merged.slides[existingIndex] = row;
+        merged.slides[existingIndex] = preferRicherSlideRow(
+          merged.slides[existingIndex],
+          row,
+        );
       } else {
         merged.slides.push(row);
       }
@@ -932,12 +926,7 @@ export function validateCourseVideoChunkQuotes(
 export function validateCourseVideoPennants(
   banner: CourseBanner,
   slideGroup: SlideGroup,
-  options?: ResolveCourseVideoInitOptions,
 ): { valid: true } | { valid: false; error: string } {
-  if (!options?.allowLegacySidecar && courseHasLegacySidecarInit(banner, slideGroup)) {
-    return { valid: false, error: 'legacy sidecar init segmentation is not supported' };
-  }
-
   const quoteValidation = validateCourseVideoChunkQuotes(banner);
   if (!quoteValidation.valid) {
     return quoteValidation;
@@ -956,7 +945,7 @@ export function validateCourseVideoPennants(
     }
   }
 
-  if (!resolveCourseVideoInitPayload(banner, slideGroup, options)) {
+  if (!resolveCourseVideoInitPayload(banner, slideGroup)) {
     return { valid: false, error: 'missing fMP4 initialization segment' };
   }
 
@@ -1061,9 +1050,7 @@ export function buildChunkPlaylistFromTutorialVideoGroup(
   const failedChunk = failedIndex >= 0 ? chunks[failedIndex] : null;
 
   let error: string | null = null;
-  if (tutorialHasLegacySidecarInit(entries)) {
-    error = 'legacy sidecar init segmentation is not supported';
-  } else if (failedChunk) {
+  if (failedChunk) {
     error = `Chunk ${failedChunk.index}/${failedChunk.total}: ${getStreamableMp3ChunkAssemblyFailure(failedContentRows) ?? 'invalid streamable MP3 segment'}`;
   } else {
     const nonMp3Index = chunks.findIndex((chunk) => {
@@ -1125,9 +1112,7 @@ export function buildChunkPlaylistFromCourseSlideGroup(
   const failedChunk = failedIndex >= 0 ? chunksWithInit[failedIndex] : null;
 
   let error: string | null = null;
-  if (courseHasLegacySidecarInit(banner, slideGroup)) {
-    error = 'legacy sidecar init segmentation is not supported';
-  } else if (!initPayload) {
+  if (!initPayload) {
     error = 'missing fMP4 initialization segment';
   } else if (failedChunk) {
     error = `Chunk ${failedChunk.index}/${failedChunk.total}: ${getFmp4ChunkAssemblyFailure(failedSlideRow) ?? 'invalid fMP4 segment'}`;

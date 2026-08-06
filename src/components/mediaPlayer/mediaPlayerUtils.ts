@@ -3,11 +3,9 @@ import type { Banner as TutorialBanner, Content as TutorialContent } from '../..
 import type { Quiz } from '../../store/slices/quizSlice';
 import type { UpdatePayload } from '../../library/actions';
 import {
-  courseHasLegacySidecarInit,
   groupTutorialVideoBannerEntries,
   resolveCourseSlideGroupForBanner,
   resolveCourseVideoInitPayload,
-  tutorialHasLegacySidecarInit,
   validateCourseVideoChunkQuotes,
   validateTutorialVideoChunkQuotes,
 } from '../../library/videoChunkPlayback';
@@ -51,9 +49,6 @@ function courseHasVideoMimeInstruction(
 
 export type MediaPlayerTab = 'course' | 'tutorial' | 'quiz';
 
-export const UNSUPPORTED_SEGMENTATION_MESSAGE =
-  'This segmentation is not supported anymore. Use Download to export the video, then re-import in studio so it is segmented correctly';
-
 export type VideoLibraryEntry = {
   id: number;
   title: string;
@@ -61,7 +56,6 @@ export type VideoLibraryEntry = {
   chunkCount: number;
   hasReleasablePayload: boolean;
   hasExportablePayload: boolean;
-  usesUnsupportedSegmentation: boolean;
   isHighlighted: boolean;
 };
 
@@ -119,8 +113,6 @@ export function buildCourseVideoLibrary(
 
     if (!courseHasVideoMimeInstruction(banner, slideGroup)) return [];
 
-    const unsupported = courseHasLegacySidecarInit(banner, slideGroup);
-
     return [{
       id: banner.id,
       title: banner.title,
@@ -128,7 +120,6 @@ export function buildCourseVideoLibrary(
       chunkCount: quoteValidation.chunkCount,
       hasReleasablePayload: courseVideoHasReleasablePayload(banner, contentGroups),
       hasExportablePayload: courseVideoHasExportablePayload(banner, contentGroups),
-      usesUnsupportedSegmentation: unsupported,
       isHighlighted: banner.isHighlighted,
     }];
   });
@@ -155,7 +146,6 @@ export function buildTutorialVideoLibrary(
       (entry) => parseVideoChunkSequence(entry.banner.quote) !== null,
     ) ?? group[0];
 
-    const unsupported = tutorialHasLegacySidecarInit(group);
     const groupIds = new Set(group.map((entry) => entry.banner.id));
     const isHighlighted = banners.some(
       (banner) => groupIds.has(banner.id) && banner.isHighlighted,
@@ -168,7 +158,6 @@ export function buildTutorialVideoLibrary(
       chunkCount: quoteValidation.chunkCount,
       hasReleasablePayload: false,
       hasExportablePayload: false,
-      usesUnsupportedSegmentation: unsupported,
       isHighlighted,
     }];
   });
@@ -241,8 +230,6 @@ export function findSlideRowForPennant(
 
 /**
  * True when sparse video chunks + init are locally stored and exportable.
- * Legacy sidecar init is allowed here so users can Download → re-import
- * (playback remains blocked via usesUnsupportedSegmentation).
  */
 export function courseVideoHasExportablePayload(
   banner: CourseBanner,
@@ -251,7 +238,7 @@ export function courseVideoHasExportablePayload(
   const slideGroup = resolveCourseSlideGroupForBanner(banner, contentGroups);
   if (!slideGroup) return false;
   if (!validateCourseVideoChunkQuotes(banner).valid) return false;
-  if (!resolveCourseVideoInitPayload(banner, slideGroup, { allowLegacySidecar: true })) return false;
+  if (!resolveCourseVideoInitPayload(banner, slideGroup)) return false;
 
   const videoPennants = [...(banner.pennants ?? [])]
     .sort((a, b) => a.ordinal - b.ordinal)

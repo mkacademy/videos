@@ -27,7 +27,6 @@ import {
   exportCourseVideoBanner,
   getNextCourseVideoInLibrary,
   resolveMediaPlayerTab,
-  UNSUPPORTED_SEGMENTATION_MESSAGE,
   type MediaPlayerTab,
 } from './mediaPlayerUtils';
 import { updateSteps } from '../../library/actions';
@@ -306,14 +305,9 @@ const MediaPlayer: React.FC = () => {
   }, [audioId, ldr, navigate]);
 
   const handlePlayCourseVideo = useCallback((id: number) => {
-    const entry = courseLibrary.find((video) => video.id === id);
-    if (entry?.usesUnsupportedSegmentation) {
-      dispatch(prependError(UNSUPPORTED_SEGMENTATION_MESSAGE));
-      return;
-    }
     setExitedCourseVideoId(null);
     navigate(buildLibraryUrl('course', { videoId: id, quizId: quizId ?? undefined, ldr }));
-  }, [courseLibrary, dispatch, ldr, navigate, quizId]);
+  }, [ldr, navigate, quizId]);
 
   const handleReleaseCourseVideoPayload = useCallback((id: number) => {
     const banners = quizId !== null ? quizBanners : courseBanners;
@@ -369,22 +363,14 @@ const MediaPlayer: React.FC = () => {
   ]);
 
   const handlePlayTutorialAudio = useCallback((id: number) => {
-    const entry = tutorialLibrary.find((audio) => audio.id === id);
-    if (entry?.usesUnsupportedSegmentation) {
-      dispatch(prependError(UNSUPPORTED_SEGMENTATION_MESSAGE));
-      return;
-    }
     setExitedTutorialAudioId(null);
     navigate(buildLibraryUrl('tutorial', { audioId: id, ldr }));
-  }, [dispatch, ldr, navigate, tutorialLibrary]);
+  }, [ldr, navigate]);
 
   const handlePlaylistFinished = useCallback(() => {
     if (quizId === null || activeTab !== 'course' || videoId === null) return;
 
-    let nextVideo = getNextCourseVideoInLibrary(courseLibrary, videoId);
-    while (nextVideo?.usesUnsupportedSegmentation) {
-      nextVideo = getNextCourseVideoInLibrary(courseLibrary, nextVideo.id);
-    }
+    const nextVideo = getNextCourseVideoInLibrary(courseLibrary, videoId);
     if (!nextVideo) return;
 
     dispatch(resetPlayback());
@@ -480,13 +466,11 @@ const MediaPlayer: React.FC = () => {
                       </Button>
                     )}
                     <Button
-                      variant={video.usesUnsupportedSegmentation
-                        ? 'outline-danger'
-                        : video.id === exitedCourseVideoId ? 'secondary' : 'primary'}
+                      variant={video.id === exitedCourseVideoId ? 'secondary' : 'primary'}
                       className={video.id === exitedCourseVideoId ? styles['libraryPlayExited'] : undefined}
                       onClick={() => handlePlayCourseVideo(video.id)}
                     >
-                      {video.usesUnsupportedSegmentation ? 'Error' : 'Play'}
+                      Play
                     </Button>
                   </div>
                 </div>
@@ -518,13 +502,11 @@ const MediaPlayer: React.FC = () => {
                     </div>
                   </div>
                   <Button
-                    variant={audio.usesUnsupportedSegmentation
-                      ? 'outline-danger'
-                      : audio.id === exitedTutorialAudioId ? 'secondary' : 'primary'}
+                    variant={audio.id === exitedTutorialAudioId ? 'secondary' : 'primary'}
                     className={audio.id === exitedTutorialAudioId ? styles['libraryPlayExited'] : undefined}
                     onClick={() => handlePlayTutorialAudio(audio.id)}
                   >
-                    {audio.usesUnsupportedSegmentation ? 'Error' : 'Play'}
+                    Play
                   </Button>
                 </div>
               ))}

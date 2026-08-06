@@ -533,18 +533,11 @@ export const FMP4_MEDIA_MIME = 'video/iso.segment';
 /** Banner/pennant quote for the init-only chunk. */
 export const FMP4_INIT_BANNER_QUOTE = 'init';
 
-/** @deprecated Legacy single-row init label stored beside media parts (sidecar). */
-export const FMP4_INIT_CONTENT_LABEL = 'init';
-
 export const formatFmp4InitPartContent = (index: number, total: number): string =>
   `init/${index}/${total}`;
 
 export const isFmp4MediaMime = (mime: string): boolean =>
   mime === FMP4_MEDIA_MIME;
-
-/** Legacy bare `init` content label (sidecar on a media chunk). */
-export const isLegacyFmp4InitContentLabel = (content: string): boolean =>
-  content.trim() === FMP4_INIT_CONTENT_LABEL;
 
 export const parseFmp4InitPartSequence = (
   content: string,
@@ -559,12 +552,12 @@ export const parseFmp4InitPartSequence = (
   return { index, total };
 };
 
+/** True for `init/i/n` content labels (fMP4 init split parts). */
 export const isFmp4InitPartContentLabel = (content: string): boolean =>
   parseFmp4InitPartSequence(content) !== null;
 
-/** True for any init-related content label (legacy bare or init/i/n). */
-export const isFmp4InitContentLabel = (content: string): boolean =>
-  isLegacyFmp4InitContentLabel(content) || isFmp4InitPartContentLabel(content);
+/** Alias for {@link isFmp4InitPartContentLabel}. */
+export const isFmp4InitContentLabel = isFmp4InitPartContentLabel;
 
 export const isFmp4InitBannerQuote = (quote: string): boolean =>
   quote.trim().toLowerCase() === FMP4_INIT_BANNER_QUOTE;
@@ -682,7 +675,11 @@ export const validateIndexedSequenceSet = (
   return { valid: true, sequences: parsed };
 };
 
-/** Join new-format `init/i/n` parts into a single init payload. Legacy bare `init` is ignored. */
+/**
+ * Join `init/i/n` parts into a single init payload.
+ * Duplicate indices (e.g. hydrated row + mime-only skeleton after merge) keep the
+ * part with a non-empty base64 payload.
+ */
 export const extractFmp4InitPayloadFromRows = (
   rows: readonly PlayablePayloadRow[],
 ): string | null => {
@@ -692,17 +689,29 @@ export const extractFmp4InitPayloadFromRows = (
 
   if (initRows.length === 0) return null;
 
-  const sequences = initRows.map((row) => parseFmp4InitPartSequence(row.content));
-  const sequenceResult = validateIndexedSequenceSet(sequences, 'init part');
-  if (!sequenceResult.valid) return null;
+  const byIndex = new Map<number, PlayablePayloadRow>();
+  let expectedTotal: number | null = null;
 
-  const byIndex = new Map(
-    initRows.flatMap((row) => {
-      const seq = parseFmp4InitPartSequence(row.content);
-      return seq ? [[seq.index, row] as const] : [];
-    }),
-  );
-  const expectedTotal = sequences[0]!.total;
+  for (const row of initRows) {
+    const seq = parseFmp4InitPartSequence(row.content);
+    if (!seq) continue;
+    if (expectedTotal == null) expectedTotal = seq.total;
+    if (seq.total !== expectedTotal) return null;
+
+    const payload = normalizeBase64Payload(row.imageurl ?? '');
+    const existing = byIndex.get(seq.index);
+    if (!existing) {
+      byIndex.set(seq.index, row);
+      continue;
+    }
+    const existingPayload = normalizeBase64Payload(existing.imageurl ?? '');
+    if (!existingPayload && payload) {
+      byIndex.set(seq.index, row);
+    }
+  }
+
+  if (expectedTotal == null || expectedTotal < 1) return null;
+
   const parts: string[] = [];
   for (let i = 1; i <= expectedTotal; i += 1) {
     const row = byIndex.get(i);
@@ -713,26 +722,6 @@ export const extractFmp4InitPayloadFromRows = (
 
   const joined = parts.join('');
   return joined && isFmp4InitSegment(joined) ? joined : null;
-};
-
-/** Legacy bare `init` sidecar payload (export recovery only; not used for playback). */
-export const extractLegacyFmp4InitPayloadFromRows = (
-  rows: readonly PlayablePayloadRow[],
-): string | null => {
-  const legacyInit = rows.find((row) => isLegacyFmp4InitContentLabel(row.content));
-  if (!legacyInit) return null;
-  const payload = normalizeBase64Payload(legacyInit.imageurl ?? '');
-  return payload && isFmp4InitSegment(payload) ? payload : null;
-};
-
-/** True when rows include a legacy bare `init` sidecar beside media parts. */
-export const hasLegacyFmp4InitSidecar = (
-  rows: readonly PlayablePayloadRow[],
-): boolean => {
-  const hasLegacy = rows.some((row) => isLegacyFmp4InitContentLabel(row.content));
-  if (!hasLegacy) return false;
-  const mediaRows = filterSplitPayloadRows(rows);
-  return mediaRows.length > 0;
 };
 
 type PlayablePayloadRow = {
