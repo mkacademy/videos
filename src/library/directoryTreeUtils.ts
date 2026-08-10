@@ -105,10 +105,20 @@ export const resolveExportFileName = (title: string, mime: string): string => {
   return `${safe}${ext}`;
 };
 
+export const isMarkdownFileName = (name: string): boolean =>
+  /\.md$/i.test(name);
+
 export const resolveTextExportFileName = (title: string): string => {
   const safe = sanitizePathSegment(title);
   if (/\.(txt|text|md)$/i.test(safe)) return safe;
   return `${safe}.txt`;
+};
+
+export const resolveMarkdownExportFileName = (title: string): string => {
+  const safe = sanitizePathSegment(title);
+  if (/\.md$/i.test(safe)) return safe;
+  if (/\.(txt|text)$/i.test(safe)) return safe.replace(/\.(txt|text)$/i, '.md');
+  return `${safe}.md`;
 };
 
 export const uniqueFileName = (baseName: string, used: Set<string>): string => {
@@ -189,7 +199,7 @@ export const formatLastModifiedLabel = (lastModified: number): string => {
   return `${year}-${month}-${day}, ${hours}:${minutes}`;
 };
 
-export type BannerQuoteMedia = 'images' | 'video' | 'audio';
+export type BannerQuoteMedia = 'images' | 'video' | 'audio' | 'text';
 
 export const formatBannerQuote = (
   totalBytes: number,
@@ -204,6 +214,40 @@ export const formatContentDescription = (
   lastModified: number,
 ): string =>
   `image size is ${formatSizeLabel(size)} (${formatBase64SizeLabel(base64Bytes)}) and was last modified on ${formatLastModifiedLabel(lastModified)}`;
+
+export const formatTextContentDescription = (
+  size: number,
+  base64Bytes: number,
+  lastModified: number,
+): string =>
+  `text size is ${formatSizeLabel(size)} (${formatBase64SizeLabel(base64Bytes)}) and was last modified on ${formatLastModifiedLabel(lastModified)}`;
+
+/** Encode Unicode text as a `data:<mime>;base64,...` URL (album-style payload). */
+export const textToDataUrl = async (text: string, mime: string): Promise<string> => {
+  const blob = new Blob([text], { type: mime });
+  const base64 = await blobToBase64Payload(blob);
+  return `data:${mime};base64,${base64}`;
+};
+
+export const isExportableTextDataUrl = (url: string): boolean => {
+  if (!url.startsWith('data:text/') || !url.includes(';base64,')) return false;
+  const parts = url.split(',');
+  if (parts.length !== 2) return false;
+  return Boolean(parts[1]?.trim().length);
+};
+
+export const textDataUrlToBlob = (dataUrl: string): Blob | null => {
+  if (!isExportableTextDataUrl(dataUrl)) return null;
+  const [header, base64] = dataUrl.split(',');
+  const mimeMatch = header.match(/data:(text\/[^;]+);/);
+  const mime = mimeMatch?.[1] ?? 'text/plain';
+  try {
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    return new Blob([bytes], { type: mime });
+  } catch {
+    return null;
+  }
+};
 
 export const fileToDataUrl = async (file: File): Promise<string> => {
   const { dataUrl } = await imageFileToDataUrl(file);

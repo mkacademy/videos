@@ -5,7 +5,7 @@ import { RootState } from '../../store';
 import { COMPLETED_MESSAGE, cpanelMessage } from '../../store/slices/viewSlice';
 import * as styles from '../../styles/roletoggler.module.css';
 
-const MEDIA_PLAYER_PATH = '/media-player';
+const MEDIA_PATHS = ['/media-player', '/media-thumbs', '/media-markdown'] as const;
 const WEBAPP_TABS = ['tutorial', 'course', 'quiz'] as const;
 
 const isHydrationMessage = (message: string | undefined): boolean =>
@@ -41,9 +41,11 @@ const MediaPlayerStatusBar: React.FC = () => {
     }
   }, [message, isRequestProcessing, dispatch]);
 
-  const onMediaPlayer = pathname === MEDIA_PLAYER_PATH || pathname.endsWith(MEDIA_PLAYER_PATH);
+  const onMediaScreen = MEDIA_PATHS.some(
+    (path) => pathname === path || pathname.endsWith(path),
+  );
 
-  if (!onMediaPlayer || !convCss || !message || isHydrationMessage(message)) return null;
+  if (!onMediaScreen || !convCss || !message || isHydrationMessage(message)) return null;
 
   return (
     <div className={`${styles['notRolePicker']} ${convCss}`}>

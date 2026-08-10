@@ -2,6 +2,7 @@ import {
   audioMimePlaceholder,
   imageMimePlaceholder,
   initMimePlaceholder,
+  markdownMimePlaceholder,
   placeholder,
   videoMimePlaceholder,
 } from '../utils';
@@ -28,7 +29,7 @@ export const getMediaMimeGroup = (url: string): MediaMimeGroup | null => {
   if (typeof url !== 'string') return null;
   if (url.startsWith('data:image')) return 'image';
   if (url.startsWith('data:audio')) return 'audio';
-  // fMP4 init uses video/mp4; media fragments use video/iso.segment.
+  // Init covers/parts use data:video/mp4; media fragments use data:video/iso.segment or bare data:video.
   if (url.startsWith('data:video/mp4')) return 'init';
   if (url.startsWith('data:video')) return 'video';
   return null;
@@ -37,28 +38,49 @@ export const getMediaMimeGroup = (url: string): MediaMimeGroup | null => {
 export const isMediaSlotValue = (url: string): boolean =>
   getMediaMimeGroup(url) !== null;
 
-/** True when a media data-URL already has a non-empty base64 payload. */
-export const hasMediaBase64Payload = (url: string): boolean => {
-  if (!isMediaSlotValue(url)) return false;
+const hasBase64Payload = (url: string): boolean => {
   const comma = url.indexOf(',');
   if (comma === -1) return false;
   if (!url.slice(0, comma).includes(';base64')) return false;
   return url.slice(comma + 1).trim().length > 0;
 };
 
-/** Bare UI sentinels — never re-fetched by bytesFetcher (`data:image`, `data:audio`, `data:video`). */
+export const isMarkdownDataUrl = (url: string): boolean =>
+  typeof url === 'string' && url.startsWith('data:text/markdown');
+
+/** Bare markdown miss sentinel — never re-queued (`data:text`). */
+export const isPermanentMarkdownSlotSentinel = (url: string): boolean =>
+  typeof url === 'string' && url.trim() === 'data:text';
+
+/** Markdown slot (typed mime, payload, or permanent bare sentinel). */
+export const isMarkdownSlotValue = (url: string): boolean =>
+  isMarkdownDataUrl(url) || isPermanentMarkdownSlotSentinel(url);
+
+/** True when a media or markdown data-URL already has a non-empty base64 payload. */
+export const hasMediaBase64Payload = (url: string): boolean => {
+  if (isMarkdownDataUrl(url)) return hasBase64Payload(url);
+  if (!isMediaSlotValue(url)) return false;
+  return hasBase64Payload(url);
+};
+
+/** Bare UI sentinels — never fetched by image hydration (`data:image`, `data:audio`, `data:video`, `data:text`). */
 export const isPermanentMediaSlotSentinel = (url: string): boolean => {
   const trimmed = url.trim();
-  return trimmed === 'data:image' || trimmed === 'data:audio' || trimmed === 'data:video';
+  return trimmed === 'data:image'
+    || trimmed === 'data:audio'
+    || trimmed === 'data:video'
+    || trimmed === 'data:text';
 };
 
 /**
  * Collapse a typed mime-only slot to a permanent bare sentinel.
- * image → `data:image`; audio → `data:audio`; video/init → `data:video`.
+ * image → `data:image`; audio → `data:audio`; video/init → `data:video`;
+ * markdown → `data:text`.
  */
 export const toPermanentMediaSlotSentinel = (
   url: string,
-): 'data:image' | 'data:audio' | 'data:video' | null => {
+): 'data:image' | 'data:audio' | 'data:video' | 'data:text' | null => {
+  if (isMarkdownDataUrl(url)) return 'data:text';
   const group = getMediaMimeGroup(url);
   if (group === 'image') return 'data:image';
   if (group === 'audio') return 'data:audio';
@@ -66,11 +88,12 @@ export const toPermanentMediaSlotSentinel = (
   return null;
 };
 
-/** Mime-only image/audio/video sentinel awaiting fetch (no base64 payload yet). */
+/** Mime-only image/audio/video/markdown sentinel awaiting fetch (no base64 payload yet). */
 export const isMimeOnlyMediaUrl = (url: string): boolean => {
   if (typeof url !== 'string') return false;
-  // Permanent UI sentinels — never re-queued by bytesFetcher.
+  // Permanent UI sentinels — never re-queued by image hydration.
   if (isPermanentMediaSlotSentinel(url)) return false;
+  if (isMarkdownDataUrl(url)) return !hasMediaBase64Payload(url);
   return isMediaSlotValue(url) && !hasMediaBase64Payload(url);
 };
 
@@ -81,12 +104,16 @@ export const isImageSlotValue = (url: string): boolean =>
 /**
  * Resolved <img> src for a media slot:
  * - valid image data URL → itself
- * - image mime-only → image group placeholder
- * - audio (any) → audio group placeholder
- * - video/mp4 (init) → init placeholder
- * - other video (fragments) → video group placeholder
+ * - image mime-only / bare `data:image` → image group placeholder
+ * - audio (any) / bare `data:audio` → audio group placeholder
+ * - video/mp4 (init segment) → init placeholder
+ * - `data:video` / other video (fragments) → video group placeholder
+ * - `data:text/markdown` / bare `data:text` → markdown placeholder
  */
 export const resolveMediaSlotSrc = (url: string): string => {
+  if (isMarkdownSlotValue(url)) {
+    return markdownMimePlaceholder;
+  }
   const group = getMediaMimeGroup(url);
   if (group === 'image') {
     return isValidDataUrl(url) ? url : imageMimePlaceholder;

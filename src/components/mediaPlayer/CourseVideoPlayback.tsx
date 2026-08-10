@@ -25,6 +25,12 @@ import {
 import Comments from '../views/Comments';
 import MediaScreenSwitcher from '../MediaScreenSwitcher';
 import { useChangeMediaOnEscape } from '../../Hooks/useChangeMediaOnEscape';
+import {
+  useMediaFullscreenOpen,
+  useMediaFullscreenReady,
+} from '../../Hooks/useMediaFullscreen';
+import MediaFullscreenCloseButton from './MediaFullscreenCloseButton';
+import MediaFullscreenToggle from './MediaFullscreenToggle';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 type CourseVideoPlaybackProps = {
@@ -133,6 +139,8 @@ type MountedPlayerProps = {
   startChunkIndex: number;
   getPartRows: SharedChunkListProps['getPartRows'];
   videoAspectRatio: number;
+  fullscreenOpen: boolean;
+  onCloseFullscreen: () => void;
   onPlayerError: (message: string | null) => void;
   onPlaylistFinished: () => void;
 };
@@ -143,6 +151,8 @@ const MountedCourseVideoPlayer: React.FC<MountedPlayerProps> = ({
   startChunkIndex,
   getPartRows,
   videoAspectRatio,
+  fullscreenOpen,
+  onCloseFullscreen,
   onPlayerError,
   onPlaylistFinished,
 }) => {
@@ -247,12 +257,18 @@ const MountedCourseVideoPlayer: React.FC<MountedPlayerProps> = ({
   return (
     <>
       <Card className={styles['playerCard']}>
-        <div ref={videoBoundsRef} className={styles['videoBounds']}>
+        <div
+          ref={videoBoundsRef}
+          className={fullscreenOpen ? styles['fullscreenOverlay'] : styles['videoBounds']}
+        >
+          {fullscreenOpen && <MediaFullscreenCloseButton onClose={onCloseFullscreen} />}
           <div
             className={styles['videoStack']}
-            style={videoFrameSize
-              ? { width: videoFrameSize.width, height: videoFrameSize.height }
-              : { width: '100%', aspectRatio: frameAspectRatio }}
+            style={fullscreenOpen
+              ? { width: '100%', height: '100%' }
+              : videoFrameSize
+                ? { width: videoFrameSize.width, height: videoFrameSize.height }
+                : { width: '100%', aspectRatio: frameAspectRatio }}
           >
             <video
               ref={player.videoRef}
@@ -446,6 +462,25 @@ const CourseVideoPlayback: React.FC<CourseVideoPlaybackProps> = ({
     [chunkPlaylist],
   );
 
+  const fullscreenReady = playableChunkCount > 0;
+  useMediaFullscreenReady(fullscreenReady);
+  const { open: fullscreenOpen, close: closeFullscreen } = useMediaFullscreenOpen();
+
+  useLayoutEffect(() => {
+    if (fullscreenOpen && !playbackSession && playableChunkCount > 0) {
+      setPlaybackSession({ startChunkIndex: 0 });
+    }
+  }, [fullscreenOpen, playbackSession, playableChunkCount]);
+
+  useEffect(() => {
+    if (!fullscreenOpen) return undefined;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [fullscreenOpen]);
+
   const totalDurationMs = useMemo(
     () => getTotalDurationMs(chunkPlaylist),
     [chunkPlaylist],
@@ -535,6 +570,7 @@ const CourseVideoPlayback: React.FC<CourseVideoPlaybackProps> = ({
         </div>
         <div className={styles['headerActions']}>
           <MediaScreenSwitcher />
+          <MediaFullscreenToggle />
           <Button
             variant="link"
             className={styles['changeMediaLink']}
@@ -578,6 +614,8 @@ const CourseVideoPlayback: React.FC<CourseVideoPlaybackProps> = ({
             startChunkIndex={playbackSession.startChunkIndex}
             getPartRows={getPartRows}
             videoAspectRatio={videoAspectRatio}
+            fullscreenOpen={fullscreenOpen}
+            onCloseFullscreen={closeFullscreen}
             onPlayerError={setPlayerError}
             onPlaylistFinished={onPlaylistFinished}
           />

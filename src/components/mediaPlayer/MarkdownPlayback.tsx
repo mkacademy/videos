@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Badge, Button, Card } from 'react-bootstrap';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useDispatch } from 'react-redux';
 import { isMimeOnlyMediaUrl, resolveMediaSlotSrc } from '../../library/imageUtils';
 import { placeholder, textEllipsis } from '../../utils';
@@ -12,45 +14,47 @@ import {
 } from '../../Hooks/useMediaFullscreen';
 import {
   collectThumbsBufferingEntries,
+  decodeMarkdownSlotText,
   type ThumbsPlaylistItem,
 } from './mediaThumbsUtils';
 import MediaFullscreenCloseButton from './MediaFullscreenCloseButton';
 import MediaFullscreenToggle from './MediaFullscreenToggle';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
-const THUMBS_ASPECT_RATIO = 16 / 9;
-/** Progress row under the main image. */
+/** Progress row under the main markdown pane. */
 const META_ROW_RESERVE_PX = 64;
 /** Thumbnail strip card (header + horizontal thumbs). */
 const PLAYLIST_RESERVE_PX = 220;
 const LAYOUT_GAP_PX = 20;
 const BOTTOM_PADDING_PX = 24;
-const MIN_FRAME_HEIGHT_PX = 120;
+const MIN_FRAME_HEIGHT_PX = 160;
 
-type ThumbsPlaybackProps = {
+type MarkdownPlaybackProps = {
   title: string;
   items: ThumbsPlaylistItem[];
   kind: 'tutorial' | 'course';
   onChangeMedia: () => void;
-  onMainImageClick?: (item: ThumbsPlaylistItem) => void;
+  onMainDocumentClick?: (item: ThumbsPlaylistItem) => void;
   onToggleHighlight?: (item: ThumbsPlaylistItem) => void;
   tabs: React.ReactNode;
 };
 
-const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
+const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
   title,
   items,
   kind,
   onChangeMedia,
-  onMainImageClick,
+  onMainDocumentClick,
   onToggleHighlight,
   tabs,
 }) => {
   const dispatch = useDispatch();
   const boundsRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [frameSize, setFrameSize] = useState<{ width: number; height: number } | null>(null);
   const bufferQueueLoadedForRef = useRef<string | null>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [frameHeight, setFrameHeight] = useState<number | null>(null);
+  const [markdownText, setMarkdownText] = useState<string | null>(null);
+  const [decodeError, setDecodeError] = useState(false);
 
   useChangeMediaOnEscape(onChangeMedia);
 
@@ -82,15 +86,44 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- items captured when structureSignature/kind change
   }, [dispatch, kind, structureSignature]);
 
+  const activeItem = items[activeIndex] ?? items[0] ?? null;
+  const activeImageurl = activeItem?.imageurl ?? '';
+  const activeAwaiting = Boolean(activeItem && isMimeOnlyMediaUrl(activeItem.imageurl));
+
+  useEffect(() => {
+    let cancelled = false;
+    setMarkdownText(null);
+    setDecodeError(false);
+
+    if (!activeItem) return undefined;
+
+    // Mime-only slots are still queued for bytesFetcher — keep loading until payload arrives.
+    if (isMimeOnlyMediaUrl(activeItem.imageurl)) {
+      return undefined;
+    }
+
+    void (async () => {
+      const text = await decodeMarkdownSlotText(activeItem.imageurl);
+      if (cancelled) return;
+      if (text == null) {
+        setDecodeError(true);
+        setMarkdownText(null);
+        return;
+      }
+      setMarkdownText(text);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeItem, activeImageurl]);
+
   const updateFrameSize = useCallback(() => {
     const bounds = boundsRef.current;
     if (!bounds) return;
 
-    const maxWidth = bounds.clientWidth;
-    if (maxWidth <= 0) return;
-
     const top = bounds.getBoundingClientRect().top;
-    const maxHeight = Math.max(
+    const height = Math.max(
       MIN_FRAME_HEIGHT_PX,
       window.innerHeight
         - top
@@ -100,16 +133,7 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
         - BOTTOM_PADDING_PX,
     );
 
-    let width = maxWidth;
-    let height = Math.round(width / THUMBS_ASPECT_RATIO);
-    if (height > maxHeight) {
-      height = maxHeight;
-      width = Math.round(height * THUMBS_ASPECT_RATIO);
-    }
-
-    setFrameSize((prev) => (
-      prev?.width === width && prev?.height === height ? prev : { width, height }
-    ));
+    setFrameHeight((prev) => (prev === height ? prev : height));
   }, []);
 
   useLayoutEffect(() => {
@@ -127,9 +151,12 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
     };
   }, [updateFrameSize]);
 
-  const activeItem = items[activeIndex] ?? items[0] ?? null;
-  const mainSrc = activeItem ? resolveMediaSlotSrc(activeItem.imageurl) : placeholder;
-  const activeReady = Boolean(activeItem && !isMimeOnlyMediaUrl(activeItem.imageurl));
+  const awaitingCount = useMemo(
+    () => items.filter((item) => isMimeOnlyMediaUrl(item.imageurl)).length,
+    [items],
+  );
+  const readyCount = items.length - awaitingCount;
+  const activeReady = Boolean(activeItem && !activeAwaiting && markdownText != null);
   useMediaFullscreenReady(activeReady);
   const { open: fullscreenOpen, close: closeFullscreen } = useMediaFullscreenOpen();
 
@@ -142,21 +169,15 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
     };
   }, [fullscreenOpen]);
 
-  const awaitingCount = useMemo(
-    () => items.filter((item) => isMimeOnlyMediaUrl(item.imageurl)).length,
-    [items],
-  );
-  const readyCount = items.length - awaitingCount;
-
-  const handleMainImageClick = () => {
-    if (!activeItem || !onMainImageClick) return;
-    onMainImageClick(activeItem);
+  const handleMainDocumentClick = () => {
+    if (!activeItem || !onMainDocumentClick) return;
+    onMainDocumentClick(activeItem);
   };
 
   const renderThumbItem = (item: ThumbsPlaylistItem, index: number) => {
-    const awaiting = isMimeOnlyMediaUrl(item.imageurl);
     const thumbSrc = resolveMediaSlotSrc(item.imageurl);
     const isActive = index === activeIndex;
+    const awaiting = isMimeOnlyMediaUrl(item.imageurl);
 
     return (
       <button
@@ -201,7 +222,7 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
               onToggleHighlight(item);
             }}
           >
-            {textEllipsis(item.title || `Image ${index + 1}`, 15)}
+            {textEllipsis(item.title || `Markdown ${index + 1}`, 15)}
           </div>
           <div className={styles['chunkBadges']}>
             {isActive && <Badge bg="primary">Viewing</Badge>}
@@ -220,7 +241,7 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
           <p className={styles['subtitle']}>
             {items.length}
             {' '}
-            image
+            document
             {items.length === 1 ? '' : 's'}
           </p>
         </div>
@@ -243,8 +264,8 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
       {awaitingCount > 0 && (
         <Alert variant="warning" className="mb-3">
           {readyCount > 0
-            ? `Still downloading images: ${readyCount} / ${items.length} ready`
-            : `Images are not ready yet: ${awaitingCount} buffering`}
+            ? `Still downloading markdown: ${readyCount} / ${items.length} ready`
+            : `Markdown is not ready yet: ${awaitingCount} buffering`}
         </Alert>
       )}
 
@@ -256,32 +277,52 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
           >
             {fullscreenOpen && <MediaFullscreenCloseButton onClose={closeFullscreen} />}
             <div
-              className={styles['videoStack']}
+              className={[
+                styles['markdownPane'],
+                onMainDocumentClick ? styles['markdownPaneClickable'] : '',
+              ].filter(Boolean).join(' ')}
               style={fullscreenOpen
-                ? { width: '100%', height: '100%' }
-                : frameSize
-                  ? { width: frameSize.width, height: frameSize.height }
-                  : { width: '100%', aspectRatio: '16 / 9' }}
+                ? undefined
+                : frameHeight
+                  ? { height: frameHeight }
+                  : { height: MIN_FRAME_HEIGHT_PX }}
+              onClick={(e) => {
+                if (!onMainDocumentClick) return;
+                const target = e.target as HTMLElement | null;
+                if (target?.closest('a, button, input, textarea, select')) return;
+                handleMainDocumentClick();
+              }}
+              role={onMainDocumentClick ? 'button' : undefined}
+              tabIndex={onMainDocumentClick ? 0 : undefined}
+              onKeyDown={(e) => {
+                if (!onMainDocumentClick) return;
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+                e.preventDefault();
+                handleMainDocumentClick();
+              }}
             >
-              <img
-                src={mainSrc}
-                alt={activeItem?.title ?? title}
-                className={`${styles['video']} ${styles['thumbsImage']}${
-                  onMainImageClick ? ` ${styles['thumbsImageClickable']}` : ''
-                }`}
-                onClick={handleMainImageClick}
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = placeholder;
-                }}
-              />
+              {decodeError ? (
+                <Alert variant="warning" className="mb-0">
+                  Could not decode this markdown document.
+                </Alert>
+              ) : markdownText == null ? (
+                <div className={styles['markdownLoading']}>
+                  {activeAwaiting ? 'Downloading markdown…' : 'Loading markdown…'}
+                </div>
+              ) : (
+                <div className={styles['markdownBody']}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {markdownText}
+                  </ReactMarkdown>
+                </div>
+              )}
             </div>
           </div>
           <div className={styles['metaRow']}>
             <div className={styles['progressText']}>
               {activeItem
-                ? `${activeIndex + 1} / ${items.length} · ${activeItem.title || `Image ${activeIndex + 1}`}`
-                : 'No images'}
+                ? `${activeIndex + 1} / ${items.length} · ${activeItem.title || `Markdown ${activeIndex + 1}`}`
+                : 'No documents'}
             </div>
           </div>
         </Card>
@@ -289,7 +330,7 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
         <Card className={styles['playlistCard']}>
           <div className={styles['playlistHeaderRow']}>
             <div className={styles['playlistHeader']}>
-              Thumbnails
+              Documents
             </div>
           </div>
           <div className={styles['playlist']}>
@@ -301,4 +342,4 @@ const ThumbsPlayback: React.FC<ThumbsPlaybackProps> = ({
   );
 };
 
-export default ThumbsPlayback;
+export default MarkdownPlayback;

@@ -412,3 +412,175 @@
   border-radius: 999px;
   background: #212529;
 }
+.markdownPane {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  overflow: auto;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #edf0f2;
+  padding: 1.25rem 1.5rem;
+  text-align: left;
+  color: #212529;
+}
+
+.markdownPaneClickable {
+  cursor: pointer;
+}
+
+.markdownLoading {
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+.markdownBody {
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.markdownBody :global(h1),
+.markdownBody :global(h2),
+.markdownBody :global(h3),
+.markdownBody :global(h4),
+.markdownBody :global(h5),
+.markdownBody :global(h6) {
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+  line-height: 1.25;
+}
+
+.markdownBody :global(h1:first-child),
+.markdownBody :global(h2:first-child),
+.markdownBody :global(h3:first-child) {
+  margin-top: 0;
+}
+
+.markdownBody :global(p),
+.markdownBody :global(ul),
+.markdownBody :global(ol),
+.markdownBody :global(blockquote),
+.markdownBody :global(pre) {
+  margin: 0 0 1em;
+}
+
+.markdownBody :global(ul),
+.markdownBody :global(ol) {
+  padding-left: 1.5em;
+}
+
+.markdownBody :global(code) {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  background: #f1f3f5;
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+.markdownBody :global(pre) {
+  overflow-x: auto;
+  background: #f8f9fa;
+  border: 1px solid #edf0f2;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+}
+
+.markdownBody :global(pre code) {
+  background: transparent;
+  padding: 0;
+}
+
+.markdownBody :global(blockquote) {
+  border-left: 3px solid #dee2e6;
+  padding-left: 1rem;
+  color: #495057;
+}
+
+.markdownBody :global(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 1em;
+}
+
+.markdownBody :global(th),
+.markdownBody :global(td) {
+  border: 1px solid #dee2e6;
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+}
+
+.markdownBody :global(img) {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdownBody :global(a) {
+  color: #0d6efd;
+}
+
+/* Fullscreen stage: cover viewport; media letterboxes on black via object-fit. */
+.fullscreenOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none;
+  margin: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0;
+}
+
+.fullscreenClose {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 10001;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(33, 37, 41, 0.75);
+  color: #fff;
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.fullscreenClose:hover {
+  background: rgba(33, 37, 41, 0.92);
+}
+
+.fullscreenOverlay .videoStack {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100vw;
+  max-height: 100vh;
+  border-radius: 0;
+  background: #000;
+}
+
+.fullscreenOverlay .video {
+  border-radius: 0;
+  object-fit: contain;
+}
+
+.fullscreenOverlay .markdownPane {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
+  border-radius: 0;
+  border: none;
+  overflow: auto;
+  background: #fff;
+  padding: 1.5rem clamp(1rem, 4vw, 3rem);
+}
+

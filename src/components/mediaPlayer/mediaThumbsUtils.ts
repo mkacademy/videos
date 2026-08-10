@@ -12,15 +12,20 @@ import {
   dataUrlToBlob,
   findContentRowsForBannerId,
   resolveExportFileName,
+  resolveMarkdownExportFileName,
   sanitizePathSegment,
+  textDataUrlToBlob,
   uniqueFileName,
   writeBlobToHandle,
 } from '../../library/directoryTreeUtils';
-import { isMimeOnlyMediaUrl } from '../../library/imageUtils';
+import { isImageSlotValue, isMarkdownSlotValue, isMimeOnlyMediaUrl } from '../../library/imageUtils';
 import { resolveMediaPlayerTab, type MediaPlayerTab } from './mediaPlayerUtils';
 
 export type { MediaPlayerTab };
 export { resolveMediaPlayerTab };
+
+/** Which media-slot type a thumbs/markdown library lists. */
+export type ThumbsSlotKind = 'image' | 'markdown';
 
 export type ThumbsLibraryEntry = {
   id: number;
@@ -62,8 +67,24 @@ function contentRowsForBanner(
   return [...findContentRowsForBannerId(contentGroups, bannerId)];
 }
 
+export function matchesThumbsSlotKind(imageurl: string, kind: ThumbsSlotKind): boolean {
+  if (kind === 'markdown') return isMarkdownSlotValue(imageurl);
+  return isImageSlotValue(imageurl);
+}
+
+function filterRowsBySlotKind<T extends { imageurl: string }>(
+  rows: readonly T[],
+  kind: ThumbsSlotKind,
+): T[] {
+  return rows.filter((row) => matchesThumbsSlotKind(row.imageurl, kind));
+}
+
 function rowHasExportableImage(imageurl: string): boolean {
   return dataUrlToBlob(imageurl) !== null;
+}
+
+function rowHasExportableMarkdown(imageurl: string): boolean {
+  return isMarkdownSlotValue(imageurl) && textDataUrlToBlob(imageurl) !== null;
 }
 
 function courseCoverItems(slideGroup: SlideGroup): SlideGroupItem[] {
@@ -82,19 +103,26 @@ export function buildTutorialThumbsLibrary(
   banners: readonly TutorialBanner[],
   contentGroups: readonly (readonly TutorialContent[])[],
   allowedIds?: ReadonlySet<number> | null,
+  slotKind: ThumbsSlotKind = 'image',
 ): ThumbsLibraryEntry[] {
   const entries = [...banners]
     .sort((a, b) => a.ordinal - b.ordinal)
     .flatMap((banner) => {
       if (allowedIds != null && !allowedIds.has(banner.id)) return [];
-      const rows = contentRowsForBanner(contentGroups, banner.id);
+      const rows = filterRowsBySlotKind(
+        contentRowsForBanner(contentGroups, banner.id),
+        slotKind,
+      );
       if (rows.length === 0 && allowedIds == null) return [];
+      const hasExportable = slotKind === 'markdown'
+        ? rows.some((row) => rowHasExportableMarkdown(row.imageurl))
+        : rows.some((row) => rowHasExportableImage(row.imageurl));
       return [{
         id: banner.id,
         title: banner.title,
         quote: banner.quote,
         imageCount: rows.length,
-        hasExportableImages: rows.some((row) => rowHasExportableImage(row.imageurl)),
+        hasExportableImages: hasExportable,
         isHighlighted: banner.isHighlighted,
       }];
     });
@@ -119,6 +147,7 @@ export function buildCourseThumbsLibrary(
   banners: readonly CourseBanner[],
   contentGroups: readonly SlideGroup[],
   quizId?: number | null,
+  slotKind: ThumbsSlotKind = 'image',
 ): ThumbsLibraryEntry[] {
   return [...banners]
     .sort((a, b) => a.ordinal - b.ordinal)
@@ -128,14 +157,17 @@ export function buildCourseThumbsLibrary(
       }
       const slideGroup = resolveCourseSlideGroupForBanner(banner, contentGroups);
       if (!slideGroup) return [];
-      const covers = courseCoverItems(slideGroup);
+      const covers = filterRowsBySlotKind(courseCoverItems(slideGroup), slotKind);
       if (covers.length === 0) return [];
+      const hasExportable = slotKind === 'markdown'
+        ? covers.some((cover) => rowHasExportableMarkdown(cover.imageurl))
+        : covers.some((cover) => rowHasExportableImage(cover.imageurl));
       return [{
         id: banner.id,
         title: banner.title,
         quote: banner.quote,
         imageCount: covers.length,
-        hasExportableImages: covers.some((cover) => rowHasExportableImage(cover.imageurl)),
+        hasExportableImages: hasExportable,
         isHighlighted: banner.isHighlighted,
       }];
     });
@@ -145,9 +177,15 @@ export function buildQuizThumbsLibrary(
   quizzes: readonly Quiz[],
   banners: readonly CourseBanner[],
   contentGroups: readonly SlideGroup[],
+  slotKind: ThumbsSlotKind = 'image',
 ): ThumbsQuizLibraryEntry[] {
   return quizzes.flatMap((quiz) => {
-    const courseCount = buildCourseThumbsLibrary(banners, contentGroups, quiz.id).length;
+    const courseCount = buildCourseThumbsLibrary(
+      banners,
+      contentGroups,
+      quiz.id,
+      slotKind,
+    ).length;
     if (courseCount === 0) return [];
     return [{
       id: quiz.id,
@@ -223,8 +261,9 @@ export function collectCoupledTutorialIdsForCourse(
 export function buildThumbsPlaylistFromTutorial(
   bannerId: number,
   contentGroups: readonly (readonly TutorialContent[])[],
+  slotKind: ThumbsSlotKind = 'image',
 ): ThumbsPlaylistItem[] {
-  return contentRowsForBanner(contentGroups, bannerId)
+  return filterRowsBySlotKind(contentRowsForBanner(contentGroups, bannerId), slotKind)
     .slice()
     .sort((a, b) => a.ordinal - b.ordinal)
     .map((row) => ({
@@ -244,22 +283,31 @@ export function buildThumbsPlaylistFromTutorial(
 export function buildThumbsPlaylistFromCourseChapter(
   slideGroup: SlideGroup,
   chapterId: number,
+  slotKind: ThumbsSlotKind = 'image',
 ): ThumbsPlaylistItem[] {
-  return (slideGroup.slides ?? [])
-    .filter((row) => row.length > 0 && row[0].bannerId === chapterId)
-    .flatMap((row) => row)
+  const row = (slideGroup.slides ?? []).find(
+    (r) => r.length > 0 && r[0].bannerId === chapterId,
+  );
+  if (!row) return [];
+  const seenIds = new Set<number>();
+  return filterRowsBySlotKind(row, slotKind)
     .slice()
     .sort((a, b) => a.ordinal - b.ordinal)
-    .map((row) => ({
-      id: row.id,
-      title: row.title,
-      imageurl: row.imageurl,
-      ordinal: row.ordinal,
-      bannerId: row.bannerId,
-      content: row.content,
-      metadata: row.metadata,
-      sizeInBytes: row.sizeInBytes,
-      isHighlighted: row.isHighlighted,
+    .filter((item) => {
+      if (seenIds.has(item.id)) return false;
+      seenIds.add(item.id);
+      return true;
+    })
+    .map((item) => ({
+      id: item.id,
+      title: item.title,
+      imageurl: item.imageurl,
+      ordinal: item.ordinal,
+      bannerId: item.bannerId,
+      content: item.content,
+      metadata: item.metadata,
+      sizeInBytes: item.sizeInBytes,
+      isHighlighted: item.isHighlighted,
       highlightSource: 'slide' as const,
     }));
 }
@@ -282,8 +330,9 @@ export function buildThumbsPlaylistFromCourseCovers(
   banner: CourseBanner,
   slideGroup: SlideGroup,
   tutorialContent: readonly (readonly TutorialContent[])[] = [],
+  slotKind: ThumbsSlotKind = 'image',
 ): ThumbsPlaylistItem[] {
-  return courseCoverItems(slideGroup).map((cover) => ({
+  return filterRowsBySlotKind(courseCoverItems(slideGroup), slotKind).map((cover) => ({
     id: cover.id,
     title: cover.title,
     imageurl: cover.imageurl,
@@ -301,6 +350,17 @@ export function buildThumbsPlaylistFromCourseCovers(
       tutorialContent,
     ),
   }));
+}
+
+/** Decode a markdown data-URL slot to UTF-8 source text. */
+export async function decodeMarkdownSlotText(imageurl: string): Promise<string | null> {
+  const blob = textDataUrlToBlob(imageurl);
+  if (!blob) return null;
+  try {
+    return await blob.text();
+  } catch {
+    return null;
+  }
 }
 
 function toChunkPartRow(item: ThumbsPlaylistItem): ChunkPartRow {
@@ -385,19 +445,59 @@ async function writeImageRowsToBannerDir(
 
 function pickExportRows<T extends { isHighlighted?: boolean; imageurl: string; title: string }>(
   rows: readonly T[],
+  isExportable: (imageurl: string) => boolean,
 ): T[] {
-  const highlighted = rows.filter((row) => row.isHighlighted && rowHasExportableImage(row.imageurl));
+  const highlighted = rows.filter((row) => row.isHighlighted && isExportable(row.imageurl));
   if (highlighted.length > 0) return highlighted;
-  return rows.filter((row) => rowHasExportableImage(row.imageurl));
+  return rows.filter((row) => isExportable(row.imageurl));
 }
 
-/** ColFour Export Directory behavior, scoped to one tutorial banner. */
+async function writeMarkdownRowsToBannerDir(
+  root: FileSystemDirectoryHandle,
+  folderTitle: string,
+  rows: readonly { title: string; imageurl: string }[],
+  usedBannerDirs: Set<string>,
+): Promise<{ written: number; errors: string[]; skipped: string[] }> {
+  const errors: string[] = [];
+  const skipped: string[] = [];
+  const dirBase = uniqueFileName(sanitizePathSegment(folderTitle), usedBannerDirs);
+  let bannerDir: FileSystemDirectoryHandle;
+  try {
+    bannerDir = await root.getDirectoryHandle(dirBase, { create: true });
+  } catch (error) {
+    errors.push(`Failed to create directory for "${folderTitle}": ${error}`);
+    return { written: 0, errors, skipped };
+  }
+
+  const usedFileNames = new Set<string>();
+  let written = 0;
+  for (const row of rows) {
+    const blob = textDataUrlToBlob(row.imageurl);
+    if (!blob) {
+      skipped.push(`Skipped "${row.title}" in "${folderTitle}": no exportable markdown`);
+      continue;
+    }
+    const fileName = uniqueFileName(resolveMarkdownExportFileName(row.title), usedFileNames);
+    try {
+      await writeBlobToHandle(bannerDir, fileName, blob);
+      written += 1;
+    } catch (error) {
+      errors.push(`Failed to write "${fileName}" in "${folderTitle}": ${error}`);
+    }
+  }
+  return { written, errors, skipped };
+}
+
+/** ColFour Export Albums behavior, scoped to one tutorial banner. */
 export async function exportTutorialBannerImagesToDirectory(
   root: FileSystemDirectoryHandle,
   banner: TutorialBanner,
   contentGroups: readonly (readonly TutorialContent[])[],
 ): Promise<ThumbsImageExportResult> {
-  const rows = pickExportRows(contentRowsForBanner(contentGroups, banner.id));
+  const rows = pickExportRows(
+    filterRowsBySlotKind(contentRowsForBanner(contentGroups, banner.id), 'image'),
+    rowHasExportableImage,
+  );
   if (rows.length === 0) {
     return {
       exportedBanners: 0,
@@ -408,6 +508,34 @@ export async function exportTutorialBannerImagesToDirectory(
   }
   const usedBannerDirs = new Set<string>();
   const result = await writeImageRowsToBannerDir(root, banner.title, rows, usedBannerDirs);
+  return {
+    exportedBanners: result.written > 0 ? 1 : 0,
+    exportedImages: result.written,
+    errors: result.errors,
+    skipped: result.skipped,
+  };
+}
+
+/** Same as image export, but only markdown slots → `.md` files. */
+export async function exportTutorialBannerMarkdownToDirectory(
+  root: FileSystemDirectoryHandle,
+  banner: TutorialBanner,
+  contentGroups: readonly (readonly TutorialContent[])[],
+): Promise<ThumbsImageExportResult> {
+  const rows = pickExportRows(
+    filterRowsBySlotKind(contentRowsForBanner(contentGroups, banner.id), 'markdown'),
+    rowHasExportableMarkdown,
+  );
+  if (rows.length === 0) {
+    return {
+      exportedBanners: 0,
+      exportedImages: 0,
+      errors: [],
+      skipped: [`Skipped banner "${banner.title}": no exportable markdown`],
+    };
+  }
+  const usedBannerDirs = new Set<string>();
+  const result = await writeMarkdownRowsToBannerDir(root, banner.title, rows, usedBannerDirs);
   return {
     exportedBanners: result.written > 0 ? 1 : 0,
     exportedImages: result.written,
@@ -431,7 +559,10 @@ export async function exportCourseCoverImagesToDirectory(
       skipped: [`Skipped banner "${banner.title}": no covers found`],
     };
   }
-  const covers = pickExportRows(courseCoverItems(slideGroup));
+  const covers = pickExportRows(
+    filterRowsBySlotKind(courseCoverItems(slideGroup), 'image'),
+    rowHasExportableImage,
+  );
   if (covers.length === 0) {
     return {
       exportedBanners: 0,

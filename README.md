@@ -6,6 +6,7 @@ Standalone media player and thumbs app for the mkacademy workspace. FFmpeg power
 
 - **Media Player** (`/media-player`) — chunked FFmpeg video playback for course and tutorial content
 - **Media Thumbs** (`/media-thumbs`) — browse and export tutorial instruction images and course covers
+- **Media Markdown** (`/media-markdown`) — browse and render tutorial/course markdown documents (`data:text/markdown`)
 
 ## Development
 

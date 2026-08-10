@@ -14,12 +14,18 @@ export type PlaybackState = {
   chunkFetchInFlight: boolean;
   playbackWebapp: PlaybackWebapp | null;
   chunkBuffer: Record<string, ChunkBuffer>;
+  /** Active media slot is selected and buffered/decoded enough to enter fullscreen. */
+  mediaFullscreenReady: boolean;
+  /** Fullscreen overlay is open on the active video / image / markdown player. */
+  mediaFullscreenOpen: boolean;
 };
 
 const initialState: PlaybackState = {
   chunkFetchInFlight: false,
   playbackWebapp: null,
   chunkBuffer: {},
+  mediaFullscreenReady: false,
+  mediaFullscreenOpen: false,
 };
 
 function chunkBufferKey(
@@ -68,6 +74,15 @@ const playbackSlice = createSlice({
       state.chunkBuffer = {};
       state.chunkFetchInFlight = false;
     },
+    setMediaFullscreenReady: (state, action: PayloadAction<boolean>) => {
+      state.mediaFullscreenReady = action.payload;
+      if (!action.payload) {
+        state.mediaFullscreenOpen = false;
+      }
+    },
+    setMediaFullscreenOpen: (state, action: PayloadAction<boolean>) => {
+      state.mediaFullscreenOpen = action.payload && state.mediaFullscreenReady;
+    },
     resetPlayback: () => initialState,
   },
 });
@@ -78,5 +93,7 @@ export const {
   clearChunkBuffer,
   resetPlayback,
   setPlaybackWebapp,
+  setMediaFullscreenReady,
+  setMediaFullscreenOpen,
 } = playbackSlice.actions;
 export default playbackSlice.reducer;

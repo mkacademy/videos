@@ -3,21 +3,24 @@ import { Button, ButtonGroup } from 'react-bootstrap';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import * as styles from '../styles/mediaScreenSwitcher.module.css';
 
-type MediaScreen = 'player' | 'thumbs';
+type MediaScreen = 'player' | 'thumbs' | 'markdown';
 
 const SCREEN_PATH: Record<MediaScreen, string> = {
   player: '/media-player',
   thumbs: '/media-thumbs',
+  markdown: '/media-markdown',
 };
 
 const SCREEN_LABEL: Record<MediaScreen, string> = {
   player: 'Videos',
   thumbs: 'Thumbs',
+  markdown: 'Markdown',
 };
 
 function resolveScreen(pathname: string): MediaScreen | null {
   if (pathname.includes('media-player')) return 'player';
   if (pathname.includes('media-thumbs')) return 'thumbs';
+  if (pathname.includes('media-markdown')) return 'markdown';
   return null;
 }
 
@@ -26,7 +29,7 @@ type MediaScreenSwitcherProps = {
   asHeader?: boolean;
 };
 
-/** Toggle between Videos and Thumbs while preserving `?tab=`. */
+/** Toggle between Videos, Thumbs, and Markdown while preserving `?tab=`. */
 const MediaScreenSwitcher: React.FC<MediaScreenSwitcherProps> = ({ asHeader = false }) => {
   const navigate = useNavigate();
   const { pathname } = useLocation();
