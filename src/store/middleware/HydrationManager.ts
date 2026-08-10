@@ -1,16 +1,31 @@
 import { RootState } from "../types";
 import { Middleware } from "@reduxjs/toolkit";
 import { hydrateData, UnzipAndHydrate } from "../../library/actions";
-import { addUnzippedTrees, completedUnzipping, MappedCourseTrees, MappedQuizTrees, MappedTutorialTrees } from "../slices/settingsSlice";
+import {
+    addUnzippedTrees,
+    completedUnzipping,
+    MappedCourseTrees,
+    MappedQuizTrees,
+    MappedTutorialTrees,
+    registerUnzippedContentTrees,
+} from "../slices/settingsSlice";
 import { FS, FF, FD, sifterTypes, filterTypes, dashboardTypes } from "../../library/commsUtils";
-import { setTutorials, TutorialState } from "../slices/tutorialSlice";
-import { QuizState, setQuizzes } from "../slices/quizSlice";
-import { parse, unSignMZip, unSignTZip, unSignQZip } from "../../library/EncodingManagerUtils";
+import { setTutorials } from "../slices/tutorialSlice";
+import { setQuizzes } from "../slices/quizSlice";
+import { parseZipTrees } from "../../library/EncodingManagerUtils";
 import { OutgoingMessage, IncomingMessage } from "../slices/commsSlice";
-import { CourseState, setCourses } from "../slices/courseSlice";
+import { setCourses } from "../slices/courseSlice";
 import { mutateCurApp } from "../slices/sessionSlice";
 import { abortIfHydrationDisabled } from "../../library/hydrationUtils";
 import { CourseTrees, QuizTrees, TutorialTrees } from "../../library/controlPanelUtils";
+import {
+    flushCourseTrees,
+    flushQuizTrees,
+    flushTutorialTrees,
+} from "../../library/controlPanelUtilz";
+import type { Banner as CourseBanner, SlideGroup } from "../../library/CourseUtils";
+import type { Banner as TutorialBanner, Content as TutorialContent } from "../slices/tutorialSlice";
+import type { Quiz } from "../../library/QuizUtils";
 
 const UNZIP_COMPLETE_POLL_MS = 2000;
 export interface ItemWithTutorialTrees {
@@ -57,95 +72,107 @@ const HydrationManager: Middleware<{}, RootState> = ({ dispatch, getState }) => 
                 QuizTrees,
             },
             comms: { outgoing, incoming },
-            session: { username }
         } = state;
 
-        // Initialize separate arrays for each category
         const tutorialTrees: ItemWithTutorialTrees[] = [];
         const courseTrees: ItemWithCourseTrees[] = [];
         const quizTrees: ItemWithQuizTrees[] = [];
 
-        // Process Courses
         if (isUnzipCourses) {
-            const unzippedTreeIds = Object.keys(CourseTrees).map(Number);
+            const unzippedTreeIds = new Set(Object.keys(CourseTrees).map(Number));
             if (unzipCoursesType === "outgoing" || unzipCoursesType === "incoming_and_outgoing") {
-                const courseOutgoingIds = outgoing
-                    .filter(({ type, id }: OutgoingMessage) => sifterTypes.includes(type) && !unzippedTreeIds.includes(id))
-                    .map(({ id, text }: OutgoingMessage) => ({ TreesId: id, ...parse(text, username || '', unSignMZip) }))
-                    .map(item => item as Partial<CourseState> & ItemWithCourseTrees)
-                    .map(({ TreesId, Trees }: ItemWithCourseTrees) => ({ TreesId, Trees: Trees }));
-                courseTrees.push(...courseOutgoingIds);
+                for (const { type, id, text } of outgoing as OutgoingMessage[]) {
+                    if (!sifterTypes.includes(type) || unzippedTreeIds.has(id)) continue;
+                    courseTrees.push({ TreesId: id, Trees: parseZipTrees<CourseTrees>(text) });
+                }
             }
             if (unzipCoursesType === "incoming" || unzipCoursesType === "incoming_and_outgoing") {
-                const courseIncomingIds = incoming
-                    .filter(({ type, id }: IncomingMessage) => type === FS && !unzippedTreeIds.includes(id))
-                    .map(({ id, text }: IncomingMessage) => ({ TreesId: id, ...parse(text, username || '', unSignMZip) }))
-                    .map(item => item as Partial<CourseState> & ItemWithCourseTrees)
-                    .map(({ TreesId, Trees }: ItemWithCourseTrees) => ({ TreesId, Trees: Trees }));
-                courseTrees.push(...courseIncomingIds);
+                for (const { type, id, text } of incoming as IncomingMessage[]) {
+                    if (type !== FS || unzippedTreeIds.has(id)) continue;
+                    courseTrees.push({ TreesId: id, Trees: parseZipTrees<CourseTrees>(text) });
+                }
             }
         }
 
-        // Process Tutorials
         if (isUnzipTutorials) {
-            const unzippedTreeIds = Object.keys(TutorialTrees).map(Number);
+            const unzippedTreeIds = new Set(Object.keys(TutorialTrees).map(Number));
             if (unzipTutorialsType === "outgoing" || unzipTutorialsType === "incoming_and_outgoing") {
-                const tutorialOutgoingIds = outgoing
-                    .filter(({ type, id }: OutgoingMessage) => filterTypes.includes(type) && !unzippedTreeIds.includes(id))
-                    .map(({ id, text }: OutgoingMessage) => ({ TreesId: id, ...parse(text, username || '', unSignTZip) }))
-                    .map(item => item as Partial<TutorialState> & ItemWithTutorialTrees)
-                    .map(({ TreesId, Trees }: ItemWithTutorialTrees) => ({ TreesId, Trees: Trees }));
-                tutorialTrees.push(...tutorialOutgoingIds);
+                for (const { type, id, text } of outgoing as OutgoingMessage[]) {
+                    if (!filterTypes.includes(type) || unzippedTreeIds.has(id)) continue;
+                    tutorialTrees.push({ TreesId: id, Trees: parseZipTrees<TutorialTrees>(text) });
+                }
             }
             if (unzipTutorialsType === "incoming" || unzipTutorialsType === "incoming_and_outgoing") {
-                const tutorialIncomingIds = incoming
-                    .filter(({ type, id }: IncomingMessage) => type === FF && !unzippedTreeIds.includes(id))
-                    .map(({ id, text }: IncomingMessage) => ({ TreesId: id, ...parse(text, username || '', unSignTZip) }))
-                    .map(item => item as Partial<TutorialState> & ItemWithTutorialTrees)
-                    .map(({ TreesId, Trees }: ItemWithTutorialTrees) => ({ TreesId, Trees: Trees }));
-                tutorialTrees.push(...tutorialIncomingIds);
+                for (const { type, id, text } of incoming as IncomingMessage[]) {
+                    if (type !== FF || unzippedTreeIds.has(id)) continue;
+                    tutorialTrees.push({ TreesId: id, Trees: parseZipTrees<TutorialTrees>(text) });
+                }
             }
         }
 
-        // Process Quizzes
         if (isUnzipQuizzes) {
-            const unzippedTreeIds = Object.keys(QuizTrees).map(Number);
+            const unzippedTreeIds = new Set(Object.keys(QuizTrees).map(Number));
             if (unzipQuizzesType === "outgoing" || unzipQuizzesType === "incoming_and_outgoing") {
-                const quizOutgoingIds = outgoing
-                    .filter(({ type, id }: OutgoingMessage) => dashboardTypes.includes(type) && !unzippedTreeIds.includes(id))
-                    .map(({ id, text }: OutgoingMessage) => ({ TreesId: id, ...parse(text, username || '', unSignQZip) }))
-                    .map(item => item as Partial<QuizState> & ItemWithQuizTrees)
-                    .map(({ TreesId, Trees }: ItemWithQuizTrees) => ({ TreesId, Trees: Trees }));
-                quizTrees.push(...quizOutgoingIds);
+                for (const { type, id, text } of outgoing as OutgoingMessage[]) {
+                    if (!dashboardTypes.includes(type) || unzippedTreeIds.has(id)) continue;
+                    quizTrees.push({ TreesId: id, Trees: parseZipTrees<QuizTrees>(text) });
+                }
             }
             if (unzipQuizzesType === "incoming" || unzipQuizzesType === "incoming_and_outgoing") {
-                const quizIncomingIds = incoming
-                    .filter(({ type, id }: IncomingMessage) => type === FD && !unzippedTreeIds.includes(id))
-                    .map(({ id, text }: IncomingMessage) => ({ TreesId: id, ...parse(text, username || '', unSignQZip) }))
-                    .map(item => item as Partial<QuizState> & ItemWithQuizTrees)
-                    .map(({ TreesId, Trees }: ItemWithQuizTrees) => ({ TreesId, Trees: Trees }));
-                quizTrees.push(...quizIncomingIds);
+                for (const { type, id, text } of incoming as IncomingMessage[]) {
+                    if (type !== FD || unzippedTreeIds.has(id)) continue;
+                    quizTrees.push({ TreesId: id, Trees: parseZipTrees<QuizTrees>(text) });
+                }
             }
         }
 
-        courseTrees.forEach((c: ItemWithCourseTrees) => {
-            const { Trees = {}, TreesId = 0 } = c;
-            const payload = { content: [], banners: [], Trees, TreesId };
-            setTimeout(() => dispatch(setCourses(payload)));
-        });
-        tutorialTrees.forEach((t: ItemWithTutorialTrees) => {
-            const { Trees = {}, TreesId = 0 } = t;
-            const payload = { banners: [], content: [], Trees, TreesId };
-            setTimeout(() => dispatch(setTutorials(payload)));
-        });
-        quizTrees.forEach((q: ItemWithQuizTrees) => {
-            const { Trees = {}, TreesId = 0 } = q;
-            const payload = { quizzes: [], banners: [], content: [], Trees, TreesId };
-            setTimeout(() => dispatch(setQuizzes(payload)));
-        });
+        if (courseTrees.length > 0) {
+            const banners: CourseBanner[] = [];
+            const content: SlideGroup[] = [];
+            const courseTreesMap: MappedCourseTrees = {};
+            for (const { Trees = {}, TreesId = 0 } of courseTrees) {
+                courseTreesMap[TreesId] = Trees;
+                const flushed = flushCourseTrees(Trees);
+                if (flushed.banners?.length) banners.push(...flushed.banners);
+                if (flushed.content?.length) content.push(...flushed.content);
+            }
+            dispatch(setCourses({ banners, content }));
+            dispatch(registerUnzippedContentTrees({ courseTrees: courseTreesMap }));
+        }
+
+        if (tutorialTrees.length > 0) {
+            const banners: TutorialBanner[] = [];
+            const content: TutorialContent[][] = [];
+            const tutorialTreesMap: MappedTutorialTrees = {};
+            for (const { Trees = {}, TreesId = 0 } of tutorialTrees) {
+                tutorialTreesMap[TreesId] = Trees;
+                const flushed = flushTutorialTrees(Trees);
+                if (flushed.banners?.length) banners.push(...flushed.banners);
+                if (flushed.content?.length) content.push(...flushed.content);
+            }
+            dispatch(setTutorials({ banners, content }));
+            dispatch(registerUnzippedContentTrees({ tutorialTrees: tutorialTreesMap }));
+        }
+
+        if (quizTrees.length > 0) {
+            const quizzes: Quiz[] = [];
+            const banners: CourseBanner[] = [];
+            const content: SlideGroup[] = [];
+            const quizTreesMap: MappedQuizTrees = {};
+            for (const { Trees = {}, TreesId = 0 } of quizTrees) {
+                quizTreesMap[TreesId] = Trees;
+                const flushed = flushQuizTrees(Trees);
+                if (flushed.quizzes?.length) quizzes.push(...flushed.quizzes);
+                if (flushed.banners?.length) banners.push(...flushed.banners);
+                if (flushed.content?.length) content.push(...flushed.content);
+            }
+            dispatch(setQuizzes({ quizzes, banners, content }));
+            dispatch(registerUnzippedContentTrees({ quizTrees: quizTreesMap }));
+        }
+
         const hasTrees = courseTrees.length > 0 || tutorialTrees.length > 0 || quizTrees.length > 0;
         scheduleCompletedUnzippingWhenIdle(dispatch);
-        if (hasTrees) setTimeout(() => {
+        if (hasTrees) {
             dispatch(addUnzippedTrees({
                 tutorialTrees: tutorialTrees.reduce((acc: MappedTutorialTrees, t: ItemWithTutorialTrees) => {
                     acc[t.TreesId] = t.Trees;
@@ -161,7 +188,7 @@ const HydrationManager: Middleware<{}, RootState> = ({ dispatch, getState }) => 
                 }, {}),
             }));
             dispatchHydrateDataIfEnabled(dispatch, getState);
-        });
+        }
     }
 
     if (mutateCurApp.match(action)) {

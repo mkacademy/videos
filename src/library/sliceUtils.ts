@@ -351,36 +351,47 @@ export const textsMergerComms = (
     : { ...row, ...updates };
 };
 
-export const idsMerger = (payload: string[], idField: string) => <T extends Mergable>(row: Draft<T>): Draft<T> => {
-  const ids = payload.map((id) => parseInt(id));
-  const i = ids.findIndex((id) => id === row[idField]);
-  if (i !== -1 && i % 2 === 0)
+/** Flat [old, new, old, new, ...] pair list → Map once (avoids re-parse + findIndex per row). */
+const idPairMapFromPayload = (payload: string[]): Map<number, number> => {
+  const map = new Map<number, number>();
+  for (let i = 0; i + 1 < payload.length; i += 2) {
+    map.set(parseInt(payload[i], 10), parseInt(payload[i + 1], 10));
+  }
+  return map;
+};
+
+export const idsMerger = (payload: string[], idField: string) => {
+  const idMap = idPairMapFromPayload(payload);
+  return <T extends Mergable>(row: Draft<T>): Draft<T> => {
+    const nextId = idMap.get(row[idField] as number);
+    if (nextId === undefined) return row;
     return {
       ...row,
       edited: false,
-      [idField]: ids[i + 1],
+      [idField]: nextId,
       sizeInBytes:
         idField === "id" ? 0 : row.sizeInBytes,
     } as Draft<T>;
-  else return row;
+  };
 };
 
 // Comms-specific idsMerger with type predicate
 export const idsMergerComms = (
   payload: string[],
   isCorrectType: (row: any) => boolean
-) => (row: any) => {
-  if (!isCorrectType(row)) return row;
-  const ids = payload.map((id) => parseInt(id));
-  const i = ids.findIndex((id) => id === row.id);
-  if (i !== -1 && i % 2 === 0)
+) => {
+  const idMap = idPairMapFromPayload(payload);
+  return (row: any) => {
+    if (!isCorrectType(row)) return row;
+    const nextId = idMap.get(row.id);
+    if (nextId === undefined) return row;
     return {
       ...row,
-      id: ids[i + 1],
+      id: nextId,
       modified: false,
       sizeInBytes: 0,
     };
-  else return row;
+  };
 };
 
 export const metadataUpdator = <T extends Mergable>(payload: MetadataUpdate[], hasBannerId: boolean) => (row: Draft<T>): Draft<T> => {

@@ -46,6 +46,20 @@ export const parse = <T = CourseBanner | TutorialBanner | Quiz | SlideGroup | Tu
   }
 };
 
+
+/** Auto-unzip only needs `Trees`; skips unSign* ID remapping of banners/content. */
+export const parseZipTrees = <T extends CourseTrees | TutorialTrees | QuizTrees = CourseTrees>(
+  encodedStr: string,
+): T => {
+  try {
+    const obj = JSON.parse(Buffer.from(encodedStr, "base64").toString()) as { Trees?: T };
+    return (obj.Trees ?? {}) as T;
+  } catch (error) {
+    console.log((error as Error).message);
+    return {} as T;
+  }
+};
+
 export const unSignTZip = ({ banners = [], content = [], Trees }: {
   banners?: TutorialBanner[];
   content?: TutorialContent[][];
@@ -75,12 +89,15 @@ export const unSignTZip = ({ banners = [], content = [], Trees }: {
   const Tpayload = Object.entries(Tpairs).flat(2).map(String);
   const Spayload = Object.entries(Spairs).flat(2).map(String);
 
-  const nState = bannerz.map((row: TutorialBanner) => idsMerger(Tpayload, "id")(row));
-  const nState0 = nState.map((row: TutorialBanner) => idsMerger(Tpayload, "filterId")(row));
-  const predicate = (row: TutorialContent) => idsMerger(Tpayload, "bannerId")(row);
-  const nState1 = contend.map((rows: TutorialContent[]) => rows.map(predicate));
-  const predicate0 = (row: TutorialContent) => idsMerger(Spayload, "id")(row);
-  const nState2 = nState1.map((rows: TutorialContent[]) => rows.map(predicate0));
+  const mergeBannerId = idsMerger(Tpayload, "id");
+  const mergeFilterId = idsMerger(Tpayload, "filterId");
+  const mergeBannerIdOnContent = idsMerger(Tpayload, "bannerId");
+  const mergeStepId = idsMerger(Spayload, "id");
+
+  const nState = bannerz.map((row: TutorialBanner) => mergeBannerId(row));
+  const nState0 = nState.map((row: TutorialBanner) => mergeFilterId(row));
+  const nState1 = contend.map((rows: TutorialContent[]) => rows.map(mergeBannerIdOnContent));
+  const nState2 = nState1.map((rows: TutorialContent[]) => rows.map(mergeStepId));
 
   return { banners: nState0, content: nState2, Trees };
 };
@@ -124,44 +141,48 @@ export const unSignMZip = ({ banners = [], content = [], Trees }: {
   const Mpayload = Object.entries(Mpairs).flat(2).map(String);
   const Spayload = Object.entries(Spairs).flat(2).map(String);
 
-  const nState = bannerz.map((row: CourseBanner) => idsMerger(Mpayload, "id")(row));
-  const nState0 = nState.map((row: CourseBanner) => idsMerger(Mpayload, "sifterId")(row));
+  const mergeCourseId = idsMerger(Mpayload, "id");
+  const mergeSifterId = idsMerger(Mpayload, "sifterId");
+  const mergePennantBannerId = idsMerger(Mpayload, "bannerId");
+  const mergePennantId = idsMerger(Mpayload, "id");
+  const mergeBannerIds = idsMerger(Mpayload, "bannerId");
+  const mergeSlideIds = idsMerger(Spayload, "id");
+
+  const nState = bannerz.map((row: CourseBanner) => mergeCourseId(row));
+  const nState0 = nState.map((row: CourseBanner) => mergeSifterId(row));
   const nState1 = nState0.map(({ pennants, ...fields }: CourseBanner) => ({
-    pennants: pennants.map((row: Pennant) => idsMerger(Mpayload, "bannerId")(row)),
+    pennants: pennants.map((row: Pennant) => mergePennantBannerId(row)),
     ...fields,
   }));
   const nState2 = nState1.map(({ pennants, ...fields }: CourseBanner) => ({
-    pennants: pennants.map((row: Pennant) => idsMerger(Mpayload, "id")(row)),
+    pennants: pennants.map((row: Pennant) => mergePennantId(row)),
     ...fields,
   }));
 
-  const nState3 = contend.map((steps: SlideGroup) =>
-    Object.entries(steps)
-      .map(([key, row]: [string, SlideGroupItem | SlideItem[][]]) => {
-        if (key === "slides") {
-          const predicate = (row: SlideItem) => idsMerger(Mpayload, "bannerId")(row);
-          const nState = (row as SlideItem[][]).map((rows) => rows.map(predicate));
-          return [key, nState];
-        }
-        const updates = idsMerger(Mpayload, "bannerId")(row as SlideGroupItem);
-        return [key, { ...row, ...updates }];
-      })
-      .reduce((prev: SlideGroup, [key, value]) => ({ ...prev, [key as keyof SlideGroup]: value }), {} as SlideGroup)
-  );
+  // O(k) SlideGroup rebuild — avoid object-spread reduce (O(k²)).
+  const nState3 = contend.map((steps: SlideGroup) => {
+    const next: SlideGroup = { slides: [] };
+    for (const [key, row] of Object.entries(steps) as [string, SlideGroupItem | SlideItem[][]][]) {
+      if (key === "slides") {
+        next.slides = (row as SlideItem[][]).map((rows) => rows.map(mergeBannerIds));
+      } else {
+        next[key as keyof SlideGroup] = { ...(row as SlideGroupItem), ...mergeBannerIds(row as SlideGroupItem) } as never;
+      }
+    }
+    return next;
+  });
 
-  const nState4 = nState3.map((steps: SlideGroup) =>
-    Object.entries(steps)
-      .map(([key, row]: [string, SlideGroupItem | SlideItem[][]]) => {
-        if (key === "slides") {
-          const predicate = (row: SlideItem) => idsMerger(Spayload, "id")(row);
-          const nState = (row as SlideItem[][]).map((rows) => rows.map(predicate));
-          return [key, nState];
-        }
-        const updates = idsMerger(Spayload, "id")(row as SlideGroupItem);
-        return [key, { ...row, ...updates }];
-      })
-      .reduce((prev: SlideGroup, [key, value]) => ({ ...prev, [key as keyof SlideGroup]: value }), {} as SlideGroup)
-  );
+  const nState4 = nState3.map((steps: SlideGroup) => {
+    const next: SlideGroup = { slides: [] };
+    for (const [key, row] of Object.entries(steps) as [string, SlideGroupItem | SlideItem[][]][]) {
+      if (key === "slides") {
+        next.slides = (row as SlideItem[][]).map((rows) => rows.map(mergeSlideIds));
+      } else {
+        next[key as keyof SlideGroup] = { ...(row as SlideGroupItem), ...mergeSlideIds(row as SlideGroupItem) } as never;
+      }
+    }
+    return next;
+  });
 
   return { banners: nState2, content: nState4, Trees };
 };
@@ -196,18 +217,25 @@ export const unSignQZip = ({ quizzes = [], banners = [], content = [], Trees }: 
   const Mpayload = Object.entries(Mpairs).flat(2).map(String);
   const quizzez = (quizzes.map(bannersPred) as Quiz[]).map(penanntsPred) as Quiz[];
 
-  const nState = quizzez.map((row: Quiz) => idsMerger(Mpayload, "id")(row));
-  const nState0 = nState.map((row: Quiz) => idsMerger(Mpayload, "dashboardId")(row));
+  const mergeQuizId = idsMerger(Mpayload, "id");
+  const mergeDashboardId = idsMerger(Mpayload, "dashboardId");
+  const mergeSubmissionBannerId = idsMerger(Mpayload, "bannerId");
+  const mergeSubmissionId = idsMerger(Mpayload, "id");
+  const mergeCourseBannerId = idsMerger(Mpayload, "bannerId");
+
+  const nState = quizzez.map((row: Quiz) => mergeQuizId(row));
+  const nState0 = nState.map((row: Quiz) => mergeDashboardId(row));
   const nState1 = nState0.map(({ pennants, ...fields }: Quiz) => ({
-    pennants: pennants.map((row: Submition) => idsMerger(Mpayload, "bannerId")(row)),
+    pennants: pennants.map((row: Submition) => mergeSubmissionBannerId(row)),
     ...fields,
   }));
   const nState2 = nState1.map(({ pennants, ...fields }: Quiz) => ({
-    pennants: pennants.map((row: Submition) => idsMerger(Mpayload, "id")(row)),
+    pennants: pennants.map((row: Submition) => mergeSubmissionId(row)),
     ...fields,
   }));
-  const nState3 = peels?.map((row: CourseBanner) => idsMerger(Mpayload, "bannerId")(row)) || [];
+  const nState3 = peels?.map((row: CourseBanner) => mergeCourseBannerId(row)) || [];
 
   return { quizzes: nState2, banners: nState3, content: insides, Trees };
 };
+
 

@@ -181,13 +181,15 @@ export const flushCourseTrees = (Trees: CourseTrees | undefined): Partial<Course
             );
 
             // Process pennants (keys that are numbers, not '_orphans' or 'slideGroupItems')
+            const seenPennantIds = new Set<number>();
             Object.entries(children).forEach(([key, value]) => {
                 if (key === '_orphans') {
                     // Orphan pennants (pennants without slides). Skip ids also present as keyed
                     // entries — merged trees can list the same pennant in both places.
                     const orphanPennantIds = Array.isArray(value) ? value : [];
                     orphanPennantIds.forEach((pennantId) => {
-                        if (keyedPennantIds.has(pennantId)) return;
+                        if (keyedPennantIds.has(pennantId) || seenPennantIds.has(pennantId)) return;
+                        seenPennantIds.add(pennantId);
                         pennants.push({
                             ...defaultTutorialChildRow,
                             id: pennantId,
@@ -208,7 +210,8 @@ export const flushCourseTrees = (Trees: CourseTrees | undefined): Partial<Course
                 } else {
                     // This is a pennant ID with its slides
                     const pennantId = Number(key);
-                    if (!Number.isFinite(pennantId) || pennants.some((p) => p.id === pennantId)) return;
+                    if (!Number.isFinite(pennantId) || seenPennantIds.has(pennantId)) return;
+                    seenPennantIds.add(pennantId);
                     const slideIds = Array.isArray(value) ? value : [];
 
                     // Create pennant
@@ -295,8 +298,8 @@ export const flushQuizTrees = (Trees: QuizTrees | undefined): Partial<QuizState>
     }
 
     const quizzes: Quiz[] = [];
-    let allBanners: CourseBanner[] = [];
-    let allContent: SlideGroup[] = [];
+    const allBanners: CourseBanner[] = [];
+    const allContent: SlideGroup[] = [];
 
     // Process quizzes with children
     Object.entries(Trees).forEach(([quizIdStr, children]) => {
@@ -312,11 +315,12 @@ export const flushQuizTrees = (Trees: QuizTrees | undefined): Partial<QuizState>
             if (children.banners) {
                 const courseState = flushCourseTrees(children.banners);
                 if (courseState.banners) {
-                    const newBanners = courseState.banners.map((banner) => ({ ...banner, bannerId: quizId }));
-                    allBanners = [...allBanners, ...newBanners];
+                    for (const banner of courseState.banners) {
+                        allBanners.push({ ...banner, bannerId: quizId });
+                    }
                 }
                 if (courseState.content) {
-                    allContent = [...allContent, ...courseState.content];
+                    allContent.push(...courseState.content);
                 }
             }
 
