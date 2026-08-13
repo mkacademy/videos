@@ -13,19 +13,22 @@ import {
   findContentRowsForBannerId,
   resolveExportFileName,
   resolveMarkdownExportFileName,
+  resolveTextExportFileName,
   sanitizePathSegment,
   textDataUrlToBlob,
   uniqueFileName,
   writeBlobToHandle,
 } from '../../library/directoryTreeUtils';
-import { isImageSlotValue, isMarkdownSlotValue, isMimeOnlyMediaUrl } from '../../library/imageUtils';
+import { isImageSlotValue, isMarkdownSlotValue, isMimeOnlyMediaUrl, isPlainTextSlotValue } from '../../library/imageUtils';
 import { resolveMediaPlayerTab, type MediaPlayerTab } from './mediaPlayerUtils';
 
 export type { MediaPlayerTab };
 export { resolveMediaPlayerTab };
 
-/** Which media-slot type a thumbs/markdown library lists. */
-export type ThumbsSlotKind = 'image' | 'markdown';
+/** Which media-slot type a thumbs/markdown/text library lists. */
+export type ThumbsSlotKind = 'image' | 'markdown' | 'text';
+
+export type DocumentMediaKind = 'markdown' | 'text';
 
 export type ThumbsLibraryEntry = {
   id: number;
@@ -69,6 +72,7 @@ function contentRowsForBanner(
 
 export function matchesThumbsSlotKind(imageurl: string, kind: ThumbsSlotKind): boolean {
   if (kind === 'markdown') return isMarkdownSlotValue(imageurl);
+  if (kind === 'text') return isPlainTextSlotValue(imageurl);
   return isImageSlotValue(imageurl);
 }
 
@@ -85,6 +89,16 @@ function rowHasExportableImage(imageurl: string): boolean {
 
 function rowHasExportableMarkdown(imageurl: string): boolean {
   return isMarkdownSlotValue(imageurl) && textDataUrlToBlob(imageurl) !== null;
+}
+
+function rowHasExportableText(imageurl: string): boolean {
+  return isPlainTextSlotValue(imageurl) && textDataUrlToBlob(imageurl) !== null;
+}
+
+function rowHasExportableDocument(imageurl: string, kind: DocumentMediaKind): boolean {
+  return kind === 'markdown'
+    ? rowHasExportableMarkdown(imageurl)
+    : rowHasExportableText(imageurl);
 }
 
 function courseCoverItems(slideGroup: SlideGroup): SlideGroupItem[] {
@@ -116,7 +130,9 @@ export function buildTutorialThumbsLibrary(
       if (rows.length === 0 && allowedIds == null) return [];
       const hasExportable = slotKind === 'markdown'
         ? rows.some((row) => rowHasExportableMarkdown(row.imageurl))
-        : rows.some((row) => rowHasExportableImage(row.imageurl));
+        : slotKind === 'text'
+          ? rows.some((row) => rowHasExportableText(row.imageurl))
+          : rows.some((row) => rowHasExportableImage(row.imageurl));
       return [{
         id: banner.id,
         title: banner.title,
@@ -161,7 +177,9 @@ export function buildCourseThumbsLibrary(
       if (covers.length === 0) return [];
       const hasExportable = slotKind === 'markdown'
         ? covers.some((cover) => rowHasExportableMarkdown(cover.imageurl))
-        : covers.some((cover) => rowHasExportableImage(cover.imageurl));
+        : slotKind === 'text'
+          ? covers.some((cover) => rowHasExportableText(cover.imageurl))
+          : covers.some((cover) => rowHasExportableImage(cover.imageurl));
       return [{
         id: banner.id,
         title: banner.title,
@@ -452,11 +470,13 @@ function pickExportRows<T extends { isHighlighted?: boolean; imageurl: string; t
   return rows.filter((row) => isExportable(row.imageurl));
 }
 
-async function writeMarkdownRowsToBannerDir(
+async function writeTextSlotRowsToBannerDir(
   root: FileSystemDirectoryHandle,
   folderTitle: string,
   rows: readonly { title: string; imageurl: string }[],
   usedBannerDirs: Set<string>,
+  resolveFileName: (title: string) => string,
+  skipLabel: string,
 ): Promise<{ written: number; errors: string[]; skipped: string[] }> {
   const errors: string[] = [];
   const skipped: string[] = [];
@@ -474,10 +494,10 @@ async function writeMarkdownRowsToBannerDir(
   for (const row of rows) {
     const blob = textDataUrlToBlob(row.imageurl);
     if (!blob) {
-      skipped.push(`Skipped "${row.title}" in "${folderTitle}": no exportable markdown`);
+      skipped.push(`Skipped "${row.title}" in "${folderTitle}": no exportable ${skipLabel}`);
       continue;
     }
-    const fileName = uniqueFileName(resolveMarkdownExportFileName(row.title), usedFileNames);
+    const fileName = uniqueFileName(resolveFileName(row.title), usedFileNames);
     try {
       await writeBlobToHandle(bannerDir, fileName, blob);
       written += 1;
@@ -486,6 +506,22 @@ async function writeMarkdownRowsToBannerDir(
     }
   }
   return { written, errors, skipped };
+}
+
+async function writeMarkdownRowsToBannerDir(
+  root: FileSystemDirectoryHandle,
+  folderTitle: string,
+  rows: readonly { title: string; imageurl: string }[],
+  usedBannerDirs: Set<string>,
+): Promise<{ written: number; errors: string[]; skipped: string[] }> {
+  return writeTextSlotRowsToBannerDir(
+    root,
+    folderTitle,
+    rows,
+    usedBannerDirs,
+    resolveMarkdownExportFileName,
+    'markdown',
+  );
 }
 
 /** ColFour Export Albums behavior, scoped to one tutorial banner. */
@@ -522,20 +558,48 @@ export async function exportTutorialBannerMarkdownToDirectory(
   banner: TutorialBanner,
   contentGroups: readonly (readonly TutorialContent[])[],
 ): Promise<ThumbsImageExportResult> {
+  return exportTutorialBannerDocumentsToDirectory(root, banner, contentGroups, 'markdown');
+}
+
+/** Same as image export, but only plain-text slots → `.txt` files. */
+export async function exportTutorialBannerTextToDirectory(
+  root: FileSystemDirectoryHandle,
+  banner: TutorialBanner,
+  contentGroups: readonly (readonly TutorialContent[])[],
+): Promise<ThumbsImageExportResult> {
+  return exportTutorialBannerDocumentsToDirectory(root, banner, contentGroups, 'text');
+}
+
+async function exportTutorialBannerDocumentsToDirectory(
+  root: FileSystemDirectoryHandle,
+  banner: TutorialBanner,
+  contentGroups: readonly (readonly TutorialContent[])[],
+  kind: DocumentMediaKind,
+): Promise<ThumbsImageExportResult> {
+  const label = kind === 'markdown' ? 'markdown' : 'text';
   const rows = pickExportRows(
-    filterRowsBySlotKind(contentRowsForBanner(contentGroups, banner.id), 'markdown'),
-    rowHasExportableMarkdown,
+    filterRowsBySlotKind(contentRowsForBanner(contentGroups, banner.id), kind),
+    (imageurl) => rowHasExportableDocument(imageurl, kind),
   );
   if (rows.length === 0) {
     return {
       exportedBanners: 0,
       exportedImages: 0,
       errors: [],
-      skipped: [`Skipped banner "${banner.title}": no exportable markdown`],
+      skipped: [`Skipped banner "${banner.title}": no exportable ${label}`],
     };
   }
   const usedBannerDirs = new Set<string>();
-  const result = await writeMarkdownRowsToBannerDir(root, banner.title, rows, usedBannerDirs);
+  const result = kind === 'markdown'
+    ? await writeMarkdownRowsToBannerDir(root, banner.title, rows, usedBannerDirs)
+    : await writeTextSlotRowsToBannerDir(
+      root,
+      banner.title,
+      rows,
+      usedBannerDirs,
+      resolveTextExportFileName,
+      'text',
+    );
   return {
     exportedBanners: result.written > 0 ? 1 : 0,
     exportedImages: result.written,

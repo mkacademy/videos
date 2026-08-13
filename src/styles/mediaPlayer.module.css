@@ -439,6 +439,13 @@
   line-height: 1.6;
 }
 
+.markdownBodyPlain {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.95rem;
+}
+
 .markdownBody :global(h1),
 .markdownBody :global(h2),
 .markdownBody :global(h3),

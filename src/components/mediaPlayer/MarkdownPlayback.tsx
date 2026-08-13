@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Alert, Badge, Button, Card } from 'react-bootstrap';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { useDispatch } from 'react-redux';
 import { isMimeOnlyMediaUrl, resolveMediaSlotSrc } from '../../library/imageUtils';
 import { placeholder, textEllipsis } from '../../utils';
@@ -15,10 +13,13 @@ import {
 import {
   collectThumbsBufferingEntries,
   decodeMarkdownSlotText,
+  type DocumentMediaKind,
   type ThumbsPlaylistItem,
 } from './mediaThumbsUtils';
 import MediaFullscreenCloseButton from './MediaFullscreenCloseButton';
 import MediaFullscreenToggle from './MediaFullscreenToggle';
+import MarkdownDocument from '../markdown/MarkdownDocument';
+import LinkifiedText from '../LinkifiedText';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 /** Progress row under the main markdown pane. */
@@ -33,6 +34,7 @@ type MarkdownPlaybackProps = {
   title: string;
   items: ThumbsPlaylistItem[];
   kind: 'tutorial' | 'course';
+  documentKind?: DocumentMediaKind;
   onChangeMedia: () => void;
   onMainDocumentClick?: (item: ThumbsPlaylistItem) => void;
   onToggleHighlight?: (item: ThumbsPlaylistItem) => void;
@@ -43,6 +45,7 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
   title,
   items,
   kind,
+  documentKind = 'markdown',
   onChangeMedia,
   onMainDocumentClick,
   onToggleHighlight,
@@ -53,8 +56,10 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
   const bufferQueueLoadedForRef = useRef<string | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [frameHeight, setFrameHeight] = useState<number | null>(null);
-  const [markdownText, setMarkdownText] = useState<string | null>(null);
+  const [documentText, setDocumentText] = useState<string | null>(null);
   const [decodeError, setDecodeError] = useState(false);
+  const kindLabel = documentKind === 'text' ? 'text' : 'markdown';
+  const kindTitle = documentKind === 'text' ? 'Text' : 'Markdown';
 
   useChangeMediaOnEscape(onChangeMedia);
 
@@ -92,7 +97,7 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    setMarkdownText(null);
+    setDocumentText(null);
     setDecodeError(false);
 
     if (!activeItem) return undefined;
@@ -107,10 +112,10 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
       if (cancelled) return;
       if (text == null) {
         setDecodeError(true);
-        setMarkdownText(null);
+        setDocumentText(null);
         return;
       }
-      setMarkdownText(text);
+      setDocumentText(text);
     })();
 
     return () => {
@@ -156,7 +161,7 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
     [items],
   );
   const readyCount = items.length - awaitingCount;
-  const activeReady = Boolean(activeItem && !activeAwaiting && markdownText != null);
+  const activeReady = Boolean(activeItem && !activeAwaiting && documentText != null);
   useMediaFullscreenReady(activeReady);
   const { open: fullscreenOpen, close: closeFullscreen } = useMediaFullscreenOpen();
 
@@ -222,7 +227,7 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
               onToggleHighlight(item);
             }}
           >
-            {textEllipsis(item.title || `Markdown ${index + 1}`, 15)}
+            {textEllipsis(item.title || `${kindTitle} ${index + 1}`, 15)}
           </div>
           <div className={styles['chunkBadges']}>
             {isActive && <Badge bg="primary">Viewing</Badge>}
@@ -264,8 +269,8 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
       {awaitingCount > 0 && (
         <Alert variant="warning" className="mb-3">
           {readyCount > 0
-            ? `Still downloading markdown: ${readyCount} / ${items.length} ready`
-            : `Markdown is not ready yet: ${awaitingCount} buffering`}
+            ? `Still downloading ${kindLabel}: ${readyCount} / ${items.length} ready`
+            : `${kindTitle} is not ready yet: ${awaitingCount} buffering`}
         </Alert>
       )}
 
@@ -303,17 +308,21 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
             >
               {decodeError ? (
                 <Alert variant="warning" className="mb-0">
-                  Could not decode this markdown document.
+                  Could not decode this {kindLabel} document.
                 </Alert>
-              ) : markdownText == null ? (
+              ) : documentText == null ? (
                 <div className={styles['markdownLoading']}>
-                  {activeAwaiting ? 'Downloading markdown…' : 'Loading markdown…'}
+                  {activeAwaiting ? `Downloading ${kindLabel}…` : `Loading ${kindLabel}…`}
                 </div>
               ) : (
-                <div className={styles['markdownBody']}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                    {markdownText}
-                  </ReactMarkdown>
+                <div className={[
+                  styles['markdownBody'],
+                  documentKind === 'text' ? styles['markdownBodyPlain'] : '',
+                ].filter(Boolean).join(' ')}
+                >
+                  {documentKind === 'text'
+                    ? <LinkifiedText text={documentText} />
+                    : <MarkdownDocument>{documentText}</MarkdownDocument>}
                 </div>
               )}
             </div>
@@ -321,7 +330,7 @@ const MarkdownPlayback: React.FC<MarkdownPlaybackProps> = ({
           <div className={styles['metaRow']}>
             <div className={styles['progressText']}>
               {activeItem
-                ? `${activeIndex + 1} / ${items.length} · ${activeItem.title || `Markdown ${activeIndex + 1}`}`
+                ? `${activeIndex + 1} / ${items.length} · ${activeItem.title || `${kindTitle} ${activeIndex + 1}`}`
                 : 'No documents'}
             </div>
           </div>

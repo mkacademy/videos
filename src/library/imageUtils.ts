@@ -4,6 +4,7 @@ import {
   initMimePlaceholder,
   markdownMimePlaceholder,
   placeholder,
+  textMimePlaceholder,
   videoMimePlaceholder,
 } from '../utils';
 
@@ -48,6 +49,9 @@ const hasBase64Payload = (url: string): boolean => {
 export const isMarkdownDataUrl = (url: string): boolean =>
   typeof url === 'string' && url.startsWith('data:text/markdown');
 
+export const isPlainTextDataUrl = (url: string): boolean =>
+  typeof url === 'string' && url.startsWith('data:text/plain');
+
 /** Bare markdown miss sentinel — never re-queued (`data:text`). */
 export const isPermanentMarkdownSlotSentinel = (url: string): boolean =>
   typeof url === 'string' && url.trim() === 'data:text';
@@ -56,9 +60,13 @@ export const isPermanentMarkdownSlotSentinel = (url: string): boolean =>
 export const isMarkdownSlotValue = (url: string): boolean =>
   isMarkdownDataUrl(url) || isPermanentMarkdownSlotSentinel(url);
 
+/** Plain text slot (`data:text/plain`, with or without base64 payload). */
+export const isPlainTextSlotValue = (url: string): boolean =>
+  isPlainTextDataUrl(url);
+
 /** True when a media or markdown data-URL already has a non-empty base64 payload. */
 export const hasMediaBase64Payload = (url: string): boolean => {
-  if (isMarkdownDataUrl(url)) return hasBase64Payload(url);
+  if (isMarkdownDataUrl(url) || isPlainTextDataUrl(url)) return hasBase64Payload(url);
   if (!isMediaSlotValue(url)) return false;
   return hasBase64Payload(url);
 };
@@ -93,7 +101,7 @@ export const isMimeOnlyMediaUrl = (url: string): boolean => {
   if (typeof url !== 'string') return false;
   // Permanent UI sentinels — never re-queued by image hydration.
   if (isPermanentMediaSlotSentinel(url)) return false;
-  if (isMarkdownDataUrl(url)) return !hasMediaBase64Payload(url);
+  if (isMarkdownDataUrl(url) || isPlainTextDataUrl(url)) return !hasMediaBase64Payload(url);
   return isMediaSlotValue(url) && !hasMediaBase64Payload(url);
 };
 
@@ -109,8 +117,12 @@ export const isImageSlotValue = (url: string): boolean =>
  * - video/mp4 (init segment) → init placeholder
  * - `data:video` / other video (fragments) → video group placeholder
  * - `data:text/markdown` / bare `data:text` → markdown placeholder
+ * - `data:text/plain` → plain text placeholder
  */
 export const resolveMediaSlotSrc = (url: string): string => {
+  if (isPlainTextSlotValue(url)) {
+    return textMimePlaceholder;
+  }
   if (isMarkdownSlotValue(url)) {
     return markdownMimePlaceholder;
   }

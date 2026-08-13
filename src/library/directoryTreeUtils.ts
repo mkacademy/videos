@@ -105,6 +105,9 @@ export const resolveExportFileName = (title: string, mime: string): string => {
   return `${safe}${ext}`;
 };
 
+export const isTextFileName = (name: string): boolean =>
+  /\.txt$/i.test(name);
+
 export const isMarkdownFileName = (name: string): boolean =>
   /\.md$/i.test(name);
 

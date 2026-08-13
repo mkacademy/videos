@@ -1,0 +1,46 @@
+.wrap {
+  margin: 0 0 1em;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.diagram {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.diagram :global(svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+.pending {
+  margin: 0 0 0.5em;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.error {
+  margin: 0 0 1em;
+  padding: 0.75rem 1rem;
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  border-radius: 8px;
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.errorLabel {
+  margin: 0 0 0.5em;
+  color: #ffc107;
+  font-size: 0.9rem;
+}
+
+.errorSource {
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  color: inherit;
+}

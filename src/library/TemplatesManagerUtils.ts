@@ -21,6 +21,7 @@ import {
   formatContentDescription,
   formatSizeLabel,
   isImageFileName,
+  isTextFileName,
   isUnicodeTextContent,
   MAX_IMAGE_BYTES,
   parseVideoChunkSequence,
@@ -377,7 +378,7 @@ export const buildTutorialTreesFromTextFolder = async (
         continue;
       }
 
-      if (isImageFileName(name)) continue;
+      if (!isTextFileName(name)) continue;
 
       const file = await (entry as FileSystemFileHandle).getFile();
       files.push({ name, file });

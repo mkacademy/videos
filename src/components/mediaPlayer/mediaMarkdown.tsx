@@ -34,7 +34,9 @@ import {
   buildTutorialThumbsLibrary,
   collectCoupledTutorialIdsForCourse,
   exportTutorialBannerMarkdownToDirectory,
+  exportTutorialBannerTextToDirectory,
   resolveMediaPlayerTab,
+  type DocumentMediaKind,
   type MediaPlayerTab,
   type ThumbsPlaylistItem,
 } from './mediaThumbsUtils';
@@ -44,6 +46,7 @@ const accountIconSrc = new URL('../../Images/user.png', import.meta.url).href;
 const exitIconSrc = new URL('../../Images/3094700.png', import.meta.url).href;
 
 function buildLibraryUrl(
+  basePath: string,
   tab: MediaPlayerTab,
   params?: {
     videoId?: number;
@@ -61,7 +64,7 @@ function buildLibraryUrl(
   if (params?.courseId !== undefined) search.set('courseId', String(params.courseId));
   if (params?.tutorialId !== undefined) search.set('tutorialId', String(params.tutorialId));
   if (params?.ldr) search.set('ldr', params.ldr);
-  return `/media-markdown?${search.toString()}`;
+  return `${basePath}?${search.toString()}`;
 }
 
 const MediaMarkdownAccountButton: React.FC = () => {
@@ -122,8 +125,15 @@ const MediaMarkdownTabs: React.FC<{
   </div>
 );
 
-const MediaMarkdown: React.FC = () => {
+type MediaDocumentsProps = {
+  documentKind: DocumentMediaKind;
+};
+
+const MediaDocuments: React.FC<MediaDocumentsProps> = ({ documentKind }) => {
   const dispatch = useDispatch();
+  const basePath = documentKind === 'text' ? '/media-text' : '/media-markdown';
+  const kindLabel = documentKind === 'text' ? 'text' : 'markdown';
+  const slotKind = documentKind;
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const curApp = useSelector((state: RootState) => state.session.curApp);
@@ -192,10 +202,10 @@ const MediaMarkdown: React.FC = () => {
 
   const courseLibrary = useMemo(() => {
     if (quizId !== null) {
-      return buildCourseThumbsLibrary(quizBanners, quizContent, quizId, 'markdown');
+      return buildCourseThumbsLibrary(quizBanners, quizContent, quizId, slotKind);
     }
-    return buildCourseThumbsLibrary(courseBanners, courseContent, undefined, 'markdown');
-  }, [quizId, quizBanners, quizContent, courseBanners, courseContent]);
+    return buildCourseThumbsLibrary(courseBanners, courseContent, undefined, slotKind);
+  }, [quizId, quizBanners, quizContent, courseBanners, courseContent, slotKind]);
 
   const filterCourseContext = useMemo(() => {
     if (courseId === null) return null;
@@ -238,7 +248,7 @@ const MediaMarkdown: React.FC = () => {
       tutorialBanners,
       tutorialContent,
       tutorialFilterIds,
-      'markdown',
+      slotKind,
     );
     if (!filterCourseContext) return entries;
 
@@ -251,7 +261,7 @@ const MediaMarkdown: React.FC = () => {
         : buildThumbsPlaylistFromCourseChapter(
           filterCourseContext.slideGroup,
           entry.id,
-          'markdown',
+          slotKind,
         ).length;
       return {
         ...entry,
@@ -262,11 +272,11 @@ const MediaMarkdown: React.FC = () => {
         isHighlighted: entry.isHighlighted || pennant?.isHighlighted || false,
       };
     });
-  }, [filterCourseContext, tutorialBanners, tutorialContent, tutorialFilterIds]);
+  }, [filterCourseContext, tutorialBanners, tutorialContent, tutorialFilterIds, slotKind]);
 
   const quizLibrary = useMemo(
-    () => buildQuizThumbsLibrary(quizQuizzes, quizBanners, quizContent, 'markdown'),
-    [quizQuizzes, quizBanners, quizContent],
+    () => buildQuizThumbsLibrary(quizQuizzes, quizBanners, quizContent, slotKind),
+    [quizQuizzes, quizBanners, quizContent, slotKind],
   );
 
   const selectedCourseBanner = activeTab === 'course' && videoId !== null
@@ -305,7 +315,7 @@ const MediaMarkdown: React.FC = () => {
     const fromTutorial = buildThumbsPlaylistFromTutorial(
       audioId,
       tutorialContent,
-      'markdown',
+      slotKind,
     );
     if (fromTutorial.length > 0) return fromTutorial;
 
@@ -313,13 +323,13 @@ const MediaMarkdown: React.FC = () => {
       const fromCourseChapter = buildThumbsPlaylistFromCourseChapter(
         filterCourseContext.slideGroup,
         audioId,
-        'markdown',
+        slotKind,
       );
       if (fromCourseChapter.length > 0) return fromCourseChapter;
     }
 
     return [];
-  }, [audioId, filterCourseContext, tutorialContent]);
+  }, [audioId, filterCourseContext, tutorialContent, slotKind]);
 
   const coursePlaylist = useMemo(() => {
     if (!selectedCourseBanner || !selectedCourseSlideGroup) return [] as ThumbsPlaylistItem[];
@@ -327,9 +337,9 @@ const MediaMarkdown: React.FC = () => {
       selectedCourseBanner,
       selectedCourseSlideGroup,
       tutorialContent,
-      'markdown',
+      slotKind,
     );
-  }, [selectedCourseBanner, selectedCourseSlideGroup, tutorialContent]);
+  }, [selectedCourseBanner, selectedCourseSlideGroup, tutorialContent, slotKind]);
 
   React.useEffect(() => () => {
     dispatch(resetPlayback());
@@ -360,43 +370,43 @@ const MediaMarkdown: React.FC = () => {
 
   const handleChangeCourseMedia = useCallback(() => {
     if (videoId !== null) setExitedCourseId(videoId);
-    navigate(buildLibraryUrl('course', {
+    navigate(buildLibraryUrl(basePath, 'course', {
       quizId: quizId ?? undefined,
       courseId: courseId ?? undefined,
       ldr,
     }));
-  }, [courseId, ldr, navigate, quizId, videoId]);
+  }, [basePath, courseId, ldr, navigate, quizId, videoId]);
 
   const handleChangeTutorialMedia = useCallback(() => {
     if (audioId !== null) setExitedTutorialId(audioId);
-    navigate(buildLibraryUrl('tutorial', {
+    navigate(buildLibraryUrl(basePath, 'tutorial', {
       courseId: courseId ?? undefined,
       tutorialId: tutorialId ?? undefined,
       quizId: quizId ?? undefined,
       ldr,
     }));
-  }, [audioId, courseId, ldr, navigate, quizId, tutorialId]);
+  }, [basePath, audioId, courseId, ldr, navigate, quizId, tutorialId]);
 
   const handleViewCourse = useCallback((id: number) => {
     setExitedCourseId(null);
-    navigate(buildLibraryUrl('course', {
+    navigate(buildLibraryUrl(basePath, 'course', {
       videoId: id,
       quizId: quizId ?? undefined,
       courseId: courseId ?? undefined,
       ldr,
     }));
-  }, [courseId, ldr, navigate, quizId]);
+  }, [basePath, courseId, ldr, navigate, quizId]);
 
   const handleViewTutorial = useCallback((id: number) => {
     setExitedTutorialId(null);
-    navigate(buildLibraryUrl('tutorial', {
+    navigate(buildLibraryUrl(basePath, 'tutorial', {
       audioId: id,
       courseId: courseId ?? undefined,
       tutorialId: tutorialId ?? undefined,
       quizId: quizId ?? undefined,
       ldr,
     }));
-  }, [courseId, ldr, navigate, quizId, tutorialId]);
+  }, [basePath, courseId, ldr, navigate, quizId, tutorialId]);
 
   const handleCourseMainImageClick = useCallback((item: ThumbsPlaylistItem) => {
     const resolvedId = item.coupledTutorialId;
@@ -404,14 +414,14 @@ const MediaMarkdown: React.FC = () => {
       dispatch(prependWarning('No tutorial coupled to this cover'));
       return;
     }
-    navigate(buildLibraryUrl('tutorial', {
+    navigate(buildLibraryUrl(basePath, 'tutorial', {
       audioId: resolvedId,
       tutorialId: resolvedId,
       courseId: courseId ?? videoId ?? undefined,
       quizId: quizId ?? undefined,
       ldr,
     }));
-  }, [courseId, dispatch, ldr, navigate, quizId, videoId]);
+  }, [basePath, courseId, dispatch, ldr, navigate, quizId, videoId]);
 
   const handleTogglePlaylistHighlight = useCallback((item: ThumbsPlaylistItem) => {
     const source = item.highlightSource
@@ -456,26 +466,29 @@ const MediaMarkdown: React.FC = () => {
     const root = await pickWritableDirectoryHandle();
     if (!root) return;
 
-    dispatch(viewRequest({ message: 'Exporting markdown... please wait', completed: false }));
+    dispatch(viewRequest({ message: `Exporting ${kindLabel}... please wait`, completed: false }));
     try {
-      const result = await exportTutorialBannerMarkdownToDirectory(root, banner, tutorialContent);
+      const exporter = documentKind === 'text'
+        ? exportTutorialBannerTextToDirectory
+        : exportTutorialBannerMarkdownToDirectory;
+      const result = await exporter(root, banner, tutorialContent);
       if (result.exportedBanners === 0) {
         dispatch(prependError(
           result.errors[0]
           ?? result.skipped[0]
-          ?? 'No markdown to export',
+          ?? `No ${kindLabel} to export`,
         ));
         return;
       }
       result.errors.forEach((msg) => dispatch(prependError(msg)));
       result.skipped.forEach((msg) => dispatch(prependWarning(msg)));
       dispatch(prependWarning(
-        `Exported ${result.exportedImages} markdown files in ${result.exportedBanners} banner folder`,
+        `Exported ${result.exportedImages} ${kindLabel} files in ${result.exportedBanners} banner folder`,
       ));
     } finally {
       dispatch(viewRequest({ completed: true }));
     }
-  }, [dispatch, exportInProgress, exportSupported, tutorialBanners, tutorialContent]);
+  }, [dispatch, documentKind, exportInProgress, exportSupported, kindLabel, tutorialBanners, tutorialContent]);
 
   const tabs = (
     <MediaMarkdownTabs activeTab={activeTab} onSelect={handleTabSelect} />
@@ -494,9 +507,9 @@ const MediaMarkdown: React.FC = () => {
           </div>
           {tabs}
           <Alert variant="warning">
-            No markdown documents found for tutorial id <strong>{audioId}</strong>.
+            {`No ${kindLabel} documents found for tutorial id `}<strong>{audioId}</strong>.
           </Alert>
-          <Link to={buildLibraryUrl('tutorial', {
+          <Link to={buildLibraryUrl(basePath, 'tutorial', {
             courseId: courseId ?? undefined,
             tutorialId: tutorialId ?? undefined,
             quizId: quizId ?? undefined,
@@ -514,6 +527,7 @@ const MediaMarkdown: React.FC = () => {
         title={title}
         items={tutorialPlaylist}
         kind="tutorial"
+        documentKind={documentKind}
         onChangeMedia={handleChangeTutorialMedia}
         onToggleHighlight={handleTogglePlaylistHighlight}
         tabs={tabs}
@@ -530,9 +544,9 @@ const MediaMarkdown: React.FC = () => {
           </div>
           {tabs}
           <Alert variant="warning">
-            No markdown covers found for course id <strong>{videoId}</strong>.
+            {`No ${kindLabel} covers found for course id `}<strong>{videoId}</strong>.
           </Alert>
-          <Link to={buildLibraryUrl('course', {
+          <Link to={buildLibraryUrl(basePath, 'course', {
             quizId: quizId ?? undefined,
             courseId: courseId ?? undefined,
             ldr,
@@ -549,6 +563,7 @@ const MediaMarkdown: React.FC = () => {
         title={selectedCourseBanner.title}
         items={coursePlaylist}
         kind="course"
+        documentKind={documentKind}
         onChangeMedia={handleChangeCourseMedia}
         onMainDocumentClick={handleCourseMainImageClick}
         onToggleHighlight={handleTogglePlaylistHighlight}
@@ -567,7 +582,7 @@ const MediaMarkdown: React.FC = () => {
         <Alert variant="warning">
           Could not open the selected container.
         </Alert>
-        <Link to={buildLibraryUrl(activeTab, {
+        <Link to={buildLibraryUrl(basePath, activeTab, {
           quizId: quizId ?? undefined,
           courseId: courseId ?? undefined,
           tutorialId: tutorialId ?? undefined,
@@ -581,11 +596,11 @@ const MediaMarkdown: React.FC = () => {
   }
 
   const librarySubtitle = activeTab === 'course'
-    ? 'Choose a course to view its covers.'
+    ? `Choose a course to view its ${kindLabel} covers.`
     : activeTab === 'tutorial'
       ? (courseId !== null
-        ? 'Choose a tutorial to view from this course.'
-        : 'Choose a tutorial to view its markdown documents.')
+        ? `Choose a tutorial to view ${kindLabel} from this course.`
+        : `Choose a tutorial to view its ${kindLabel} documents.`)
       : 'Choose a quiz to browse its courses.';
 
   return (
@@ -602,7 +617,7 @@ const MediaMarkdown: React.FC = () => {
       {activeTab === 'course' && quizId !== null && (
         <div className={styles['filterBanner']}>
           <span>Showing courses for quiz #{quizId}</span>
-          <Link to={buildLibraryUrl('quiz', { ldr })}>Back to quizzes</Link>
+          <Link to={buildLibraryUrl(basePath, 'quiz', { ldr })}>Back to quizzes</Link>
         </div>
       )}
 
@@ -613,7 +628,7 @@ const MediaMarkdown: React.FC = () => {
             {courseId}
             {tutorialId !== null ? ` · tutorial #${tutorialId}` : ''}
           </span>
-          <Link to={buildLibraryUrl('course', {
+          <Link to={buildLibraryUrl(basePath, 'course', {
             videoId: courseId,
             quizId: quizId ?? undefined,
             ldr,
@@ -630,7 +645,7 @@ const MediaMarkdown: React.FC = () => {
             Showing tutorial #
             {tutorialId}
           </span>
-          <Link to={buildLibraryUrl('tutorial', { ldr })}>Back to tutorials</Link>
+          <Link to={buildLibraryUrl(basePath, 'tutorial', { ldr })}>Back to tutorials</Link>
         </div>
       )}
 
@@ -638,8 +653,8 @@ const MediaMarkdown: React.FC = () => {
         courseLibrary.length === 0 ? (
           <div className={styles['emptyState']}>
             {quizId !== null
-              ? 'No courses with covers found in this quiz.'
-              : 'No courses with covers found.'}
+              ? `No courses with ${kindLabel} covers found in this quiz.`
+              : `No courses with ${kindLabel} covers found.`}
           </div>
         ) : (
           <div className={styles['libraryList']}>
@@ -693,10 +708,10 @@ const MediaMarkdown: React.FC = () => {
         tutorialLibrary.length === 0 ? (
           <div className={styles['emptyState']}>
             {courseId !== null
-              ? 'No tutorials with markdown documents found for this course.'
+              ? `No tutorials with ${kindLabel} documents found for this course.`
               : tutorialId !== null
-                ? 'No tutorial with markdown documents found for this id.'
-                : 'No tutorials with markdown documents found.'}
+                ? `No tutorial with ${kindLabel} documents found for this id.`
+                : `No tutorials with ${kindLabel} documents found.`}
           </div>
         ) : (
           <div className={styles['libraryList']}>
@@ -736,8 +751,8 @@ const MediaMarkdown: React.FC = () => {
                     <Button
                       variant="outline-secondary"
                       size="sm"
-                      title="Export markdown to folder"
-                      aria-label="Export markdown to folder"
+                      title={`Export ${kindLabel} to folder`}
+                      aria-label={`Export ${kindLabel} to folder`}
                       disabled={exportInProgress}
                       onClick={() => handleExportTutorial(tutorial.id)}
                     >
@@ -763,7 +778,7 @@ const MediaMarkdown: React.FC = () => {
       {activeTab === 'quiz' && (
         quizLibrary.length === 0 ? (
           <div className={styles['emptyState']}>
-            No quizzes with course covers found.
+            {`No quizzes with ${kindLabel} course covers found.`}
           </div>
         ) : (
           <div className={styles['libraryList']}>
@@ -799,7 +814,7 @@ const MediaMarkdown: React.FC = () => {
                 </div>
                 <Button
                   variant="outline-primary"
-                  onClick={() => navigate(buildLibraryUrl('course', { quizId: quiz.id, ldr }))}
+                  onClick={() => navigate(buildLibraryUrl(basePath, 'course', { quizId: quiz.id, ldr }))}
                 >
                   Browse
                 </Button>
@@ -811,5 +826,9 @@ const MediaMarkdown: React.FC = () => {
     </div>
   );
 };
+
+const MediaMarkdown: React.FC = () => <MediaDocuments documentKind="markdown" />;
+
+export const MediaText: React.FC = () => <MediaDocuments documentKind="text" />;
 
 export default MediaMarkdown;

@@ -5,7 +5,7 @@ import { RootState } from '../../store';
 import { COMPLETED_MESSAGE, cpanelMessage } from '../../store/slices/viewSlice';
 import * as styles from '../../styles/roletoggler.module.css';
 
-const MEDIA_PATHS = ['/media-player', '/media-thumbs', '/media-markdown'] as const;
+const MEDIA_PATHS = ['/media-player', '/media-thumbs', '/media-markdown', '/media-text'] as const;
 const WEBAPP_TABS = ['tutorial', 'course', 'quiz'] as const;
 
 const isHydrationMessage = (message: string | undefined): boolean =>
