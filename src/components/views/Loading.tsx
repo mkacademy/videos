@@ -4,6 +4,7 @@ import * as styles from "../../styles/loading.module.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchData } from "../../library/Thunks";
 import { buildFetchDataPayload } from "../../library/ThunksUtils";
+import { buildFallbackSessionQueries } from "../../library/fallbackSessionQuery";
 import { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { RootState } from "../../store";
 import { UnzipAndHydrate } from "../../library/actions";
@@ -12,9 +13,6 @@ import {
   toggleUnzipCourses,
   toggleUnzipQuizzes,
   toggleUnzipTutorials,
-  unzipCoursesTypeSelected,
-  unzipTutorialsTypeSelected,
-  unzipQuizzesTypeSelected,
 } from "../../store/slices/settingsSlice";
 import { setCurPage } from "../../library/Thunks";
 import {
@@ -24,7 +22,6 @@ import {
   resolveEditorDeepLinkSearch,
   type LoadingDeepLinkPair,
 } from "../../loadingRouteUtils";
-import { parseUnzipQueryParam } from "../../library/unzipQuery";
 
 const MIN_LOADING_DELAY_MS = 2_000;
 const MAX_LOADING_WAIT_MS = 30_000;
@@ -79,25 +76,32 @@ const LoadingAnimation: React.FC = () => {
     hasTriggeredUnzip.current = false;
     prevIsNotUnzipping.current = true;
 
-    if (!hasTreeParams && foundPairs.length === 0) return;
-
-    const webapp = primaryLoadingWebapp(resolvedSearch, foundPairs);
-    const unzipTypes = parseUnzipQueryParam(resolvedSearch);
-    dispatch(toggleUnzipTutorials(hasTutorial));
-    dispatch(toggleUnzipCourses(hasCourse));
-    dispatch(toggleUnzipQuizzes(hasQuiz));
-    if (unzipTypes.tutorial) dispatch(unzipTutorialsTypeSelected(unzipTypes.tutorial));
-    if (unzipTypes.course) dispatch(unzipCoursesTypeSelected(unzipTypes.course));
-    if (unzipTypes.quiz) dispatch(unzipQuizzesTypeSelected(unzipTypes.quiz));
+    const isFallback = !hasTreeParams && foundPairs.length === 0;
+    dispatch(toggleUnzipTutorials(isFallback || hasTutorial));
+    dispatch(toggleUnzipCourses(isFallback || hasCourse));
+    dispatch(toggleUnzipQuizzes(isFallback || hasQuiz));
     dispatch(completedUnzipping(true));
     setCurPage(0);
+    const webapp = primaryLoadingWebapp(resolvedSearch, foundPairs);
     dispatch(fetchData(buildFetchDataPayload(
-      { isUnzipCourses: hasCourse, isUnzipQuizzes: hasQuiz, isUnzipTutorials: hasTutorial },
       {
-        search: resolvedSearch,
-        webapp,
-        convolution: webapp,
+        isUnzipCourses: isFallback || hasCourse,
+        isUnzipQuizzes: isFallback || hasQuiz,
+        isUnzipTutorials: isFallback || hasTutorial,
       },
+      isFallback
+        ? {
+            search: resolvedSearch,
+            webapp: 'session',
+            convolution: 'session',
+            requestTake: 1,
+            queriesOverride: buildFallbackSessionQueries('videos'),
+          }
+        : {
+            search: resolvedSearch,
+            webapp,
+            convolution: webapp,
+          },
     )));
   }, [location.search,
     dispatch,
@@ -110,8 +114,6 @@ const LoadingAnimation: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (!hasTreeParams && foundPairs.length === 0) return;
-
     const fetchJustCompleted = prevIsNotUnzipping.current && !isNotUnzipping;
     prevIsNotUnzipping.current = isNotUnzipping;
 
@@ -119,19 +121,19 @@ const LoadingAnimation: React.FC = () => {
       hasTriggeredUnzip.current = true;
       setTimeout(() => dispatch(UnzipAndHydrate()));
     }
-  }, [isNotUnzipping, foundPairs, hasTreeParams, dispatch]);
+  }, [isNotUnzipping, dispatch]);
 
   useEffect(() => {
     hasNavigated.current = false;
 
-    const isDeepLinkExit = hasTreeParams || foundPairs.length > 0;
+    const isFallback = !hasTreeParams && foundPairs.length === 0;
 
     const proceed = () => {
       if (hasNavigated.current) return;
       hasNavigated.current = true;
 
-      if (!isDeepLinkExit) {
-        navigate('/media-player', { replace: true });
+      if (isFallback) {
+        navigate('/media-player?tab=tutorial', { replace: true });
         return;
       }
 
@@ -147,9 +149,7 @@ const LoadingAnimation: React.FC = () => {
 
     const scheduleProceed = (useMaxWait = false) => {
       const now = Date.now();
-      const minRemaining = isDeepLinkExit
-        ? Math.max(0, MIN_LOADING_DELAY_MS - (now - loadStartedAt.current))
-        : 0;
+      const minRemaining = Math.max(0, MIN_LOADING_DELAY_MS - (now - loadStartedAt.current));
 
       let waitMs = minRemaining;
       if (useMaxWait) {
@@ -164,15 +164,11 @@ const LoadingAnimation: React.FC = () => {
       return setTimeout(proceed, waitMs);
     };
 
-    if (!isDeepLinkExit) {
-      const timeout = scheduleProceed();
-      return () => clearTimeout(timeout);
-    }
-
-    const isContentReady =
-      (hasTutorial && !noTutorials) ||
-      (hasCourse && !noCourses) ||
-      (hasQuiz && !noQuizzes);
+    const isContentReady = isFallback
+      ? (!noTutorials || !noCourses || !noQuizzes)
+      : (hasTutorial && !noTutorials) ||
+        (hasCourse && !noCourses) ||
+        (hasQuiz && !noQuizzes);
 
     if (isContentReady) {
       const timeout = scheduleProceed();

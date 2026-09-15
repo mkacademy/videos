@@ -103,7 +103,7 @@ export const Tree = {
 };
 
 export const maxIndexOfApps = 4;
-export const maxIndexOfUserApps = 6;
+export const maxIndexOfUserApps = 7;
 export function capitalizeFirstLetter(string: string | undefined): string {
   if (!string) return '';
   return string.charAt(0).toUpperCase() + string.slice(1);

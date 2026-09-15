@@ -4,6 +4,37 @@ import { fetchingCompleted, hydrateData } from '../../library/actions';
 import { clearData } from './rowSlice';
 import { authenticate, deHydratedRowsDataFetcher } from '../../library/Thunks';
 
+export type SessionItemKind = 'tutorial' | 'course' | 'quiz';
+
+export interface SessionItem {
+  id: number;
+  kind: SessionItemKind;
+  owner: boolean;
+  quote: string;
+  title: string;
+  ordinal: number;
+  bannerId: number;
+  sizeInBytes: number;
+  isDismissed: boolean;
+  isHighlighted: boolean;
+  status: number;
+  descendentsSums: Record<string, number>;
+}
+
+export interface SessionRow {
+  id: number;
+  bannerId: number;
+  owner: boolean;
+  title: string;
+  ordinal: number;
+  content: string;
+  imageurl: string;
+  sizeInBytes: number;
+  isHighlighted: boolean;
+  status: number;
+  descendentsSums: Record<string, number>;
+  isDismissed: boolean;
+}
 
 export interface SessionState {
   curApp: number;
@@ -25,6 +56,8 @@ export interface SessionState {
   username: string | undefined;
   roleIds: number[] | undefined;
   allowMimeOnlyImageurlOverrideOnUpdateSteps: boolean;
+  sessions: SessionRow[];
+  sessionItems: SessionItem[];
 }
 
 const initialState: SessionState = {
@@ -47,6 +80,8 @@ const initialState: SessionState = {
   defaultTake: 100,
   roleIndex: -1,
   allowMimeOnlyImageurlOverrideOnUpdateSteps: false,
+  sessions: [],
+  sessionItems: [],
 };
 
 let loginAttempts = -2;
@@ -77,6 +112,10 @@ const sessionSlice = createSlice({
       }
       else console.log("unknown app ==>", action.payload);
     },
+    setSessions: (state, action: PayloadAction<{ sessions?: SessionRow[]; sessionItems: SessionItem[] }>) => {
+      if (action.payload.sessions) state.sessions = action.payload.sessions;
+      state.sessionItems = action.payload.sessionItems;
+    },
     signedOut: (state) => {
       state.userid = undefined;
       state.curMailer = -1;
@@ -94,6 +133,8 @@ const sessionSlice = createSlice({
       state.defaultTake = 100;
       state.roleIndex = -1;
       state.allowMimeOnlyImageurlOverrideOnUpdateSteps = false;
+      state.sessions = [];
+      state.sessionItems = [];
     },
     setAllowMimeOnlyImageurlOverrideOnUpdateSteps: (state, action: PayloadAction<boolean>) => {
       state.allowMimeOnlyImageurlOverrideOnUpdateSteps = action.payload;
@@ -146,6 +187,7 @@ const sessionSlice = createSlice({
 export const {
   initializedLoading,
   mutateCurApp,
+  setSessions,
   signedOut,
   setAllowMimeOnlyImageurlOverrideOnUpdateSteps,
 } = sessionSlice.actions;

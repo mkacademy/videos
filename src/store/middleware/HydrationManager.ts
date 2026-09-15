@@ -9,13 +9,11 @@ import {
     MappedTutorialTrees,
     registerUnzippedContentTrees,
 } from "../slices/settingsSlice";
-import { FS, FF, FD, sifterTypes, filterTypes, dashboardTypes } from "../../library/commsUtils";
 import { setTutorials } from "../slices/tutorialSlice";
 import { setQuizzes } from "../slices/quizSlice";
 import { parseZipTrees } from "../../library/EncodingManagerUtils";
-import { OutgoingMessage, IncomingMessage } from "../slices/commsSlice";
 import { setCourses } from "../slices/courseSlice";
-import { mutateCurApp } from "../slices/sessionSlice";
+import { mutateCurApp, type SessionItem, type SessionItemKind } from "../slices/sessionSlice";
 import { abortIfHydrationDisabled } from "../../library/hydrationUtils";
 import { CourseTrees, QuizTrees, TutorialTrees } from "../../library/controlPanelUtils";
 import {
@@ -26,6 +24,11 @@ import {
 import type { Banner as CourseBanner, SlideGroup } from "../../library/CourseUtils";
 import type { Banner as TutorialBanner, Content as TutorialContent } from "../slices/tutorialSlice";
 import type { Quiz } from "../../library/QuizUtils";
+import {
+    getDeepLinkTreeIds,
+    resolveEditorDeepLinkSearch,
+    type DeepLinkTreeIds,
+} from "../../loadingRouteUtils";
 
 const UNZIP_COMPLETE_POLL_MS = 2000;
 export interface ItemWithTutorialTrees {
@@ -40,6 +43,32 @@ export interface ItemWithQuizTrees {
     Trees: QuizTrees;
     TreesId: number;
 }
+
+const isZipQuote = (quote: string | undefined): quote is string =>
+    typeof quote === 'string' && quote.trim() !== '' && quote.trim() !== '.';
+
+const hasTrees = (trees: object): boolean => Object.keys(trees).length > 0;
+
+const collectKindTrees = <T extends CourseTrees | TutorialTrees | QuizTrees>(
+    sessionItems: SessionItem[],
+    kind: SessionItemKind,
+    enabled: boolean,
+    targetTreeId: number | undefined,
+    restrictToUrlIds: boolean,
+    alreadyUnzipped: Set<number>,
+): Array<{ TreesId: number; Trees: T }> => {
+    if (!enabled) return [];
+    if (restrictToUrlIds && targetTreeId === undefined) return [];
+    const collected: Array<{ TreesId: number; Trees: T }> = [];
+    for (const item of sessionItems) {
+        if (item.kind !== kind || alreadyUnzipped.has(item.id) || !isZipQuote(item.quote)) continue;
+        if (targetTreeId !== undefined && item.id !== targetTreeId) continue;
+        const Trees = parseZipTrees<T>(item.quote);
+        if (!hasTrees(Trees)) continue;
+        collected.push({ TreesId: item.id, Trees });
+    }
+    return collected;
+};
 const scheduleCompletedUnzippingWhenIdle = (
     dispatch:  (action: ReturnType<typeof completedUnzipping>) => void,
 ) => {
@@ -64,67 +93,42 @@ const HydrationManager: Middleware<{}, RootState> = ({ dispatch, getState }) => 
                 isUnzipCourses,
                 isUnzipTutorials,
                 isUnzipQuizzes,
-                unzipCoursesType,
-                unzipTutorialsType,
-                unzipQuizzesType,
                 TutorialTrees,
                 CourseTrees,
                 QuizTrees,
             },
-            comms: { outgoing, incoming },
+            session: { sessionItems },
         } = state;
 
-        const tutorialTrees: ItemWithTutorialTrees[] = [];
-        const courseTrees: ItemWithCourseTrees[] = [];
-        const quizTrees: ItemWithQuizTrees[] = [];
+        const treeIds: DeepLinkTreeIds = typeof window !== 'undefined'
+            ? getDeepLinkTreeIds(resolveEditorDeepLinkSearch(window.location.search))
+            : {};
+        const restrictToUrlIds = Object.keys(treeIds).length > 0;
 
-        if (isUnzipCourses) {
-            const unzippedTreeIds = new Set(Object.keys(CourseTrees).map(Number));
-            if (unzipCoursesType === "outgoing" || unzipCoursesType === "incoming_and_outgoing") {
-                for (const { type, id, text } of outgoing as OutgoingMessage[]) {
-                    if (!sifterTypes.includes(type) || unzippedTreeIds.has(id)) continue;
-                    courseTrees.push({ TreesId: id, Trees: parseZipTrees<CourseTrees>(text) });
-                }
-            }
-            if (unzipCoursesType === "incoming" || unzipCoursesType === "incoming_and_outgoing") {
-                for (const { type, id, text } of incoming as IncomingMessage[]) {
-                    if (type !== FS || unzippedTreeIds.has(id)) continue;
-                    courseTrees.push({ TreesId: id, Trees: parseZipTrees<CourseTrees>(text) });
-                }
-            }
-        }
-
-        if (isUnzipTutorials) {
-            const unzippedTreeIds = new Set(Object.keys(TutorialTrees).map(Number));
-            if (unzipTutorialsType === "outgoing" || unzipTutorialsType === "incoming_and_outgoing") {
-                for (const { type, id, text } of outgoing as OutgoingMessage[]) {
-                    if (!filterTypes.includes(type) || unzippedTreeIds.has(id)) continue;
-                    tutorialTrees.push({ TreesId: id, Trees: parseZipTrees<TutorialTrees>(text) });
-                }
-            }
-            if (unzipTutorialsType === "incoming" || unzipTutorialsType === "incoming_and_outgoing") {
-                for (const { type, id, text } of incoming as IncomingMessage[]) {
-                    if (type !== FF || unzippedTreeIds.has(id)) continue;
-                    tutorialTrees.push({ TreesId: id, Trees: parseZipTrees<TutorialTrees>(text) });
-                }
-            }
-        }
-
-        if (isUnzipQuizzes) {
-            const unzippedTreeIds = new Set(Object.keys(QuizTrees).map(Number));
-            if (unzipQuizzesType === "outgoing" || unzipQuizzesType === "incoming_and_outgoing") {
-                for (const { type, id, text } of outgoing as OutgoingMessage[]) {
-                    if (!dashboardTypes.includes(type) || unzippedTreeIds.has(id)) continue;
-                    quizTrees.push({ TreesId: id, Trees: parseZipTrees<QuizTrees>(text) });
-                }
-            }
-            if (unzipQuizzesType === "incoming" || unzipQuizzesType === "incoming_and_outgoing") {
-                for (const { type, id, text } of incoming as IncomingMessage[]) {
-                    if (type !== FD || unzippedTreeIds.has(id)) continue;
-                    quizTrees.push({ TreesId: id, Trees: parseZipTrees<QuizTrees>(text) });
-                }
-            }
-        }
+        const tutorialTrees: ItemWithTutorialTrees[] = collectKindTrees<TutorialTrees>(
+            sessionItems,
+            'tutorial',
+            isUnzipTutorials,
+            treeIds.tutorial,
+            restrictToUrlIds,
+            new Set(Object.keys(TutorialTrees).map(Number)),
+        );
+        const courseTrees: ItemWithCourseTrees[] = collectKindTrees<CourseTrees>(
+            sessionItems,
+            'course',
+            isUnzipCourses,
+            treeIds.course,
+            restrictToUrlIds,
+            new Set(Object.keys(CourseTrees).map(Number)),
+        );
+        const quizTrees: ItemWithQuizTrees[] = collectKindTrees<QuizTrees>(
+            sessionItems,
+            'quiz',
+            isUnzipQuizzes,
+            treeIds.quiz,
+            restrictToUrlIds,
+            new Set(Object.keys(QuizTrees).map(Number)),
+        );
 
         if (courseTrees.length > 0) {
             const banners: CourseBanner[] = [];

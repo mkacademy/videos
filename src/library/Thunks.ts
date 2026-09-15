@@ -220,14 +220,11 @@ export const fetchData = createAsyncThunk<
     'fetchData',
     async (payload: FetchDataPayload, { rejectWithValue, getState, dispatch, requestId }) => {
         const state = getState() as RootState;
-        const { convolution, search, webapp } = payload;
+        const { convolution, search, webapp, requestTake: payloadTake, queriesOverride } = payload;
         const {
             isUnzipCourses,
             isUnzipTutorials,
             isUnzipQuizzes,
-            unzipCoursesType,
-            unzipTutorialsType,
-            unzipQuizzesType,
         } = state.settings;
         const {
             curApp,
@@ -243,16 +240,13 @@ export const fetchData = createAsyncThunk<
             isUnzipCourses,
             isUnzipTutorials,
             isUnzipQuizzes,
-            unzipCoursesType,
-            unzipTutorialsType,
-            unzipQuizzesType,
             convolution,
             webapp,
-            search,
         };
         const [unzippedApp, unzippedAppName, unzippedAppConvolution] = getUnzippedApp(args);
         try {
             const isAccount = !isIncognito && curToken;
+            const requestTake = payloadTake ?? defaultTake;
             const params = isAccount
                 ? {
                     state,
@@ -264,7 +258,8 @@ export const fetchData = createAsyncThunk<
                     counts: {} ,
                     curApp: unzippedApp,
                     executedQueries:  {} ,
-                    requestTake: defaultTake,
+                    requestTake,
+                    queriesOverride,
                     convolution: unzippedAppName,
                     formatter: unzippedAppConvolution,
                     path: ToolKit.authenticatedRecordsUrl,
@@ -273,7 +268,8 @@ export const fetchData = createAsyncThunk<
                     state,
                     search,
                     curApp: unzippedApp,
-                    requestTake: defaultTake,
+                    requestTake,
+                    queriesOverride,
                     convolution: unzippedAppName,
                     formatter: unzippedAppConvolution,
                     counts: {} ,
@@ -308,22 +304,16 @@ export const fetchData = createAsyncThunk<
 type UnzipFetchArgs = {
     curApp: number;
     webapp: string;
-    search: string;
     convolution: string;
     isUnzipCourses: boolean;
     isUnzipQuizzes: boolean;
     isUnzipTutorials: boolean;
-    unzipCoursesType: string;
-    unzipTutorialsType: string;
-    unzipQuizzesType: string;
 };
 
 let curskip = 0;
 export const getCurSkip = () => curskip;
 
-
-let curPage = 0;
-export const setCurPage = (page: number) => (curPage = page);
+export const setCurPage = (_page: number) => { };
 const getUnzippedApp = (args: UnzipFetchArgs): [number, string, string] => {
     const {
         curApp,
@@ -332,83 +322,16 @@ const getUnzippedApp = (args: UnzipFetchArgs): [number, string, string] => {
         isUnzipCourses,
         isUnzipTutorials,
         isUnzipQuizzes,
-        unzipCoursesType,
-        unzipTutorialsType,
-        unzipQuizzesType,
     } = args;
     const _webapp = webapp.toLowerCase();
-    switch (_webapp) {
-
-        case 'course': {
-            if (isUnzipCourses && unzipCoursesType === "incoming_and_outgoing") {
-                const _app = curPage % 2 === 0 ? (curPage++, "outgoing") : (curPage++, "incoming");
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            if (isUnzipCourses && unzipCoursesType === "incoming") {
-                curPage++;
-                const _app = "incoming";
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            if (isUnzipCourses && unzipCoursesType === "outgoing") {
-                curPage++;
-                const _app = "outgoing";
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            return [curApp, webapp, convolution];
-        }
-        case 'tutorial': {
-            if (isUnzipTutorials && unzipTutorialsType === "incoming_and_outgoing") {
-                const _app = curPage % 2 === 0 ? (curPage++, "outgoing") : (curPage++, "incoming");
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            if (isUnzipTutorials && unzipTutorialsType === "incoming") {
-                curPage++;
-                const _app = "incoming";
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            if (isUnzipTutorials && unzipTutorialsType === "outgoing") {
-                curPage++;
-                const _app = "outgoing";
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            return [curApp, webapp, convolution];
-        }
-        case 'quiz': {
-            if (isUnzipQuizzes && unzipQuizzesType === "incoming_and_outgoing") {
-                const _app = curPage % 2 === 0 ? (curPage++, "outgoing") : (curPage++, "incoming");
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            if (isUnzipQuizzes && unzipQuizzesType === "incoming") {
-                curPage++;
-                const _app = "incoming";
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            if (isUnzipQuizzes && unzipQuizzesType === "outgoing") {
-                curPage++;
-                const _app = "outgoing";
-                const [index, _] = getCurAppIndex(_app)
-                const _a = index ?? curApp.toString();
-                return [parseInt(_a), _app, _app];
-            }
-            return [curApp, webapp, convolution];
-        }
-        default:
-            return [curApp, webapp, convolution];
+    const remapToSession =
+        _webapp === 'session'
+        || (_webapp === 'tutorial' && isUnzipTutorials)
+        || (_webapp === 'course' && isUnzipCourses)
+        || (_webapp === 'quiz' && isUnzipQuizzes);
+    if (remapToSession) {
+        const [index] = getCurAppIndex('session');
+        return [parseInt(index ?? '7'), 'session', 'session'];
     }
+    return [curApp, webapp, convolution];
 }

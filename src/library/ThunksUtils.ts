@@ -9,6 +9,12 @@ import { Quiz } from '../store/slices/quizSlice';
 import { QueryParams } from '../store/types';
 import { RootState } from '../store';
 import { setOutgoings, setIncomings } from '../store/slices/commsSlice';
+import {
+    setSessions,
+    type SessionItem,
+    type SessionItemKind,
+    type SessionRow,
+} from '../store/slices/sessionSlice';
 
 
 
@@ -25,6 +31,7 @@ interface RecordParams {
     requestTake: number;
     curToken?: string | null;
     fetchRole?: string | null;
+    queriesOverride?: Record<string, Executedquery>;
     path: string;
 }
 
@@ -44,7 +51,7 @@ const getAccountBody = async (params: RecordParams) => {
     }
     const requestBody = {
         counts: {},
-        queries: {},
+        queries: params.queriesOverride ?? {},
         state: stateProps,
         searchedRoutes: null,
         mailer: params.mailer,
@@ -103,7 +110,7 @@ const getAnonymousBody = async (params: RecordParams) => {
     };
     const requestBody = {
         counts: {},
-        queries: {},
+        queries: params.queriesOverride ?? {},
         state: stateProps,
         searchedRoutes: null,
         search: params.search,
@@ -140,6 +147,7 @@ export interface Executedquery {
     isPrivateView?: boolean;
     parentIDs?: number[];
     childIDs?: number[];
+    parentIds?: number[];
     search?: string;
     take?: number;
     skip?: number;
@@ -150,6 +158,8 @@ export interface FetchDataPayload {
     convolution: string;
     webapp: string;
     search: string;
+    requestTake?: number;
+    queriesOverride?: Record<string, Executedquery>;
 }
 
 export interface MinimumFeatureModeFlags {
@@ -257,7 +267,9 @@ export interface FetchedData {
     banners?: Banner[] | TutorialBanner[];
     counts: Record<string, Record<string, number>>;
     executedQueries?: Record<string, Executedquery>;
-    content?: OutgoingMessage[] | IncomingMessage[];
+    content?: OutgoingMessage[] | IncomingMessage[] | SessionRow[];
+    sessions?: SessionRow[];
+    sessionItems?: Array<Partial<SessionItem> & { id: number; sender?: string; purpose?: string }>;
 }
 
 interface validateThenDispatchPayload {
@@ -277,6 +289,11 @@ export const validateThenDispatch = ({
 
     const { content } = response;
     const routeReasons: string[] = [];
+    if (isSessionResponse(response)) {
+        console.log("is_session_response");
+        dispatch(setSessions(normalizeSessionDomainPayload(response)));
+        return;
+    }
     if (content && Array.isArray(content) && content.length > 0) {
         if (isArrayOfType(content, isOutgoingMessage)) {
             console.log("is_outgoing_response");
@@ -285,6 +302,13 @@ export const validateThenDispatch = ({
         else if (isArrayOfType(content, isIncomingMessage)) {
             console.log("is_incoming_response");
             dispatch(setIncomings(content));
+        }
+        else if (isArrayOfType(content, isSessionRow)) {
+            console.log("is_session_response");
+            dispatch(setSessions(normalizeSessionDomainPayload({
+                sessions: content,
+                sessionItems: response.sessionItems,
+            })));
         }
     } else {
         console.log("is_empty_response");
@@ -297,6 +321,68 @@ export const validateThenDispatch = ({
 
 const isArrayOfType = <T>(arr: unknown[], typeGuard: (item: unknown) => item is T): arr is T[] => {
     return Array.isArray(arr) && arr.every((item) => typeGuard(item));
+};
+
+const SESSION_ITEM_KINDS = new Set<SessionItemKind>(['tutorial', 'course', 'quiz']);
+
+const coerceSessionItemKind = (value: unknown, sender?: string): SessionItemKind => {
+    if (typeof value === 'string' && SESSION_ITEM_KINDS.has(value as SessionItemKind)) {
+        return value as SessionItemKind;
+    }
+    if (sender === 'course' || sender === 'quiz' || sender === 'tutorial') return sender;
+    return 'tutorial';
+};
+
+const sessionItemQuote = (item: { quote?: string; purpose?: string }): string => {
+    if (typeof item.quote === 'string' && item.quote.trim() !== '' && item.quote !== '.') {
+        return item.quote;
+    }
+    if (typeof item.purpose === 'string' && item.purpose.trim() !== '') {
+        return item.purpose;
+    }
+    return typeof item.quote === 'string' && item.quote.length > 0 ? item.quote : '.';
+};
+
+const normalizeSessionDomainPayload = (payload: {
+    sessions?: SessionRow[];
+    sessionItems?: Array<Partial<SessionItem> & { id: number; sender?: string; purpose?: string }>;
+    content?: unknown;
+}): { sessions?: SessionRow[]; sessionItems: SessionItem[] } => {
+    const sessions = payload.sessions
+        ?? (Array.isArray(payload.content) && isArrayOfType(payload.content, isSessionRow)
+            ? payload.content
+            : undefined);
+    const items: SessionItem[] = (payload.sessionItems ?? []).map((item, index) => ({
+        id: item.id,
+        kind: coerceSessionItemKind(item.kind, item.sender),
+        owner: item.owner !== false,
+        quote: sessionItemQuote(item),
+        title: item.title ?? 'Item',
+        ordinal: item.ordinal ?? index,
+        bannerId: item.bannerId ?? 0,
+        sizeInBytes: item.sizeInBytes ?? 0,
+        isDismissed: item.isDismissed ?? false,
+        isHighlighted: item.isHighlighted ?? false,
+        status: typeof item.status === 'number' ? item.status : 0,
+        descendentsSums: item.descendentsSums ?? {},
+    }));
+    return {
+        ...(sessions ? { sessions } : {}),
+        sessionItems: items,
+    };
+};
+
+const isSessionResponse = (response: FetchedData): boolean => {
+    const sessions = response.sessions;
+    const sessionItems = response.sessionItems;
+    return (Array.isArray(sessions) && sessions.length > 0)
+        || (Array.isArray(sessionItems) && sessionItems.length > 0);
+};
+
+const isSessionRow = (item: unknown): item is SessionRow => {
+    if (typeof item !== 'object' || item === null) return false;
+    const o = item as Record<string, unknown>;
+    return typeof o.id === 'number' && typeof o.bannerId === 'number' && !('mailer' in o) && !('email' in o);
 };
 
 

@@ -117,6 +117,6 @@ export const isOnLoadingScreen = (): boolean => {
   return !!basename && (pathname === basename || pathname === `${basename}/`);
 };
 
-/** Loading mounts at `/` with valid deep-link params and enforces its own min delay. */
+/** Loading mounts at `/` and enforces its own min delay (deep-link or fallback). */
 export const willLoadingEnforceMinDelay = (): boolean =>
-  isOnLoadingScreen() && hasLoadingDeepLinkParams(window.location.search);
+  isOnLoadingScreen();
