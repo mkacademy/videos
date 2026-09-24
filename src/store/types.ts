@@ -6,7 +6,6 @@ import { CourseState } from './slices/courseSlice';
 import { PaginationState } from './slices/paginationSlice';
 import { QuizState } from './slices/quizSlice';
 import { TutorialState } from './slices/tutorialSlice';
-import { CommsState } from './slices/commsSlice';
 import { TextState } from './slices/textSlice';
 import { RowState } from './slices/rowSlice';
 import { SettingsState } from './slices/settingsSlice';
@@ -18,7 +17,6 @@ export interface RootState {
   session: SessionState;
   view: ViewState;
   error: ErrorState;
-  comms: CommsState;
   tutorial: TutorialState;
   course: CourseState;
   quiz: QuizState;

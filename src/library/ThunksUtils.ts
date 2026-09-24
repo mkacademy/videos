@@ -2,13 +2,12 @@ import { jwtDecode } from 'jwt-decode';
 import { createSelector, Dispatch } from '@reduxjs/toolkit';
 import { Banner as TutorialBanner } from '../store/slices/tutorialSlice';
 import { Banner } from './CourseUtils';
-import { IncomingMessage, OutgoingMessage } from '../store/slices/commsSlice';
 import { ToolKit, getCurAppName, timeout } from '../utils';
 import { ResultPayload } from '../store/slices/rowSlice';
 import { Quiz } from '../store/slices/quizSlice';
 import { QueryParams } from '../store/types';
 import { RootState } from '../store';
-import { setOutgoings, setIncomings } from '../store/slices/commsSlice';
+import { getDeepLinkTreeIds, resolveEditorDeepLinkSearch } from '../loadingRouteUtils';
 import {
     setSessions,
     type SessionItem,
@@ -22,7 +21,7 @@ const expireMessage = 'Token has expired, sign out and sign in again';
 
 interface RecordParams {
     curApp: number;
-    search: string;
+    search: string | null;
     mailer?: number;
     state: RootState;
     formatter: string;
@@ -147,6 +146,7 @@ export interface Executedquery {
     isPrivateView?: boolean;
     parentIDs?: number[];
     childIDs?: number[];
+    childIds?: number[];
     parentIds?: number[];
     search?: string;
     take?: number;
@@ -157,7 +157,7 @@ export interface FetchDataPayload {
     isMinimumFeatureMode?: boolean;
     convolution: string;
     webapp: string;
-    search: string;
+    search: string | null;
     requestTake?: number;
     queriesOverride?: Record<string, Executedquery>;
 }
@@ -267,7 +267,7 @@ export interface FetchedData {
     banners?: Banner[] | TutorialBanner[];
     counts: Record<string, Record<string, number>>;
     executedQueries?: Record<string, Executedquery>;
-    content?: OutgoingMessage[] | IncomingMessage[] | SessionRow[];
+    content?: SessionRow[];
     sessions?: SessionRow[];
     sessionItems?: Array<Partial<SessionItem> & { id: number; sender?: string; purpose?: string }>;
 }
@@ -291,24 +291,24 @@ export const validateThenDispatch = ({
     const routeReasons: string[] = [];
     if (isSessionResponse(response)) {
         console.log("is_session_response");
-        dispatch(setSessions(normalizeSessionDomainPayload(response)));
+        const normalized = normalizeSessionDomainPayload(response);
+        dispatch(setSessions({
+            ...normalized,
+            sessionItems: filterSessionItemsByDeepLinkTreeIds(normalized.sessionItems),
+        }));
         return;
     }
     if (content && Array.isArray(content) && content.length > 0) {
-        if (isArrayOfType(content, isOutgoingMessage)) {
-            console.log("is_outgoing_response");
-            dispatch(setOutgoings(content));
-        }
-        else if (isArrayOfType(content, isIncomingMessage)) {
-            console.log("is_incoming_response");
-            dispatch(setIncomings(content));
-        }
-        else if (isArrayOfType(content, isSessionRow)) {
+        if (isArrayOfType(content, isSessionRow)) {
             console.log("is_session_response");
-            dispatch(setSessions(normalizeSessionDomainPayload({
+            const normalized = normalizeSessionDomainPayload({
                 sessions: content,
                 sessionItems: response.sessionItems,
-            })));
+            });
+            dispatch(setSessions({
+                ...normalized,
+                sessionItems: filterSessionItemsByDeepLinkTreeIds(normalized.sessionItems),
+            }));
         }
     } else {
         console.log("is_empty_response");
@@ -321,6 +321,14 @@ export const validateThenDispatch = ({
 
 const isArrayOfType = <T>(arr: unknown[], typeGuard: (item: unknown) => item is T): arr is T[] => {
     return Array.isArray(arr) && arr.every((item) => typeGuard(item));
+};
+
+const filterSessionItemsByDeepLinkTreeIds = (items: SessionItem[]): SessionItem[] => {
+    if (typeof window === 'undefined') return items;
+    const treeIds = getDeepLinkTreeIds(resolveEditorDeepLinkSearch(window.location.search));
+    const allowedIds = new Set(Object.values(treeIds));
+    if (allowedIds.size === 0) return items;
+    return items.filter((item) => allowedIds.has(item.id));
 };
 
 const SESSION_ITEM_KINDS = new Set<SessionItemKind>(['tutorial', 'course', 'quiz']);
@@ -385,24 +393,6 @@ const isSessionRow = (item: unknown): item is SessionRow => {
     return typeof o.id === 'number' && typeof o.bannerId === 'number' && !('mailer' in o) && !('email' in o);
 };
 
-
-const isOutgoingMessage = (item: unknown): item is OutgoingMessage => {
-    if (typeof item !== 'object' || item === null) return false;
-    const o = item as Record<string, unknown>;
-    // OutgoingMessage has mailer as undefined (not present), no email, status as object
-    return typeof o.status === 'object' &&
-        typeof o.mailer === 'undefined' &&
-        !('email' in o);
-};
-
-const isIncomingMessage = (item: unknown): item is IncomingMessage => {
-    if (typeof item !== 'object' || item === null) return false;
-    const o = item as Record<string, unknown>;
-    // IncomingMessage has mailer as number, no email, status as object
-    return typeof o.status === 'object' &&
-        typeof o.mailer === 'number' &&
-        !('email' in o);
-};
 
 const logGuardInvalidReasons = (guardName: string, reasons: string[], response: unknown) => {
     if (reasons.length === 0) return;

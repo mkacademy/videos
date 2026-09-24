@@ -4,7 +4,7 @@ import * as styles from "../../styles/loading.module.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchData } from "../../library/Thunks";
 import { buildFetchDataPayload } from "../../library/ThunksUtils";
-import { buildFallbackSessionQueries } from "../../library/fallbackSessionQuery";
+import { buildDeepLinkSessionQueries, buildFallbackSessionQueries } from "../../library/fallbackSessionQuery";
 import { ThunkDispatch, UnknownAction } from "@reduxjs/toolkit";
 import { RootState } from "../../store";
 import { UnzipAndHydrate } from "../../library/actions";
@@ -17,6 +17,7 @@ import {
 import { setCurPage } from "../../library/Thunks";
 import {
   LOADING_DEEP_LINK_PAIRS,
+  getDeepLinkTreeIds,
   parseLoadingTreeFlags,
   primaryLoadingWebapp,
   resolveEditorDeepLinkSearch,
@@ -82,7 +83,6 @@ const LoadingAnimation: React.FC = () => {
     dispatch(toggleUnzipQuizzes(isFallback || hasQuiz));
     dispatch(completedUnzipping(true));
     setCurPage(0);
-    const webapp = primaryLoadingWebapp(resolvedSearch, foundPairs);
     dispatch(fetchData(buildFetchDataPayload(
       {
         isUnzipCourses: isFallback || hasCourse,
@@ -98,9 +98,11 @@ const LoadingAnimation: React.FC = () => {
             queriesOverride: buildFallbackSessionQueries('videos'),
           }
         : {
-            search: resolvedSearch,
-            webapp,
-            convolution: webapp,
+            search: null,
+            webapp: 'session',
+            convolution: 'session',
+            requestTake: 1,
+            queriesOverride: buildDeepLinkSessionQueries(getDeepLinkTreeIds(resolvedSearch)),
           },
     )));
   }, [location.search,
