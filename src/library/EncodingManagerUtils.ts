@@ -24,6 +24,25 @@ type UnsignFunction<T> = (obj: T, username: string) => Partial<TutorialState>
   & { Trees: QuizTrees };
 
 
+export const ZIP_QUOTE_MIME = "data:application/json";
+export const ZIP_QUOTE_SENTINEL = "data:application";
+export const ZIP_QUOTE_DATA_PREFIX = "data:application/json;base64,";
+
+/**
+ * Strip `data:application/json;base64,` when present.
+ * Mime-only / bare sentinel → empty (cannot unzip). Raw base64 is returned unchanged.
+ */
+export const unwrapZipQuote = (value: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed === ZIP_QUOTE_MIME || trimmed === ZIP_QUOTE_SENTINEL) {
+    return "";
+  }
+  if (trimmed.startsWith(ZIP_QUOTE_DATA_PREFIX)) {
+    return trimmed.slice(ZIP_QUOTE_DATA_PREFIX.length).trim();
+  }
+  return trimmed;
+};
+
 export const parse = <T = CourseBanner | TutorialBanner | Quiz | SlideGroup | TutorialContent>(
   encodedStr: string,
   username: string,
@@ -52,7 +71,9 @@ export const parseZipTrees = <T extends CourseTrees | TutorialTrees | QuizTrees 
   encodedStr: string,
 ): T => {
   try {
-    const obj = JSON.parse(Buffer.from(encodedStr, "base64").toString()) as { Trees?: T };
+    const payload = unwrapZipQuote(encodedStr);
+    if (!payload) return {} as T;
+    const obj = JSON.parse(Buffer.from(payload, "base64").toString()) as { Trees?: T };
     return (obj.Trees ?? {}) as T;
   } catch (error) {
     console.log((error as Error).message);
