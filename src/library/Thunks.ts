@@ -14,7 +14,7 @@ import {
     AuthPayload,
 } from "./types";
 import { RootState } from "../store";
-import { anonymousFetch, authenticatedFetch, FetchDataPayload } from "./ThunksUtils";
+import { anonymousFetch, authenticatedFetch, FetchDataPayload, jsonHeaders } from "./ThunksUtils";
 import { QueryParams } from "../store/types";
 import { Executedquery, validateThenDispatch } from "./ThunksUtils";
 import { getAccountRecords, getAnonymousRecords } from "./ThunksUtils";
@@ -40,7 +40,7 @@ export const authenticate = createAsyncThunk<Partial<SessionState>, AuthPayload,
         const timeoutId = setTimeout(() => controller.abort(), timeout);
         try {
             const response = await fetch(ToolKit.accountLoginUrl, {
-                headers: { 'Content-Type': 'application/json' },
+                headers: jsonHeaders,
                 body: JSON.stringify(variables),
                 method: 'POST',
                 signal: controller.signal,

@@ -19,6 +19,11 @@ import {
 
 const expireMessage = 'Token has expired, sign out and sign in again';
 
+export const jsonHeaders = {
+    'Content-Type': 'application/json',
+    group: '1',
+} as const;
+
 interface RecordParams {
     curApp: number;
     search: string | null;
@@ -76,7 +81,7 @@ export const getAccountRecords = async (params: RecordParams) => {
     try {
         const response = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: jsonHeaders,
             body: await getAccountBody(params),
             signal: controller.signal,
         });
@@ -126,7 +131,7 @@ export const getAnonymousRecords = async (params: RecordParams) => {
     try {
         const response = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: jsonHeaders,
             body: await getAnonymousBody(params),
             signal: controller.signal,
         });
@@ -199,7 +204,7 @@ export const anonymousFetch = async (query: QueryParams): Promise<ResultPayload>
     try {
         const response = await fetch(ToolKit.anonymousFetcherUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: jsonHeaders,
             body: JSON.stringify(query),
             signal: controller.signal
         });
@@ -233,7 +238,7 @@ export const authenticatedFetch = async (query: QueryParams): Promise<ResultPayl
     try {
         const response = await fetch(ToolKit.authenticatedFetcherUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: jsonHeaders,
             body: JSON.stringify(query),
             signal: controller.signal
         });
