@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as styles from "../../styles/loading.module.css";
 import { useDispatch, useSelector } from "react-redux";
@@ -18,16 +18,18 @@ import { setCurPage } from "../../library/Thunks";
 import {
   LOADING_DEEP_LINK_PAIRS,
   getDeepLinkTreeIds,
+  hasLoadingDeepLinkParams,
   parseLoadingTreeFlags,
   primaryLoadingWebapp,
   resolveEditorDeepLinkSearch,
   type LoadingDeepLinkPair,
 } from "../../loadingRouteUtils";
+import SearchLanding from "./SearchLanding";
 
 const MIN_LOADING_DELAY_MS = 2_000;
 const MAX_LOADING_WAIT_MS = 30_000;
 
-const LoadingAnimation: React.FC = () => {
+const LoadingScreen: React.FC<{ fallbackSearch: string }> = ({ fallbackSearch }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch<ThunkDispatch<RootState, unknown, UnknownAction>>();
@@ -95,7 +97,7 @@ const LoadingAnimation: React.FC = () => {
             webapp: 'session',
             convolution: 'session',
             requestTake: 1,
-            queriesOverride: buildFallbackSessionQueries('videos'),
+            queriesOverride: buildFallbackSessionQueries(fallbackSearch),
           }
         : {
             search: null,
@@ -113,6 +115,7 @@ const LoadingAnimation: React.FC = () => {
     hasQuiz,
     hasTreeParams,
     resolvedSearch,
+    fallbackSearch,
   ]);
 
   useEffect(() => {
@@ -202,6 +205,28 @@ const LoadingAnimation: React.FC = () => {
       <span></span>
     </div>
   );
+};
+
+/** Last submitted landing search; kept in memory so returning to `/` (e.g. after login) reuses it. */
+let lastFallbackSearch: string | null = null;
+
+/** No valid deep-link params: ask for the fallback search text before loading. */
+const LoadingAnimation: React.FC = () => {
+  const location = useLocation();
+  const [fallbackSearch, setFallbackSearch] = useState<string | null>(lastFallbackSearch);
+  const hasParams = hasLoadingDeepLinkParams(resolveEditorDeepLinkSearch(location.search));
+
+  if (!hasParams && fallbackSearch === null) {
+    return (
+      <SearchLanding
+        onSearch={(text) => {
+          lastFallbackSearch = text;
+          setFallbackSearch(text);
+        }}
+      />
+    );
+  }
+  return <LoadingScreen fallbackSearch={fallbackSearch ?? ""} />;
 };
 
 export default LoadingAnimation;

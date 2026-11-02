@@ -18,7 +18,7 @@ const childRecordsQuery = (childId: number): Executedquery => ({
 });
 
 export const buildFallbackSessionQueries = (
-  search: 'videos' | 'images',
+  search: string,
 ): Record<string, Executedquery> => ({
   dashboardsinstructionsrecords: {
     take: FALLBACK_TAKE,
