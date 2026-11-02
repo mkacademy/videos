@@ -25,6 +25,7 @@ import {
   type LoadingDeepLinkPair,
 } from "../../loadingRouteUtils";
 import SearchLanding from "./SearchLanding";
+import { addSearchToHistory, isSearchHistoryAvailable } from "../../library/searchHistory";
 
 const MIN_LOADING_DELAY_MS = 2_000;
 const MAX_LOADING_WAIT_MS = 30_000;
@@ -220,6 +221,7 @@ const LoadingAnimation: React.FC = () => {
     return (
       <SearchLanding
         onSearch={(text) => {
+          if (isSearchHistoryAvailable()) addSearchToHistory(text);
           lastFallbackSearch = text;
           setFallbackSearch(text);
         }}

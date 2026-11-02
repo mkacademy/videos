@@ -140,3 +140,42 @@
         display: inline;
     }
 }
+
+.history {
+    width: 100%;
+    max-width: 54.6rem;
+    margin-top: 1.5rem;
+    padding: 0 1rem;
+}
+
+.historyDay {
+    margin-bottom: 1rem;
+}
+
+.historyDate {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.historyTags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.historyTag {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
+}
+
+.historyDate :global(.btn-close),
+.historyTag :global(.btn-close) {
+    font-size: 0.65rem;
+}
