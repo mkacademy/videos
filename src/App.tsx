@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import { Provider } from 'react-redux'
 import { Route, Routes, BrowserRouter } from 'react-router-dom'
 import 'bootstrap/dist/css/bootstrap.min.css'
@@ -6,13 +6,17 @@ import './init'
 import { store } from './store'
 import ErrorModal from './components/modals/Error'
 import NotFound from './components/views/NotFound'
-import MediaPlayer from './components/mediaPlayer/mediaPlayer'
-import MediaThumbs from './components/mediaPlayer/mediaThumbs'
-import MediaMarkdown, { MediaText } from './components/mediaPlayer/mediaMarkdown'
 import MediaPlayerStatusBar from './components/mediaPlayer/MediaPlayerStatusBar'
 import HydrationProgressBar from './components/HydrationProgressBar'
 import LoadingAnimation from './components/views/Loading'
-import Login from './components/convolutions/Login'
+
+// Route screens load on demand so markdown/mermaid and player code stay out of App.js.
+const Login = lazy(() => import('./components/convolutions/Login'))
+const MediaPlayer = lazy(() => import('./components/mediaPlayer/mediaPlayer'))
+const MediaThumbs = lazy(() => import('./components/mediaPlayer/mediaThumbs'))
+const MediaMarkdown = lazy(() => import('./components/mediaPlayer/mediaMarkdown'))
+const MediaText = lazy(() =>
+  import('./components/mediaPlayer/mediaMarkdown').then((m) => ({ default: m.MediaText })))
 
 const appGlobalCSS = new URL('./styles/appGlobal.css', import.meta.url).href;
 const courseGlobalCSS = new URL('./styles/courseGlobal.css', import.meta.url).href;
@@ -59,11 +63,13 @@ function AppShell() {
           v7_relativeSplatPath: true,
         }}
       >
-        <Routes>
-          {mediaRoutes.map((route) => (
-            <Route key={route.path} path={route.path} element={route.element} />
-          ))}
-        </Routes>
+        <Suspense fallback={<LoadingAnimation />}>
+          <Routes>
+            {mediaRoutes.map((route) => (
+              <Route key={route.path} path={route.path} element={route.element} />
+            ))}
+          </Routes>
+        </Suspense>
         <HydrationProgressBar />
         <MediaPlayerStatusBar />
       </BrowserRouter>

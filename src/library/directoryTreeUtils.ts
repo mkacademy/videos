@@ -1,5 +1,4 @@
 import { acceptedFiles } from '../utils';
-import { imageFileToDataUrl } from './imageCompression';
 
 export const MAX_IMAGE_BYTES = 1_048_576;
 
@@ -253,6 +252,8 @@ export const textDataUrlToBlob = (dataUrl: string): Blob | null => {
 };
 
 export const fileToDataUrl = async (file: File): Promise<string> => {
+  // browser-image-compression only loads when a file is actually converted.
+  const { imageFileToDataUrl } = await import('./imageCompression');
   const { dataUrl } = await imageFileToDataUrl(file);
   return dataUrl;
 };

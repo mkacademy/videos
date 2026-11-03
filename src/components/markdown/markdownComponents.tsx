@@ -1,6 +1,7 @@
-import React, { Children, isValidElement } from 'react';
+import React, { Children, isValidElement, lazy, Suspense } from 'react';
 import type { Components } from 'react-markdown';
-import MermaidBlock from './MermaidBlock';
+
+const MermaidBlock = lazy(() => import('./MermaidBlock'));
 
 const extractText = (node: React.ReactNode): string => {
   if (typeof node === 'string' || typeof node === 'number') return String(node);
@@ -20,7 +21,11 @@ export const markdownComponents: Components = {
       const language = /language-([^\s]+)/.exec(className)?.[1];
       if (language === 'mermaid') {
         const chart = extractText(onlyChild.props.children).replace(/\n$/, '');
-        return <MermaidBlock chart={chart} />;
+        return (
+          <Suspense fallback={<pre>{chart}</pre>}>
+            <MermaidBlock chart={chart} />
+          </Suspense>
+        );
       }
     }
     return <pre>{children}</pre>;
