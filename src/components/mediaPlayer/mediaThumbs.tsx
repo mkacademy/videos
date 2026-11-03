@@ -40,6 +40,7 @@ import {
   type MediaPlayerTab,
   type ThumbsPlaylistItem,
 } from './mediaThumbsUtils';
+import MediaSearchButton from './MediaSearchButton';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 const accountIconSrc = new URL('../../Images/user.png', import.meta.url).href;
@@ -120,7 +121,10 @@ const MediaThumbsTabs: React.FC<{
         </Nav.Item>
       ))}
     </Nav>
-    <MediaThumbsAccountButton />
+    <div className={styles['tabActions']}>
+      <MediaSearchButton />
+      <MediaThumbsAccountButton />
+    </div>
   </div>
 );
 

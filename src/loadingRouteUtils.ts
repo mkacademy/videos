@@ -120,3 +120,13 @@ export const isOnLoadingScreen = (): boolean => {
 /** Loading mounts at `/` and enforces its own min delay (deep-link or fallback). */
 export const willLoadingEnforceMinDelay = (): boolean =>
   isOnLoadingScreen();
+
+/** Router state that opens the search landing at `/` instead of reusing the last search. */
+export const SEARCH_LANDING_STATE = { showSearchLanding: true } as const;
+
+export const isSearchLandingState = (state: unknown): boolean =>
+  (state as { showSearchLanding?: boolean } | null)?.showSearchLanding === true;
+
+/** Initial load at `/` without deep-link params lands on the search screen: no spinner. */
+export const isSearchLandingLoad = (): boolean =>
+  isOnLoadingScreen() && !hasLoadingDeepLinkParams(resolveEditorDeepLinkSearch(window.location.search));

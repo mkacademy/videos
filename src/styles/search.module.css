@@ -6,14 +6,23 @@
     justify-content: space-between;
 }
 
+.screenFlex :global(.searchBox) {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
 .searchBarStyles {
     align-items: center;
-    width: 11rem;
+    flex-wrap: nowrap;
+    width: 90%;
+    max-width: 105rem;
 }
 
 .searchBarStyles .form-control {
-    width: 77%;
-    flex: 0 0 auto;
+    flex: 1 1 auto;
+    width: 1%;
+    min-width: 0;
 }
 
 .searchBarStyles .input-group-prepend,
@@ -23,7 +32,6 @@
 
 .searchBarStyles .input-group-prepend {
     display: flex;
-    margin-right: -1rem;
 }
 
 .searchBarStyles .input-group-text {
@@ -39,31 +47,7 @@
     width: 2rem;
 }
 
-@media screen and (min-width: 576px) {
-    .searchBarStyles {
-        width: 14rem;
-    }
-    
-    .searchBarStyles .form-control {
-        width: 82.5%;
-    }
-}
-
-@media screen and (min-width: 768px) {
-    .searchBarStyles {
-        width: 20.1rem;
-    }
-    
-    .searchBarStyles .form-control {
-        width: 87.8%;
-    }
-}
-
 @media screen and (min-width: 992px) {
-    .searchBarStyles {
-        width: 54.6rem;
-    }
-    
     .searchBarStyles .input-group-prepend,
     .searchBarStyles .form-control {
         height: 4.8rem;
@@ -71,42 +55,11 @@
     
     .searchBarStyles .form-control {
         font-size: 2rem;
-        width: 92.7%;
     }
     
     .searchBarStyles .input-group-text svg {
         height: 3.5rem;
         width: 3.5rem;
-    }
-}
-
-@media screen and (min-width: 1440px) {
-    .searchBarStyles {
-        width: 78.3rem;
-    }
-    
-    .searchBarStyles .form-control {
-        width: 94.85%;
-    }
-}
-
-@media screen and (min-width: 1536px) {
-    .searchBarStyles {
-        width: 83.3rem;
-    }
-    
-    .searchBarStyles .form-control {
-        width: 95.25%;
-    }
-}
-
-@media screen and (min-width: 1920px) {
-    .searchBarStyles {
-        width: 105rem;
-    }
-    
-    .searchBarStyles .form-control {
-        width: 96.2%;
     }
 }
 

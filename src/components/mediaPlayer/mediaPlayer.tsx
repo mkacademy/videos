@@ -35,6 +35,7 @@ import { prependError, prependWarning } from '../../store/slices/errorSlice';
 import { viewRequest } from '../../store/slices/viewSlice';
 import { FaDownload, FaTrash } from 'react-icons/fa';
 import MediaScreenSwitcher from '../MediaScreenSwitcher';
+import MediaSearchButton from './MediaSearchButton';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
 const accountIconSrc = new URL('../../Images/user.png', import.meta.url).href;
@@ -114,7 +115,10 @@ const MediaPlayerTabs: React.FC<{
         </Nav.Item>
       ))}
     </Nav>
-    <MediaPlayerAccountButton />
+    <div className={styles['tabActions']}>
+      <MediaSearchButton />
+      <MediaPlayerAccountButton />
+    </div>
   </div>
 );
 

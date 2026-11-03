@@ -9,6 +9,7 @@ import NotFound from './components/views/NotFound'
 import MediaPlayerStatusBar from './components/mediaPlayer/MediaPlayerStatusBar'
 import HydrationProgressBar from './components/HydrationProgressBar'
 import LoadingAnimation from './components/views/Loading'
+import LoadingSpinner from './components/views/LoadingSpinner'
 
 // Route screens load on demand so markdown/mermaid and player code stay out of App.js.
 const Login = lazy(() => import('./components/convolutions/Login'))
@@ -63,7 +64,7 @@ function AppShell() {
           v7_relativeSplatPath: true,
         }}
       >
-        <Suspense fallback={<LoadingAnimation />}>
+        <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             {mediaRoutes.map((route) => (
               <Route key={route.path} path={route.path} element={route.element} />

@@ -19,6 +19,7 @@ import {
   LOADING_DEEP_LINK_PAIRS,
   getDeepLinkTreeIds,
   hasLoadingDeepLinkParams,
+  isSearchLandingState,
   parseLoadingTreeFlags,
   primaryLoadingWebapp,
   resolveEditorDeepLinkSearch,
@@ -214,7 +215,9 @@ let lastFallbackSearch: string | null = null;
 /** No valid deep-link params: ask for the fallback search text before loading. */
 const LoadingAnimation: React.FC = () => {
   const location = useLocation();
-  const [fallbackSearch, setFallbackSearch] = useState<string | null>(lastFallbackSearch);
+  const [fallbackSearch, setFallbackSearch] = useState<string | null>(() =>
+    isSearchLandingState(location.state) ? null : lastFallbackSearch,
+  );
   const hasParams = hasLoadingDeepLinkParams(resolveEditorDeepLinkSearch(location.search));
 
   if (!hasParams && fallbackSearch === null) {
