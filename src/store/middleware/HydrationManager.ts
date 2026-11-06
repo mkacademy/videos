@@ -100,10 +100,14 @@ const HydrationManager: Middleware<{}, RootState> = ({ dispatch, getState }) => 
             session: { sessionItems },
         } = state;
 
-        const treeIds: DeepLinkTreeIds = typeof window !== 'undefined'
+        const pagerItemId = action.payload?.pagerItemId;
+        const urlTreeIds: DeepLinkTreeIds = typeof window !== 'undefined'
             ? getDeepLinkTreeIds(resolveEditorDeepLinkSearch(window.location.search))
             : {};
-        const restrictToUrlIds = Object.keys(treeIds).length > 0;
+        const treeIds: DeepLinkTreeIds = pagerItemId !== undefined
+            ? { tutorial: pagerItemId, course: pagerItemId, quiz: pagerItemId }
+            : urlTreeIds;
+        const restrictToUrlIds = pagerItemId === undefined && Object.keys(urlTreeIds).length > 0;
 
         const tutorialTrees: ItemWithTutorialTrees[] = collectKindTrees<TutorialTrees>(
             sessionItems,

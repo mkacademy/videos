@@ -3,6 +3,8 @@ import type { Executedquery } from './ThunksUtils';
 
 const FALLBACK_TAKE = 1;
 const FALLBACK_SKIP = 0;
+/** The first query fetches every matching session: that set is fixed for the search. */
+export const SESSION_SET_TAKE = 100;
 
 const CHILD_RECORDS_BY_KIND = {
   tutorial: 'instructionsfiltersrecords',
@@ -21,7 +23,7 @@ export const buildFallbackSessionQueries = (
   search: string,
 ): Record<string, Executedquery> => ({
   dashboardsinstructionsrecords: {
-    take: FALLBACK_TAKE,
+    take: SESSION_SET_TAKE,
     skip: FALLBACK_SKIP,
     search,
     parentIds: [0],

@@ -36,6 +36,7 @@ interface RecordParams {
     curToken?: string | null;
     fetchRole?: string | null;
     queriesOverride?: Record<string, Executedquery>;
+    counts?: Record<string, Record<string, number>>;
     path: string;
 }
 
@@ -54,7 +55,7 @@ const getAccountBody = async (params: RecordParams) => {
         contend: [],
     }
     const requestBody = {
-        counts: {},
+        counts: params.counts ?? {},
         queries: params.queriesOverride ?? {},
         state: stateProps,
         searchedRoutes: null,
@@ -113,7 +114,7 @@ const getAnonymousBody = async (params: RecordParams) => {
         webapp: params.curApp,
     };
     const requestBody = {
-        counts: {},
+        counts: params.counts ?? {},
         queries: params.queriesOverride ?? {},
         state: stateProps,
         searchedRoutes: null,
@@ -165,6 +166,8 @@ export interface FetchDataPayload {
     search: string | null;
     requestTake?: number;
     queriesOverride?: Record<string, Executedquery>;
+    /** Cached counts to send back; `{}` (default) asks the backend to count. */
+    counts?: Record<string, Record<string, number>>;
 }
 
 export interface MinimumFeatureModeFlags {
@@ -378,6 +381,7 @@ const normalizeSessionDomainPayload = (payload: {
         isHighlighted: item.isHighlighted ?? false,
         status: typeof item.status === 'number' ? item.status : 0,
         descendentsSums: item.descendentsSums ?? {},
+        ...(item.metadata ? { metadata: item.metadata } : {}),
     }));
     return {
         ...(sessions ? { sessions } : {}),

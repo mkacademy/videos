@@ -59,7 +59,8 @@ export const updateCoversMetadata = createAction<MetadataUpdate[]>('updateCovers
 export const updatePennantsMetadata = createAction<MetadataUpdate[]>('updatePennantsMetadata');
 export const updateAnswersMetadata = createAction<MetadataUpdate[]>('updateAnswersMetadata');
 
-export const UnzipAndHydrate = createAction('UnzipAndHydrate');
+/** `pagerItemId`: unzip only that session item (session pager), ignoring deep-link id restrictions. */
+export const UnzipAndHydrate = createAction<{ pagerItemId?: number } | undefined>('UnzipAndHydrate');
 export const hydratedThenFetch = createAction<FetchDataPayload>('hydratedThenFetch');
 
 export const initSettings = createAction('initSettings');

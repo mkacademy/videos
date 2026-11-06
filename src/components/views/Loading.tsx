@@ -1,3 +1,4 @@
+import { initSessionPager } from '../../store/thunks/sessionPager';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as styles from "../../styles/loading.module.css";
@@ -87,7 +88,8 @@ const LoadingScreen: React.FC<{ fallbackSearch: string }> = ({ fallbackSearch })
     dispatch(toggleUnzipQuizzes(isFallback || hasQuiz));
     dispatch(completedUnzipping(true));
     setCurPage(0);
-    dispatch(fetchData(buildFetchDataPayload(
+    const pagerSearchKey = isFallback ? `search:${fallbackSearch}` : `link:${resolvedSearch}`;
+    void dispatch(fetchData(buildFetchDataPayload(
       {
         isUnzipCourses: isFallback || hasCourse,
         isUnzipQuizzes: isFallback || hasQuiz,
@@ -108,7 +110,11 @@ const LoadingScreen: React.FC<{ fallbackSearch: string }> = ({ fallbackSearch })
             requestTake: 1,
             queriesOverride: buildDeepLinkSessionQueries(getDeepLinkTreeIds(resolvedSearch)),
           },
-    )));
+    ))).then((result) => {
+      if (fetchData.fulfilled.match(result)) {
+        void dispatch(initSessionPager({ searchKey: pagerSearchKey, executedQueries: result.payload }));
+      }
+    });
   }, [location.search,
     dispatch,
     foundPairs,

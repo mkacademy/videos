@@ -2,6 +2,8 @@ import React from 'react';
 import { Button, ButtonGroup } from 'react-bootstrap';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import * as styles from '../styles/mediaScreenSwitcher.module.css';
+import SessionPager from './Pagination/SessionPager';
+import { isPagerScreen } from '../library/sessionPager';
 
 type MediaScreen = 'player' | 'thumbs' | 'markdown' | 'text';
 
@@ -61,12 +63,20 @@ const MediaScreenSwitcher: React.FC<MediaScreenSwitcherProps> = ({ asHeader = fa
   ));
 
   if (asHeader) {
-    return (
+    const title = (
       <h1 className={styles['headerTitle']}>
         <ButtonGroup className={styles['headerGroup']} aria-label="Switch media screen">
           {screens}
         </ButtonGroup>
       </h1>
+    );
+    // Session pager: one page = one session item of the active tab's kind.
+    if (current === 'text' || !isPagerScreen(tab)) return title;
+    return (
+      <div className="d-flex flex-column align-items-center">
+        {title}
+        <SessionPager screen={tab} />
+      </div>
     );
   }
 

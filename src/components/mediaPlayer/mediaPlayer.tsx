@@ -35,6 +35,7 @@ import { prependError, prependWarning } from '../../store/slices/errorSlice';
 import { viewRequest } from '../../store/slices/viewSlice';
 import { FaDownload, FaTrash } from 'react-icons/fa';
 import MediaScreenSwitcher from '../MediaScreenSwitcher';
+import { useSessionPagerRoots } from '../../Hooks/useSessionPagerVisibleIds';
 import MediaSearchButton from './MediaSearchButton';
 import * as styles from '../../styles/mediaPlayer.module.css';
 
@@ -149,11 +150,14 @@ const MediaPlayer: React.FC = () => {
   const [exitedTutorialAudioId, setExitedTutorialAudioId] = React.useState<number | null>(null);
   const exitedLibraryItemRef = React.useRef<HTMLDivElement | null>(null);
 
-  const courseBanners = useSelector((state: RootState) => state.course.banners);
+  const allCourseBanners = useSelector((state: RootState) => state.course.banners);
+  const courseBanners = useSessionPagerRoots(allCourseBanners, 'course');
   const courseContent = useSelector((state: RootState) => state.course.content);
-  const tutorialBanners = useSelector((state: RootState) => state.tutorial.banners);
+  const allTutorialBanners = useSelector((state: RootState) => state.tutorial.banners);
+  const tutorialBanners = useSessionPagerRoots(allTutorialBanners, 'tutorial');
   const tutorialContent = useSelector((state: RootState) => state.tutorial.content);
-  const quizQuizzes = useSelector((state: RootState) => state.quiz.quizzes);
+  const allQuizQuizzes = useSelector((state: RootState) => state.quiz.quizzes);
+  const quizQuizzes = useSessionPagerRoots(allQuizQuizzes, 'quiz');
   const quizBanners = useSelector((state: RootState) => state.quiz.banners);
   const quizContent = useSelector((state: RootState) => state.quiz.content);
   const exportInProgress = useSelector((state: RootState) => state.view.requestIsProcessing);

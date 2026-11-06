@@ -1,3 +1,4 @@
+import { capturedSessionResponse } from '../store/slices/sessionPagerSlice';
 import { jwtDecode } from "jwt-decode";
 import { getCurAppIndex, userroles, timeout, getMoldsResolver, signOut } from "../utils";
 import { createAsyncThunk } from "@reduxjs/toolkit";
@@ -220,7 +221,7 @@ export const fetchData = createAsyncThunk<
     'fetchData',
     async (payload: FetchDataPayload, { rejectWithValue, getState, dispatch, requestId }) => {
         const state = getState() as RootState;
-        const { convolution, search, webapp, requestTake: payloadTake, queriesOverride } = payload;
+        const { convolution, search, webapp, requestTake: payloadTake, queriesOverride, counts: payloadCounts } = payload;
         const {
             isUnzipCourses,
             isUnzipTutorials,
@@ -255,7 +256,7 @@ export const fetchData = createAsyncThunk<
                     curToken,
                     isPrivate,
                     fetchRole,
-                    counts: {} ,
+                    counts: payloadCounts ?? {},
                     curApp: unzippedApp,
                     executedQueries:  {} ,
                     requestTake,
@@ -272,7 +273,7 @@ export const fetchData = createAsyncThunk<
                     queriesOverride,
                     convolution: unzippedAppName,
                     formatter: unzippedAppConvolution,
-                    counts: {} ,
+                    counts: payloadCounts ?? {},
                     executedQueries:  {} ,
                     path: ToolKit.anonymousRecordsUrl,
                 };
@@ -290,6 +291,10 @@ export const fetchData = createAsyncThunk<
                 state,
                 requestId,
             });
+            if (webapp === 'session') {
+                const responseCounts = (fetchedData as { counts?: Record<string, Record<string, number>> }).counts;
+                dispatch(capturedSessionResponse(responseCounts ?? null));
+            }
             console.log(content);
             return query || {};
         } catch (error) {

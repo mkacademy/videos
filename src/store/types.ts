@@ -11,6 +11,7 @@ import { RowState } from './slices/rowSlice';
 import { SettingsState } from './slices/settingsSlice';
 import { CommentsState } from './slices/commentsSlice';
 import { PlaybackState } from './slices/playbackSlice';
+import type { SessionPagerState } from './slices/sessionPagerSlice';
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit';
 
 export interface RootState {
@@ -27,6 +28,7 @@ export interface RootState {
   settings: SettingsState;
   comments: CommentsState;
   playback: PlaybackState;
+  sessionPager: SessionPagerState;
 }
 
 export interface QueryParams {

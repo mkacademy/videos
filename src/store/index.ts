@@ -12,6 +12,7 @@ import textReducer from './slices/textSlice';
 import tutorialReducer from './slices/tutorialSlice';
 import viewReducer from './slices/viewSlice';
 import commentsReducer from './slices/commentsSlice';
+import sessionPagerReducer from './slices/sessionPagerSlice';
 import playbackReducer from './slices/playbackSlice';
 import { preThunkMiddleware, postThunkMiddleware } from './middleware';
 
@@ -30,6 +31,7 @@ export const store = configureStore({
     view: viewReducer,
     comments: commentsReducer,
     playback: playbackReducer,
+    sessionPager: sessionPagerReducer,
   },
   middleware: (getDefaultMiddleware) => 
     getDefaultMiddleware({
