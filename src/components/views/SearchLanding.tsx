@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { Form, InputGroup } from 'react-bootstrap';
 import { BsSearch } from 'react-icons/bs';
+import { Link, createSearchParams, useLocation } from 'react-router-dom';
 import {
   type SearchHistoryDay,
   isSearchHistoryAvailable,
@@ -32,6 +33,8 @@ const formatDate = (date: string): string => {
 /** Studio's min-mode search screen, with localStorage search history in place of badges. */
 const SearchLanding: React.FC<SearchLandingProps> = ({ onSearch }) => {
   const ref = useRef<HTMLInputElement>(null);
+  const { pathname, search } = useLocation();
+  const loginSearch = createSearchParams({ redirectUrl: pathname + search }).toString();
   const [isAvailable] = useState(isSearchHistoryAvailable);
   const [history, setHistory] = useState<SearchHistoryDay[]>(() =>
     isAvailable ? loadSearchHistory() : [],
@@ -58,7 +61,9 @@ const SearchLanding: React.FC<SearchLandingProps> = ({ onSearch }) => {
   return (
     <div className={`screenFlex ${styles['screenFlex']}`}>
       <div className="details noscrollvisible">
-        <img src={Logo} width={256} height={256} alt="logo" />
+        <Link to={{ pathname: '/login', search: loginSearch }} aria-label="Sign in">
+          <img src={Logo} width={256} height={256} alt="logo" />
+        </Link>
       </div>
       <Form onSubmit={submit} className="searchBox">
         <InputGroup className={`searchBarStyles ${styles['searchBarStyles']}`}>
