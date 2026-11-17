@@ -32,7 +32,7 @@ interface RecordParams {
     formatter: string;
     isPrivate?: boolean;
     convolution: string;
-    requestTake: number;
+    requestTake?: number;
     curToken?: string | null;
     fetchRole?: string | null;
     queriesOverride?: Record<string, Executedquery>;
@@ -164,7 +164,8 @@ export interface FetchDataPayload {
     convolution: string;
     webapp: string;
     search: string | null;
-    requestTake?: number;
+    /** `null` omits it so the gateway sets the take (search). */
+    requestTake?: number | null;
     queriesOverride?: Record<string, Executedquery>;
     /** Cached counts to send back; `{}` (default) asks the backend to count. */
     counts?: Record<string, Record<string, number>>;

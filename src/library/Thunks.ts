@@ -247,7 +247,7 @@ export const fetchData = createAsyncThunk<
         const [unzippedApp, unzippedAppName, unzippedAppConvolution] = getUnzippedApp(args);
         try {
             const isAccount = !isIncognito && curToken;
-            const requestTake = payloadTake ?? defaultTake;
+            const requestTake = payloadTake === null ? undefined : payloadTake ?? defaultTake;
             const params = isAccount
                 ? {
                     state,

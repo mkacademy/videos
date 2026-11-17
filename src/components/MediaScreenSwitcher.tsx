@@ -73,9 +73,11 @@ const MediaScreenSwitcher: React.FC<MediaScreenSwitcherProps> = ({ asHeader = fa
     // Session pager: one page = one session item of the active tab's kind.
     if (current === 'text' || !isPagerScreen(tab)) return title;
     return (
-      <div className="d-flex flex-column align-items-center">
+      <div className={styles['sessionHeader']}>
         {title}
-        <SessionPager screen={tab} />
+        <div className={styles['pagerRow']}>
+          <SessionPager screen={tab} />
+        </div>
       </div>
     );
   }

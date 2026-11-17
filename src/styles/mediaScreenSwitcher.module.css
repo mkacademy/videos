@@ -17,3 +17,23 @@
   line-height: 1.2;
   padding: 0.35rem 0.85rem;
 }
+
+/* Header + session pager: title stays left, pager centers across the page width. */
+.sessionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+/* Library views wrap the header in a plain div inside the flex header row; let it span the row too. */
+div:has(> .sessionHeader) {
+  flex: 1 1 100%;
+}
+
+.pagerRow {
+  align-self: stretch;
+  display: flex;
+  justify-content: center;
+}

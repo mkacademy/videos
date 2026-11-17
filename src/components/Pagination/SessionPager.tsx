@@ -47,9 +47,11 @@ const SessionPager: React.FC<SessionPagerProps> = ({ screen }) => {
 
   return (
     <div className="d-flex flex-column align-items-center">
-      <small className="text-muted mb-1">
-        Session {sessionIndex + 1} / {sessionIds.length}
-      </small>
+      {sessionIds.length > 1 && (
+        <small className="text-muted mb-1">
+          Session {sessionIndex + 1} / {sessionIds.length}
+        </small>
+      )}
       <ul className={`classic pagination flex-wrap ${paginationStyles['pagination']}`}>
         <Pagination.Prev
           onClick={(e) => {
