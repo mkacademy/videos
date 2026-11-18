@@ -1,4 +1,5 @@
 import { initSessionPager } from '../../store/thunks/sessionPager';
+import type { PagerPageCounts, PagerScreen } from '../../library/sessionPager';
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import * as styles from "../../styles/loading.module.css";
@@ -32,6 +33,14 @@ import { addSearchToHistory, isSearchHistoryAvailable } from "../../library/sear
 const MIN_LOADING_DELAY_MS = 2_000;
 const MAX_LOADING_WAIT_MS = 30_000;
 
+/** Search lands on the first tab whose session set has items (tutorial when none are counted). */
+const fallbackTabForCounts = (counts: PagerPageCounts): PagerScreen => {
+  if (counts.filters > 0) return 'tutorial';
+  if (counts.sifters > 0) return 'course';
+  if (counts.dashboards > 0) return 'quiz';
+  return 'tutorial';
+};
+
 const LoadingScreen: React.FC<{ fallbackSearch: string }> = ({ fallbackSearch }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,6 +50,9 @@ const LoadingScreen: React.FC<{ fallbackSearch: string }> = ({ fallbackSearch })
   const noTutorials = useSelector((state: RootState) => state.tutorial.noTutorials);
   const noCourses = useSelector((state: RootState) => state.course.noCourses);
   const noQuizzes = useSelector((state: RootState) => state.quiz.noQuizzes);
+  const pagerCounts = useSelector((state: RootState) => state.sessionPager.pageCounts);
+  const pagerCountsRef = useRef(pagerCounts);
+  pagerCountsRef.current = pagerCounts;
   const hasNavigated = useRef(false);
   const hasTriggeredUnzip = useRef(false);
   const prevIsNotUnzipping = useRef(isNotUnzipping);
@@ -146,7 +158,7 @@ const LoadingScreen: React.FC<{ fallbackSearch: string }> = ({ fallbackSearch })
       hasNavigated.current = true;
 
       if (isFallback) {
-        navigate('/media-player?tab=tutorial', { replace: true });
+        navigate(`/media-player?tab=${fallbackTabForCounts(pagerCountsRef.current)}`, { replace: true });
         return;
       }
 
