@@ -34,7 +34,8 @@ import { isDirectoryExportSupported, pickWritableDirectoryHandle } from '../../l
 import { prependError, prependWarning } from '../../store/slices/errorSlice';
 import { viewRequest } from '../../store/slices/viewSlice';
 import { FaDownload, FaTrash } from 'react-icons/fa';
-import MediaScreenSwitcher from '../MediaScreenSwitcher';
+import MediaScreenSwitcher, { MediaSessionPager } from '../MediaScreenSwitcher';
+import MediaEmptyState from './MediaEmptyState';
 import { useSessionPagerRoots } from '../../Hooks/useSessionPagerVisibleIds';
 import MediaSearchButton from './MediaSearchButton';
 import * as styles from '../../styles/mediaPlayer.module.css';
@@ -427,11 +428,7 @@ const MediaPlayer: React.FC = () => {
 
         {activeTab === 'course' && (
           courseLibrary.length === 0 ? (
-            <div className={styles['emptyState']}>
-              {quizId !== null
-                ? 'No course videos found in this quiz.'
-                : 'No course videos found. Import videos from the course screen first.'}
-            </div>
+            <MediaEmptyState message="oops! nothing in here" />
           ) : (
             <div className={styles['libraryList']}>
               {courseLibrary.map((video) => (
@@ -489,9 +486,7 @@ const MediaPlayer: React.FC = () => {
 
         {activeTab === 'tutorial' && (
           tutorialLibrary.length === 0 ? (
-            <div className={styles['emptyState']}>
-              No tutorial audio found. Import audio from the tutorial screen first.
-            </div>
+            <MediaEmptyState message="oops! nothing in here" />
           ) : (
             <div className={styles['libraryList']}>
               {tutorialLibrary.map((audio) => (
@@ -524,9 +519,7 @@ const MediaPlayer: React.FC = () => {
 
         {activeTab === 'quiz' && (
           quizLibrary.length === 0 ? (
-            <div className={styles['emptyState']}>
-              No quizzes with video content found. Import videos from the quiz screen first.
-            </div>
+            <MediaEmptyState message="oops! nothing in here" />
           ) : (
             <div className={styles['libraryList']}>
               {quizLibrary.map((quiz) => (
@@ -555,6 +548,7 @@ const MediaPlayer: React.FC = () => {
             </div>
           )
         )}
+        <MediaSessionPager />
       </div>
     );
   }
@@ -572,6 +566,7 @@ const MediaPlayer: React.FC = () => {
           No {mediaLabel} with a valid chunk sequence found for id <strong>{mediaId}</strong>.
         </Alert>
         <Link to={buildLibraryUrl(activeTab, { quizId: quizId ?? undefined, ldr })}>Back to library</Link>
+        <MediaSessionPager />
       </div>
     );
   }
@@ -617,6 +612,7 @@ const MediaPlayer: React.FC = () => {
         Playback is only available on the tutorial and course tabs.
       </Alert>
       <Link to={buildLibraryUrl(activeTab, { quizId: quizId ?? undefined, ldr })}>Back to library</Link>
+      <MediaSessionPager />
     </div>
   );
 };

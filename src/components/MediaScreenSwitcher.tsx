@@ -63,22 +63,12 @@ const MediaScreenSwitcher: React.FC<MediaScreenSwitcherProps> = ({ asHeader = fa
   ));
 
   if (asHeader) {
-    const title = (
+    return (
       <h1 className={styles['headerTitle']}>
         <ButtonGroup className={styles['headerGroup']} aria-label="Switch media screen">
           {screens}
         </ButtonGroup>
       </h1>
-    );
-    // Session pager: one page = one session item of the active tab's kind.
-    if (current === 'text' || !isPagerScreen(tab)) return title;
-    return (
-      <div className={styles['sessionHeader']}>
-        {title}
-        <div className={styles['pagerRow']}>
-          <SessionPager screen={tab} />
-        </div>
-      </div>
     );
   }
 
@@ -86,6 +76,21 @@ const MediaScreenSwitcher: React.FC<MediaScreenSwitcherProps> = ({ asHeader = fa
     <ButtonGroup size="sm" aria-label="Switch media screen">
       {screens}
     </ButtonGroup>
+  );
+};
+
+/** Session pager for the active tab, placed by library screens after their content. */
+export const MediaSessionPager: React.FC = () => {
+  const { pathname } = useLocation();
+  const [searchParams] = useSearchParams();
+  const current = resolveScreen(pathname);
+  const tab = searchParams.get('tab');
+  // One page = one session item of the active tab's kind.
+  if (!current || current === 'text' || !isPagerScreen(tab)) return null;
+  return (
+    <div className={styles['pagerRow']}>
+      <SessionPager screen={tab} />
+    </div>
   );
 };
 

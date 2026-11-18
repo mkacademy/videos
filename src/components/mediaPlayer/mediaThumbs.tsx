@@ -23,7 +23,8 @@ import { resolveCourseSlideGroupForBanner } from '../../library/videoChunkPlayba
 import { isDirectoryExportSupported, pickWritableDirectoryHandle } from '../../library/directoryTreeUtils';
 import { prependError, prependWarning } from '../../store/slices/errorSlice';
 import { viewRequest } from '../../store/slices/viewSlice';
-import MediaScreenSwitcher from '../MediaScreenSwitcher';
+import MediaScreenSwitcher, { MediaSessionPager } from '../MediaScreenSwitcher';
+import MediaEmptyState from './MediaEmptyState';
 import { useSessionPagerRoots } from '../../Hooks/useSessionPagerVisibleIds';
 import ThumbsPlayback from './ThumbsPlayback';
 import {
@@ -562,6 +563,7 @@ const MediaThumbs: React.FC = () => {
           >
             Back to library
           </Link>
+          <MediaSessionPager />
         </div>
       );
     }
@@ -598,6 +600,7 @@ const MediaThumbs: React.FC = () => {
         >
           Back to library
         </Link>
+        <MediaSessionPager />
       </div>
     );
   }
@@ -658,11 +661,7 @@ const MediaThumbs: React.FC = () => {
 
       {activeTab === 'course' && (
         courseLibrary.length === 0 ? (
-          <div className={styles['emptyState']}>
-            {quizId !== null
-              ? 'No courses with covers found in this quiz.'
-              : 'No courses with covers found.'}
-          </div>
+          <MediaEmptyState message="oops! nothing in here" />
         ) : (
           <div className={styles['libraryList']}>
             {courseLibrary.map((course) => (
@@ -725,13 +724,7 @@ const MediaThumbs: React.FC = () => {
 
       {activeTab === 'tutorial' && (
         tutorialLibrary.length === 0 ? (
-          <div className={styles['emptyState']}>
-            {courseId !== null
-              ? 'No tutorials with instruction images found for this course.'
-              : tutorialId !== null
-                ? 'No tutorial with instruction images found for this id.'
-                : 'No tutorials with instruction images found.'}
-          </div>
+          <MediaEmptyState message="oops! nothing in here" />
         ) : (
           <div className={styles['libraryList']}>
             {tutorialLibrary.map((tutorial) => (
@@ -796,9 +789,7 @@ const MediaThumbs: React.FC = () => {
 
       {activeTab === 'quiz' && (
         quizLibrary.length === 0 ? (
-          <div className={styles['emptyState']}>
-            No quizzes with course covers found.
-          </div>
+          <MediaEmptyState message="oops! nothing in here" />
         ) : (
           <div className={styles['libraryList']}>
             {quizLibrary.map((quiz) => (
@@ -842,6 +833,7 @@ const MediaThumbs: React.FC = () => {
           </div>
         )
       )}
+      <MediaSessionPager />
     </div>
   );
 };

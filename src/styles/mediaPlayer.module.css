@@ -342,12 +342,6 @@
   margin-top: 0.15rem;
 }
 
-.emptyState {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: #6c757d;
-}
-
 .libraryList {
   display: grid;
   gap: 0.75rem;

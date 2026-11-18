@@ -23,7 +23,8 @@ import { resolveCourseSlideGroupForBanner } from '../../library/videoChunkPlayba
 import { isDirectoryExportSupported, pickWritableDirectoryHandle } from '../../library/directoryTreeUtils';
 import { prependError, prependWarning } from '../../store/slices/errorSlice';
 import { viewRequest } from '../../store/slices/viewSlice';
-import MediaScreenSwitcher from '../MediaScreenSwitcher';
+import MediaScreenSwitcher, { MediaSessionPager } from '../MediaScreenSwitcher';
+import MediaEmptyState from './MediaEmptyState';
 import { useSessionPagerRoots } from '../../Hooks/useSessionPagerVisibleIds';
 import MarkdownPlayback from './MarkdownPlayback';
 import {
@@ -526,6 +527,7 @@ const MediaDocuments: React.FC<MediaDocumentsProps> = ({ documentKind }) => {
           >
             Back to library
           </Link>
+          <MediaSessionPager />
         </div>
       );
     }
@@ -562,6 +564,7 @@ const MediaDocuments: React.FC<MediaDocumentsProps> = ({ documentKind }) => {
           >
             Back to library
           </Link>
+          <MediaSessionPager />
         </div>
       );
     }
@@ -599,6 +602,7 @@ const MediaDocuments: React.FC<MediaDocumentsProps> = ({ documentKind }) => {
         >
           Back to library
         </Link>
+        <MediaSessionPager />
       </div>
     );
   }
@@ -659,11 +663,7 @@ const MediaDocuments: React.FC<MediaDocumentsProps> = ({ documentKind }) => {
 
       {activeTab === 'course' && (
         courseLibrary.length === 0 ? (
-          <div className={styles['emptyState']}>
-            {quizId !== null
-              ? `No courses with ${kindLabel} covers found in this quiz.`
-              : `No courses with ${kindLabel} covers found.`}
-          </div>
+          <MediaEmptyState message="oops! nothing in here" />
         ) : (
           <div className={styles['libraryList']}>
             {courseLibrary.map((course) => (
@@ -714,13 +714,7 @@ const MediaDocuments: React.FC<MediaDocumentsProps> = ({ documentKind }) => {
 
       {activeTab === 'tutorial' && (
         tutorialLibrary.length === 0 ? (
-          <div className={styles['emptyState']}>
-            {courseId !== null
-              ? `No tutorials with ${kindLabel} documents found for this course.`
-              : tutorialId !== null
-                ? `No tutorial with ${kindLabel} documents found for this id.`
-                : `No tutorials with ${kindLabel} documents found.`}
-          </div>
+          <MediaEmptyState message="oops! nothing in here" />
         ) : (
           <div className={styles['libraryList']}>
             {tutorialLibrary.map((tutorial) => (
@@ -785,9 +779,7 @@ const MediaDocuments: React.FC<MediaDocumentsProps> = ({ documentKind }) => {
 
       {activeTab === 'quiz' && (
         quizLibrary.length === 0 ? (
-          <div className={styles['emptyState']}>
-            {`No quizzes with ${kindLabel} course covers found.`}
-          </div>
+          <MediaEmptyState message="oops! nothing in here" />
         ) : (
           <div className={styles['libraryList']}>
             {quizLibrary.map((quiz) => (
@@ -831,6 +823,7 @@ const MediaDocuments: React.FC<MediaDocumentsProps> = ({ documentKind }) => {
           </div>
         )
       )}
+      <MediaSessionPager />
     </div>
   );
 };
