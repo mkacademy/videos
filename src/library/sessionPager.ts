@@ -76,6 +76,10 @@ export const extractPageCounts = (counts: unknown): PagerPageCounts => ({
   dashboards: lookupCount(counts, 'instructionsDashboards', 'dashboards'),
 });
 
+/** Sessions matching the search (the session route's own count). */
+export const extractSessionSetCount = (counts: unknown): number =>
+  lookupCount(counts, 'dashboardsInstructions', 'instructions');
+
 export const hasAnyCount = (counts: PagerPageCounts): boolean =>
   counts.filters + counts.sifters + counts.dashboards > 0;
 

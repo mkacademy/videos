@@ -5,6 +5,7 @@ import { buildFetchDataPayload, type Executedquery } from '../../library/ThunksU
 import {
   buildItemPageQuery,
   extractPageCounts,
+  extractSessionSetCount,
   KIND_BY_SCREEN,
   pageCountForScreen,
   sessionItemParentIds,
@@ -23,6 +24,8 @@ import {
 } from '../slices/sessionPagerSlice';
 import { UnzipAndHydrate } from '../../library/actions';
 import { unwrapZipQuote } from '../../library/EncodingManagerUtils';
+import { SESSION_SET_TAKE } from '../../library/fallbackSessionQuery';
+import { prependWarning } from '../slices/errorSlice';
 
 type ThunkApi = { state: RootState; dispatch: AppDispatch };
 
@@ -91,6 +94,14 @@ export const initSessionPager = createAsyncThunk<
     rawCounts,
     executedQueries: executedQueries ?? {},
   }));
+  // A search's session set is capped at SESSION_SET_TAKE: say so when more sessions match.
+  const matchingSessions = extractSessionSetCount(rawCounts);
+  if (searchKey.startsWith('search:') && matchingSessions > SESSION_SET_TAKE) {
+    dispatch(prependWarning(
+      `Too many sessions: ${matchingSessions} match this search, but the session pager pages `
+      + `through at most ${SESSION_SET_TAKE}. Narrow the search to reach the rest.`,
+    ));
+  }
   if (sessionIds.length === 0) return;
 
   // Items returned by the first query are cached as pages 1..n of their session, in response order.
