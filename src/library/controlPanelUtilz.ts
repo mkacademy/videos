@@ -104,7 +104,7 @@ export const flushTutorialTrees = (Trees: TutorialTrees | undefined): Partial<Tu
 
     // Process banners with content
     Object.entries(Trees).forEach(([bannerIdStr, contentIds]) => {
-        if (bannerIdStr === '_orphans') return;
+        if (bannerIdStr === '_barren') return;
 
         const bannerId = Number(bannerIdStr);
         const contentIdArray = Array.isArray(contentIds) ? contentIds : [];
@@ -128,9 +128,9 @@ export const flushTutorialTrees = (Trees: TutorialTrees | undefined): Partial<Tu
         });
     });
 
-    // Process orphan banners (banners without content)
-    if (Trees._orphans) {
-        Trees._orphans.forEach((bannerId) => {
+    // Process barren banners (banners without content)
+    if (Trees._barren) {
+        Trees._barren.forEach((bannerId) => {
             banners.push({
                 ...defaultTutorialRootBanner,
                 id: bannerId,
@@ -164,7 +164,7 @@ export const flushCourseTrees = (Trees: CourseTrees | undefined): Partial<Course
 
     // Process banners with children
     Object.entries(Trees).forEach(([bannerIdStr, children]) => {
-        if (bannerIdStr === '_orphans') return;
+        if (bannerIdStr === '_barren') return;
 
         const bannerId = Number(bannerIdStr);
         const pennants: Pennant[] = [];
@@ -176,18 +176,18 @@ export const flushCourseTrees = (Trees: CourseTrees | undefined): Partial<Course
             const childrenRecord = children as Record<string, unknown>;
             const keyedPennantIds = new Set(
                 Object.keys(childrenRecord)
-                    .filter((key) => key !== '_orphans' && key !== 'slideGroupItems' && Number.isFinite(Number(key)))
+                    .filter((key) => key !== '_barren' && key !== 'slideGroupItems' && Number.isFinite(Number(key)))
                     .map(Number),
             );
 
-            // Process pennants (keys that are numbers, not '_orphans' or 'slideGroupItems')
+            // Process pennants (keys that are numbers, not '_barren' or 'slideGroupItems')
             const seenPennantIds = new Set<number>();
             Object.entries(children).forEach(([key, value]) => {
-                if (key === '_orphans') {
-                    // Orphan pennants (pennants without slides). Skip ids also present as keyed
+                if (key === '_barren') {
+                    // Barren pennants (pennants without slides). Skip ids also present as keyed
                     // entries — merged trees can list the same pennant in both places.
-                    const orphanPennantIds = Array.isArray(value) ? value : [];
-                    orphanPennantIds.forEach((pennantId) => {
+                    const barrenPennantIds = Array.isArray(value) ? value : [];
+                    barrenPennantIds.forEach((pennantId) => {
                         if (keyedPennantIds.has(pennantId) || seenPennantIds.has(pennantId)) return;
                         seenPennantIds.add(pennantId);
                         pennants.push({
@@ -255,7 +255,7 @@ export const flushCourseTrees = (Trees: CourseTrees | undefined): Partial<Course
             slideGroup[index] = item;
         });
 
-        // One row per pennant id (keyedPennantIds / pennants are unique after orphan skip)
+        // One row per pennant id (keyedPennantIds / pennants are unique after barren skip)
         pennants.forEach((pennant) => {
             if (slidesByPennantId[pennant.id] && slidesByPennantId[pennant.id].length > 0) {
                 slideGroup.slides.push(slidesByPennantId[pennant.id]);
@@ -268,9 +268,9 @@ export const flushCourseTrees = (Trees: CourseTrees | undefined): Partial<Course
         }
     });
 
-    // Process orphan banners (banners without children)
-    if (Trees._orphans) {
-        Trees._orphans.forEach((bannerId) => {
+    // Process barren banners (banners without children)
+    if (Trees._barren) {
+        Trees._barren.forEach((bannerId) => {
             banners.push({
                 ...defaultCourseBanner,
                 id: bannerId,
@@ -303,7 +303,7 @@ export const flushQuizTrees = (Trees: QuizTrees | undefined): Partial<QuizState>
 
     // Process quizzes with children
     Object.entries(Trees).forEach(([quizIdStr, children]) => {
-        if (quizIdStr === '_orphans') return;
+        if (quizIdStr === '_barren') return;
 
         const quizId = Number(quizIdStr);
         const submissions: Submition[] = [];
@@ -345,9 +345,9 @@ export const flushQuizTrees = (Trees: QuizTrees | undefined): Partial<QuizState>
         });
     });
 
-    // Process orphan quizzes (quizzes without children)
-    if (Trees._orphans) {
-        Trees._orphans.forEach((quizId) => {
+    // Process barren quizzes (quizzes without children)
+    if (Trees._barren) {
+        Trees._barren.forEach((quizId) => {
             quizzes.push({
                 ...defaultQuizBanner,
                 id: quizId,

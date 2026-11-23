@@ -115,12 +115,12 @@ export const buildItemPageQuery = (
   };
 };
 
-/** Root banner / quiz ids of one unzipped tree (numeric keys + `_orphans`). */
+/** Root banner / quiz ids of one unzipped tree (numeric keys + `_barren`). */
 export const rootIdsFromTree = (tree: unknown): Set<number> => {
   const out = new Set<number>();
   if (!tree || typeof tree !== 'object') return out;
   for (const [key, nested] of Object.entries(tree as Record<string, unknown>)) {
-    if (key === '_orphans') {
+    if (key === '_barren') {
       if (Array.isArray(nested)) {
         for (const id of nested) if (typeof id === 'number' && Number.isFinite(id)) out.add(id);
       }

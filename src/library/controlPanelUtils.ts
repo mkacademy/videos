@@ -40,7 +40,7 @@ function treeEntityPredicate(
   return (item) => isDehydrated(item);
 }
 
-export type TutorialTrees = Record<number, number[]> & { _orphans?: number[] };
+export type TutorialTrees = Record<number, number[]> & { _barren?: number[] };
 
 export const getTutorialTrees = (
   { banners, content }: {
@@ -78,13 +78,13 @@ export const getTutorialTrees = (
 
   const tutorialIds = {
     ...bannersWithChildren,
-    ...(bannersWithoutChildren.length > 0 ? { _orphans: bannersWithoutChildren } : {}),
+    ...(bannersWithoutChildren.length > 0 ? { _barren: bannersWithoutChildren } : {}),
   };
   return tutorialIds;
 };
 
 export type CourseTrees = Record<number, (Record<number, number[]> & { slideGroupItems?: number[] }) |
-{ slideGroupItems: number[] }> & { _orphans?: number[] };
+{ slideGroupItems: number[] }> & { _barren?: number[] };
 
 export const getCourseTrees = (
   { banners, content }: {
@@ -136,13 +136,13 @@ export const getCourseTrees = (
     if (slidesByPennantId[pennant.id] && slidesByPennantId[pennant.id].length > 0) {
       parent[pennant.id] = slidesByPennantId[pennant.id];
     } else {
-      if (!parent._orphans) {
-        parent._orphans = [];
+      if (!parent._barren) {
+        parent._barren = [];
       }
-      parent._orphans.push(pennant.id);
+      parent._barren.push(pennant.id);
     }
     return acc;
-  }, {} as Record<number, Record<number, number[]> & { _orphans?: number[] }>);
+  }, {} as Record<number, Record<number, number[]> & { _barren?: number[] }>);
 
   // Build final structure: banners with children as objects, without children as array
   // Banners contain both pennants (with their slides) and slideGroupItems
@@ -170,7 +170,7 @@ export const getCourseTrees = (
 
   const courseIds = {
     ...bannersWithChildren,
-    ...(bannersWithoutChildren.length > 0 ? { _orphans: bannersWithoutChildren } : {}),
+    ...(bannersWithoutChildren.length > 0 ? { _barren: bannersWithoutChildren } : {}),
   };
   return courseIds;
 };
@@ -180,7 +180,7 @@ export const getCourseTrees = (
 export type QuizTrees = Record<number, {
   banners?: CourseTrees;
   submissions?: number[];
-}> & { _orphans?: number[] };
+}> & { _barren?: number[] };
 
 export const getQuizTrees = (
   { quizzes, banners, content }: {
@@ -237,13 +237,13 @@ export const getQuizTrees = (
     if (slideItemsByPennantId[pennant.id] && slideItemsByPennantId[pennant.id].length > 0) {
       parent[pennant.id] = slideItemsByPennantId[pennant.id];
     } else {
-      if (!parent._orphans) {
-        parent._orphans = [];
+      if (!parent._barren) {
+        parent._barren = [];
       }
-      parent._orphans.push(pennant.id);
+      parent._barren.push(pennant.id);
     }
     return acc;
-  }, {} as Record<number, Record<number, number[]> & { _orphans?: number[] }>);
+  }, {} as Record<number, Record<number, number[]> & { _barren?: number[] }>);
 
   // Group banners by quiz ID (banner.bannerId === quiz.id)
   // Banners contain both pennants (with their slides) and slideGroupItems
@@ -267,13 +267,13 @@ export const getQuizTrees = (
         parent[banner.id] = { slideGroupItems: slideGroupItemsByBannerId[banner.id] };
       }
     } else {
-      if (!parent._orphans) {
-        parent._orphans = [];
+      if (!parent._barren) {
+        parent._barren = [];
       }
-      parent._orphans.push(banner.id);
+      parent._barren.push(banner.id);
     }
     return acc;
-  }, {} as Record<number, Record<number, (Record<number, number[]> & { slideGroupItems?: number[] }) | { slideGroupItems: number[] }> & { _orphans?: number[] }>);
+  }, {} as Record<number, Record<number, (Record<number, number[]> & { slideGroupItems?: number[] }) | { slideGroupItems: number[] }> & { _barren?: number[] }>);
 
   // Group submissions by quiz bannerId (submissions are quiz.pennants)
   const submissionsByQuizId = filteredSubmissions.reduce((acc, submission) => {
@@ -285,7 +285,7 @@ export const getQuizTrees = (
   }, {} as Record<number, number[]>);
 
   // Build final structure: quizzes with children as objects, without children as array
-  const quizzesWithChildren: Record<number, Record<number, Record<number, Record<number, number[]> & { _orphans?: number[] }> & { _orphans?: number[] }> & { _orphans?: number[] } | number[]> = {};
+  const quizzesWithChildren: Record<number, Record<number, Record<number, Record<number, number[]> & { _barren?: number[] }> & { _barren?: number[] }> & { _barren?: number[] } | number[]> = {};
   const quizzesWithoutChildren: number[] = [];
 
   filteredQuizzes.forEach((quiz) => {
@@ -308,7 +308,7 @@ export const getQuizTrees = (
 
   const quizIds = {
     ...quizzesWithChildren,
-    ...(quizzesWithoutChildren.length > 0 ? { _orphans: quizzesWithoutChildren } : {}),
+    ...(quizzesWithoutChildren.length > 0 ? { _barren: quizzesWithoutChildren } : {}),
   };
   return quizIds;
 };
